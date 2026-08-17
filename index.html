@@ -40,7 +40,7 @@
                 <p class="text-xs text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
                 <!-- 클라우드 저장 상태 뱃지 -->
                 <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1">
-                    <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">로컬 저장</span>
+                    <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">로컬 전용</span>
                 </span>
             </div>
         </div>
@@ -144,7 +144,7 @@
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                 <h3 class="text-base font-bold text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud text-blue-400"></i> 웹 클라우드 저장 및 동기화
+                    <i class="fa-solid fa-cloud text-blue-400"></i> 웹 클라우드 동기화
                 </h3>
                 <button onclick="closeCloudModal()" class="text-gray-400 hover:text-white text-lg">
                     <i class="fa-solid fa-xmark"></i>
@@ -153,18 +153,18 @@
 
             <div class="space-y-3 text-xs">
                 <p class="text-gray-300 leading-relaxed">
-                    본인의 **동기화 키(Sync Key)**를 발급받거나 입력하면, 모든 기기(스마트폰, PC 등)에서 동일한 포트폴리오가 실시간 안전하게 연동됩니다.
+                    본인만의 **고유 동기화 키(예: dongland)**를 입력하면 클라우드 서버에 안전하게 자동 저장/연동되어 새로고침하거나 기기가 바뀌어도 복구됩니다.
                 </p>
 
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">내 클라우드 동기화 키 (Sync Key)</label>
                     <div class="flex gap-2">
-                        <input type="text" id="inputSyncKey" placeholder="키를 직접 입력하거나 새로 발급받으세요" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono text-xs">
-                        <button type="button" id="btnCreateKey" onclick="createNewCloudKey()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap active:scale-95 transition">
-                            <i class="fa-solid fa-key"></i> 새 키 발급
+                        <input type="text" id="inputSyncKey" placeholder="예: dongland 또는 my_portfolio" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono text-xs">
+                        <button type="button" onclick="generateRandomSyncKey()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-lg font-semibold whitespace-nowrap active:scale-95 transition">
+                            랜덤 키 생성
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-400 mt-1">💡 최초 1회 [새 키 발급]을 누르면 고유 키가 생성되어 클라우드에 즉시 저장됩니다.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">💡 영문, 숫자, 밑줄(_) 조합의 고유한 단어를 사용하세요.</p>
                 </div>
 
                 <div class="pt-2 flex flex-col gap-2">
@@ -391,6 +391,9 @@
         let activeChartTab = 'monthly';
         let cloudSyncKey = '';
 
+        // 클라우드 베이스 API (CORS 프리 Key-Value 스토리지)
+        const CLOUD_API_BASE = 'https://portfolio-sync-v1-default-rtdb.firebaseio.com/sync_data';
+
         // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             initCloudSyncStatus();
@@ -399,12 +402,16 @@
             renderAll();
         });
 
-        // 1. 웹 클라우드 동기화 엔진 (JSONBlob API 기반 영구 안정 연동)
+        // 1. 웹 클라우드 동기화 엔진
+        function sanitizeKey(key) {
+            return encodeURIComponent(key.trim().replace(/[\.\$#\[\]\/]/g, '_'));
+        }
+
         function initCloudSyncStatus() {
             cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
             const statusText = document.getElementById('cloudStatusText');
             if (cloudSyncKey) {
-                statusText.innerText = '클라우드 ON';
+                statusText.innerText = `클라우드 ON (${cloudSyncKey})`;
                 document.getElementById('inputSyncKey').value = cloudSyncKey;
             } else {
                 statusText.innerText = '로컬 전용';
@@ -420,51 +427,16 @@
             document.getElementById('cloudModal').classList.add('hidden');
         }
 
-        // [신규] JSONBlob 서버에 새 공간을 생성하고 고유 Sync Key 발급
-        async function createNewCloudKey() {
-            const btn = document.getElementById('btnCreateKey');
-            const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성중';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(portfolio)
-                });
-
-                if (!res.ok) throw new Error('클라우드 생성 서버 응답 오류');
-
-                // Location 헤더 또는 x-jsonblob 헤더에서 생성된 Key 추출
-                const locationHeader = res.headers.get('Location') || res.headers.get('x-jsonblob') || '';
-                const newKey = locationHeader.split('/').pop();
-
-                if (!newKey) throw new Error('키 생성에 실패했습니다.');
-
-                cloudSyncKey = newKey;
-                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                document.getElementById('inputSyncKey').value = cloudSyncKey;
-                initCloudSyncStatus();
-
-                alert(`새 클라우드 동기화 키가 생성되었습니다!\n\n동기화 키: ${cloudSyncKey}\n\n다른 기기에서도 이 키를 입력하면 현재 포트폴리오를 그대로 불러옵니다.`);
-            } catch (err) {
-                console.error(err);
-                alert('클라우드 키 생성 중 오류가 발생했습니다. 네트워크 상태를 확인해주세요.');
-            } finally {
-                btn.innerHTML = originText;
-                btn.disabled = false;
-            }
+        function generateRandomSyncKey() {
+            const randomStr = Math.random().toString(36).substring(2, 8);
+            document.getElementById('inputSyncKey').value = `asset_${randomStr}`;
         }
 
         // 클라우드 키 연결 및 즉시 업로드
         async function saveCloudSyncKey() {
             const key = document.getElementById('inputSyncKey').value.trim();
             if (!key) {
-                alert('동기화 키를 입력하거나 [새 키 발급]을 먼저 눌러주세요.');
+                alert('동기화 키를 입력해주세요. (예: dongland)');
                 return;
             }
 
@@ -479,13 +451,14 @@
                 if (success) {
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     initCloudSyncStatus();
-                    alert('웹 클라우드에 성공적으로 업로드 및 동기화되었습니다!');
+                    alert(`'${cloudSyncKey}' 키로 클라우드에 성공적으로 업로드되었습니다!\n이제 어떤 기기에서든 이 키를 입력하면 포트폴리오가 복구됩니다.`);
                     closeCloudModal();
                 } else {
-                    alert('클라우드 업로드에 실패했습니다. 키를 다시 확인해주세요.');
+                    alert('클라우드 업로드에 실패했습니다. 네트워크 상태를 확인해주세요.');
                 }
             } catch (err) {
-                alert('클라우드 연결 중 오류가 발생했습니다.');
+                console.error(err);
+                alert('업로드 통신 중 오류가 발생했습니다.');
             } finally {
                 btn.innerHTML = originText;
                 btn.disabled = false;
@@ -496,13 +469,11 @@
         async function pushToCloud() {
             if (!cloudSyncKey) return false;
             try {
-                const endpoint = `https://jsonblob.com/api/jsonBlob/${encodeURIComponent(cloudSyncKey)}`;
+                const sKey = sanitizeKey(cloudSyncKey);
+                const endpoint = `${CLOUD_API_BASE}/${sKey}.json`;
                 const res = await fetch(endpoint, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(portfolio)
                 });
                 return res.ok;
@@ -516,10 +487,9 @@
         async function fetchFromCloud() {
             if (!cloudSyncKey) return null;
             try {
-                const endpoint = `https://jsonblob.com/api/jsonBlob/${encodeURIComponent(cloudSyncKey)}`;
-                const res = await fetch(endpoint, {
-                    headers: { 'Accept': 'application/json' }
-                });
+                const sKey = sanitizeKey(cloudSyncKey);
+                const endpoint = `${CLOUD_API_BASE}/${sKey}.json`;
+                const res = await fetch(endpoint);
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data)) {
@@ -536,30 +506,31 @@
         async function forceFetchFromCloud() {
             const inputKey = document.getElementById('inputSyncKey').value.trim();
             if (!inputKey) {
-                alert('불러올 동기화 키를 먼저 입력해주세요.');
+                alert('불러올 동기화 키를 입력해주세요.');
                 return;
             }
 
             const btn = document.getElementById('btnDownloadCloud');
             const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...';
             btn.disabled = true;
 
             try {
                 cloudSyncKey = inputKey;
                 const cloudData = await fetchFromCloud();
-                if (cloudData && cloudData.length > 0) {
+                if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
                     portfolio = cloudData;
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
                     initCloudSyncStatus();
                     renderAll();
-                    alert(`클라우드에서 ${cloudData.length}개의 종목 데이터를 성공적으로 불러왔습니다!`);
+                    alert(`'${cloudSyncKey}' 키에서 총 ${cloudData.length}개 종목 데이터를 성공적으로 복원했습니다!`);
                     closeCloudModal();
                 } else {
-                    alert('해당 키로 저장된 유효한 데이터가 없거나 조회가 불가능합니다.\n키 번호를 다시 확인해주세요.');
+                    alert(`'${cloudSyncKey}' 키로 저장된 클라우드 데이터가 없습니다.\n키를 다시 확인하거나 현재 기기의 데이터를 먼저 업로드해주세요.`);
                 }
             } catch (err) {
+                console.error(err);
                 alert('클라우드 데이터를 불러오지 못했습니다.');
             } finally {
                 btn.innerHTML = originText;
@@ -569,7 +540,7 @@
 
         // 2. 통합 데이터 로드 (클라우드 우선, 로컬 폴백)
         async function loadPortfolioData() {
-            // 1순위: 클라우드 연동 키가 있을 경우 클라우드 최신 데이터 조회
+            // 1순위: 클라우드 연동 키가 있을 경우 클라우드 데이터 확인
             if (cloudSyncKey) {
                 const cloudData = await fetchFromCloud();
                 if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
@@ -579,7 +550,7 @@
                 }
             }
 
-            // 2순위: 로컬 스토리지 데이터 확인
+            // 2순위: 로컬 스토리지 확인
             const saved = localStorage.getItem('my_dividend_portfolio_v9');
             if (saved) {
                 try {
@@ -597,7 +568,7 @@
             }
         }
 
-        // 데이터 저장 (로컬과 클라우드 동시 저장)
+        // 데이터 저장 (로컬 및 클라우드 실시간 반영)
         function saveToStorage() {
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             pushToCloud();
@@ -617,7 +588,7 @@
             }
         }
 
-        // 4. 온라인 실시간 시세 초고속 확인 (1.2초 타임아웃)
+        // 4. 온라인 실시간 시세 확인 (1.2초 타임아웃)
         async function tryFetchLiveOnline(symbol) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 1200);
