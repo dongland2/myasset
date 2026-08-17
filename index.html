@@ -11,18 +11,18 @@
     <meta name="apple-mobile-web-app-title" content="배당포트폴리오">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2454/2454282.png">
 
-    <!-- Tailwind CSS, FontAwesome, Chart.js CDN 로드 -->
+    <!-- 외부 스타일시트 및 차트 라이브러리 (Tailwind CSS, FontAwesome, Chart.js) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* 모바일 터치 및 UI 최적화 */
+        /* 모바일 터치 및 앱 룩앤필 최적화 */
         body {
             -webkit-tap-highlight-color: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
         }
-        /* 스크롤바 숨김 */
+        /* 불필요한 스크롤바 숨김 */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -30,7 +30,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen pb-24">
 
-    <!-- 상단 헤더 영역 -->
+    <!-- 상단 고정 헤더 -->
     <header class="sticky top-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex justify-between items-center">
         <div>
             <h1 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
@@ -39,11 +39,11 @@
             <p class="text-xs text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
         </div>
         <div class="flex gap-2">
-            <!-- DRIP 복리 시뮬레이터 팝업 버튼 -->
+            <!-- DRIP 복리 시뮬레이터 팝업 열기 버튼 -->
             <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition">
                 <i class="fa-solid fa-seedling"></i> DRIP
             </button>
-            <!-- 종목 추가 모달 버튼 -->
+            <!-- 종목 추가 모달 열기 버튼 -->
             <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30 active:scale-95 transition">
                 <i class="fa-solid fa-plus"></i> 종목 추가
             </button>
@@ -61,7 +61,7 @@
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- 총 자산 및 배당 요약 대시보드 카드 -->
+        <!-- 총 자산 및 배당 통계 요약 카드 -->
         <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl">
             <div class="flex justify-between items-start mb-2">
                 <span class="text-xs font-semibold text-gray-400">총 평가 자산</span>
@@ -69,7 +69,7 @@
             </div>
             <div class="text-2xl font-black tracking-tight text-white mb-4" id="totalAssetValue">0원</div>
 
-            <!-- 자산 세부 통계 그리드 (매수금, 손익, 연배당금, 세후 월배당) -->
+            <!-- 자산 세부 통계 그리드 (매수금, 손익, 연간 배당금, 월평균 세후 배당금) -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
                 <div>
                     <p class="text-gray-400">총 매수 금액</p>
@@ -90,7 +90,7 @@
             </div>
         </section>
 
-        <!-- 차트 탭 메뉴 (월별 배당금 / 종목별 비중 도넛 차트) -->
+        <!-- 차트 탭 영역 (월별 배당금 막대 차트 / 포트폴리오 비중 도넛 차트 전환) -->
         <section class="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-2">
@@ -103,18 +103,18 @@
                 </div>
             </div>
 
-            <!-- 월별 배당 막대 차트 -->
+            <!-- 월별 배당 막대 차트 캔버스 -->
             <div id="monthlyChartWrapper" class="relative h-48 w-full">
                 <canvas id="monthlyDividendChart"></canvas>
             </div>
 
-            <!-- 자산 비중 도넛 차트 -->
+            <!-- 자산 비중 도넛 차트 캔버스 -->
             <div id="pieChartWrapper" class="relative h-48 w-full hidden">
                 <canvas id="assetPieChart"></canvas>
             </div>
         </section>
 
-        <!-- 보유 종목 리스트 헤더 -->
+        <!-- 보유 종목 리스트 섹션 -->
         <section class="space-y-3">
             <div class="flex justify-between items-center px-1">
                 <h2 class="text-sm font-bold text-gray-300 flex items-center gap-1.5">
@@ -125,9 +125,9 @@
                 </button>
             </div>
 
-            <!-- 보유 종목 카드 동적 렌더링 컨테이너 -->
+            <!-- 보유 종목 카드 동적 삽입 영역 -->
             <div id="stockListContainer" class="space-y-3">
-                <!-- 자바스크립트에 의해 동적으로 카드가 삽입됩니다 -->
+                <!-- 동적으로 카드 렌더링 -->
             </div>
         </section>
     </main>
@@ -145,7 +145,7 @@
             <form id="stockForm" onsubmit="saveStock(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="editIndex" value="-1">
 
-                <!-- 시장 구분 (한국 / 미국) -->
+                <!-- 시장 선택 -->
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">시장 선택</label>
                     <div class="grid grid-cols-2 gap-2">
@@ -164,18 +164,18 @@
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
-                        <input type="text" id="inputTicker" required placeholder="예: 삼성전자, 005930, AAPL, SCHD" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="inputTicker" required placeholder="예: SCHD, AAPL, 삼성전자, 005930" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-magnifying-glass"></i> 조회
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-1">💡 '삼성전자', 'SK하이닉스', '현대차', 'SCHD', '애플' 등 입력 후 조회를 누르세요.</p>
+                    <p class="text-[10px] text-gray-400 mt-1">💡 'SCHD', '리얼티인컴', '애플', '삼성전자', '005930' 등 입력 후 조회</p>
                 </div>
 
                 <!-- 종목명 -->
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">종목명</label>
-                    <input type="text" id="inputName" required placeholder="예: 삼성전자 / 애플" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                    <input type="text" id="inputName" required placeholder="예: SCHD / 삼성전자" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <!-- 수량 & 평단가 -->
@@ -289,11 +289,33 @@
         </div>
     </div>
 
-    <!-- 핵심 비즈니스 로직 스크립트 -->
+    <!-- 핵심 비즈니스 로직 자바스크립트 -->
     <script>
-        // 한국 및 미국 대표 종목 실제 시세 및 배당 데이터베이스
+        // 한국 및 미국 대표 종목 최신 시세 및 액면분할 반영 데이터베이스
         const BUILTIN_STOCKS = {
-            // [국내 대표 배당/대형주 실제 시세 및 연간 배당금]
+            // [미국 대표 배당/성장 ETF 및 주식 - 액면분할 및 최신 수치 완벽 반영]
+            "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "리얼티인컴": { ticker: "O", name: "Realty Income Corp", market: "US", price: 54.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "O": { ticker: "O", name: "Realty Income Corp", market: "US", price: 54.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "JEPI": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "제피": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "JEPQ": { ticker: "JEPQ", name: "JPMorgan Nasdaq Equity Premium Income ETF", market: "US", price: 54.80, dps: 5.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "애플": { ticker: "AAPL", name: "Apple Inc.", market: "US", price: 226.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
+            "AAPL": { ticker: "AAPL", name: "Apple Inc.", market: "US", price: 226.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
+            "마이크로소프트": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", price: 430.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "MSFT": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", price: 430.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "엔비디아": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", price: 125.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "NVDA": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", price: 125.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "테슬라": { ticker: "TSLA", name: "Tesla Inc.", market: "US", price: 215.00, dps: 0.0, cycle: "annual", months: [12] },
+            "TSLA": { ticker: "TSLA", name: "Tesla Inc.", market: "US", price: 215.00, dps: 0.0, cycle: "annual", months: [12] },
+            "코카콜라": { ticker: "KO", name: "Coca-Cola Co", market: "US", price: 65.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
+            "KO": { ticker: "KO", name: "Coca-Cola Co", market: "US", price: 65.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
+            "SPY": { ticker: "SPY", name: "SPDR S&P 500 ETF Trust", market: "US", price: 555.00, dps: 6.90, cycle: "quarterly", months: [4, 7, 10, 12] },
+            "VOO": { ticker: "VOO", name: "Vanguard S&P 500 ETF", market: "US", price: 510.00, dps: 6.70, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", price: 480.00, dps: 2.70, cycle: "quarterly", months: [4, 7, 10, 12] },
+
+            // [국내 대표 배당/대형주 최신 시세 및 배당 데이터]
             "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "삼전": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "005930": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
@@ -320,31 +342,10 @@
             "네이버": { ticker: "035420", name: "NAVER", market: "KR", price: 214000, dps: 1200, cycle: "annual", months: [4] },
             "035420": { ticker: "035420", name: "NAVER", market: "KR", price: 214000, dps: 1200, cycle: "annual", months: [4] },
             "카카오": { ticker: "035720", name: "카카오", market: "KR", price: 40700, dps: 61, cycle: "annual", months: [4] },
-            "035720": { ticker: "035720", name: "카카오", market: "KR", price: 40700, dps: 61, cycle: "annual", months: [4] },
-
-            // [미국 대표 배당/성장주 및 ETF 실제 시세]
-            "애플": { ticker: "AAPL", name: "Apple Inc.", market: "US", price: 228.0, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
-            "AAPL": { ticker: "AAPL", name: "Apple Inc.", market: "US", price: 228.0, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
-            "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 83.5, dps: 2.85, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 83.5, dps: 2.85, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "리얼티인컴": { ticker: "O", name: "Realty Income Corp", market: "US", price: 53.8, dps: 3.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "O": { ticker: "O", name: "Realty Income Corp", market: "US", price: 53.8, dps: 3.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "JEPI": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", price: 58.2, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "제피": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", price: 58.2, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "JEPQ": { ticker: "JEPQ", name: "JPMorgan Nasdaq Equity Premium Income ETF", market: "US", price: 54.5, dps: 5.10, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "테슬라": { ticker: "TSLA", name: "Tesla Inc.", market: "US", price: 218.0, dps: 0.0, cycle: "annual", months: [12] },
-            "TSLA": { ticker: "TSLA", name: "Tesla Inc.", market: "US", price: 218.0, dps: 0.0, cycle: "annual", months: [12] },
-            "엔비디아": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", price: 128.0, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "NVDA": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", price: 128.0, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "마이크로소프트": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", price: 425.0, dps: 3.00, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "MSFT": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", price: 425.0, dps: 3.00, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "코카콜라": { ticker: "KO", name: "Coca-Cola Co", market: "US", price: 65.5, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "KO": { ticker: "KO", name: "Coca-Cola Co", market: "US", price: 65.5, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "SPY": { ticker: "SPY", name: "SPDR S&P 500 ETF Trust", market: "US", price: 560.0, dps: 6.90, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", price: 485.0, dps: 2.70, cycle: "quarterly", months: [4, 7, 10, 12] }
+            "035720": { ticker: "035720", name: "카카오", market: "KR", price: 40700, dps: 61, cycle: "annual", months: [4] }
         };
 
-        // 전역 상태 관리
+        // 전역 상태 변수
         let portfolio = [];
         let usdKrwRate = 1350;
         let monthlyChart = null;
@@ -352,14 +353,14 @@
         let dripChartInstance = null;
         let activeChartTab = 'monthly';
 
-        // DOM 로드 시 초기 실행
+        // DOM 로드 시 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             loadPortfolioFromStorage();
             await fetchExchangeRate();
             renderAll();
         });
 
-        // 1. 실시간 달러-원 환율 조회
+        // 1. 실시간 달러-원 환율 조회 (무료 환율 API)
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -373,7 +374,7 @@
             }
         }
 
-        // 2. 온라인 실시간 시세 초고속 확인 (선택적 시도)
+        // 2. 온라인 실시간 시세 초고속 확인 (타임아웃 1.2초)
         async function tryFetchLiveOnline(symbol) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 1200);
@@ -392,7 +393,7 @@
             return null;
         }
 
-        // 3. 지능형 스마트 주식 정보 조회 함수
+        // 3. 지능형 스마트 종목 조회 함수 (미국/한국 실시간 및 내장 DB 통합)
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -409,7 +410,7 @@
                 let resolved = null;
                 const upperRaw = inputRaw.toUpperCase();
 
-                // [1단계] 내장 실제 데이터베이스 우선 매핑
+                // [1단계] 내장 실제 데이터베이스 우선 매핑 (최신 액면분할 완벽 반영)
                 for (const key in BUILTIN_STOCKS) {
                     if (key.toUpperCase() === upperRaw || BUILTIN_STOCKS[key].ticker.toUpperCase() === upperRaw) {
                         resolved = { ...BUILTIN_STOCKS[key] };
@@ -495,7 +496,7 @@
 
         // 4. 로컬 스토리지 데이터 관리
         function loadPortfolioFromStorage() {
-            const saved = localStorage.getItem('my_dividend_portfolio_v6');
+            const saved = localStorage.getItem('my_dividend_portfolio_v7');
             if (saved) {
                 try {
                     portfolio = JSON.parse(saved);
@@ -503,17 +504,17 @@
                     portfolio = [];
                 }
             } else {
-                // 초기 포트폴리오 샘플
+                // 초기 포트폴리오 샘플 (SCHD 액면분할 후 가격 및 삼성전자 최신 시세 반영)
                 portfolio = [
-                    { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 50, buyPrice: 240000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] },
-                    { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 30, buyPrice: 76.5, currentPrice: 83.5, dps: 2.85, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] }
+                    { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
+                    { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
                 ];
                 saveToStorage();
             }
         }
 
         function saveToStorage() {
-            localStorage.setItem('my_dividend_portfolio_v6', JSON.stringify(portfolio));
+            localStorage.setItem('my_dividend_portfolio_v7', JSON.stringify(portfolio));
         }
 
         // 5. 전체 보유 종목 일괄 갱신
@@ -664,7 +665,7 @@
                 container.appendChild(card);
             });
 
-            // 상단 대시보드 수치 갱신
+            // 상단 대시보드 요약 수치 갱신
             const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = (totalAnnualDivKRW * (1 - 0.154)) / 12;
@@ -684,7 +685,7 @@
             document.getElementById('monthlyNetDividend').innerText = `${Math.round(monthlyNetKRW).toLocaleString()}원`;
         }
 
-        // 7. 월별 배당금 막대 차트
+        // 7. 월별 배당금 막대 차트 렌더링
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -740,7 +741,7 @@
             });
         }
 
-        // 8. 종목별 자산 비중 도넛 차트
+        // 8. 종목별 자산 비중 도넛 차트 렌더링
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
@@ -787,7 +788,7 @@
             });
         }
 
-        // 9. DRIP(배당 재투자) 복리 시뮬레이터
+        // 9. DRIP(배당 재투자) 복리 시뮬레이터 로직
         function openDripModal() {
             document.getElementById('dripModal').classList.remove('hidden');
             runDripSimulation();
@@ -884,7 +885,7 @@
             });
         }
 
-        // 10. 모달 및 입력 폼 제어
+        // 10. 모달 팝업 및 입력 폼 제어 함수
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -979,7 +980,7 @@
             }
         }
 
-        // 11. 데이터 백업 및 복원
+        // 11. 데이터 백업 및 복원 함수
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio, null, 2));
             const a = document.createElement('a');
