@@ -144,36 +144,57 @@
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                 <h3 class="text-base font-bold text-white flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud text-blue-400"></i> 웹 클라우드 동기화
+                    <i class="fa-solid fa-cloud text-blue-400"></i> 웹 클라우드 동기화 & 백업
                 </h3>
                 <button onclick="closeCloudModal()" class="text-gray-400 hover:text-white text-lg">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs">
-                <p class="text-gray-300 leading-relaxed">
-                    본인만의 **고유 동기화 키(예: dongland)**를 입력하면 클라우드 서버에 안전하게 자동 저장/연동되어 새로고침하거나 기기가 바뀌어도 복구됩니다.
-                </p>
-
-                <div>
-                    <label class="block text-gray-400 font-semibold mb-1">내 클라우드 동기화 키 (Sync Key)</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="inputSyncKey" placeholder="예: dongland 또는 my_portfolio" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono text-xs">
-                        <button type="button" onclick="generateRandomSyncKey()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-lg font-semibold whitespace-nowrap active:scale-95 transition">
-                            랜덤 키 생성
+            <div class="space-y-4 text-xs">
+                <!-- 1. 클라우드 고유 ID 연동 섹션 -->
+                <div class="bg-gray-900/70 p-3.5 rounded-xl border border-gray-700 space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-gray-200 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-server text-indigo-400"></i> 클라우드 동기화 ID
+                        </label>
+                        <span id="cloudIdBadge" class="text-[10px] text-gray-400">미연결</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        [새 클라우드 공간 생성]을 누르면 전용 동기화 ID가 발급되어 서버에 안전하게 영구 보관됩니다.
+                    </p>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="inputSyncKey" placeholder="발급된 클라우드 ID 입력" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-blue-500 font-mono text-xs">
+                        <button type="button" id="btnCreateCloud" onclick="createNewCloudStorage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-bold whitespace-nowrap active:scale-95 transition">
+                            새 공간 생성
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-400 mt-1">💡 영문, 숫자, 밑줄(_) 조합의 고유한 단어를 사용하세요.</p>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button type="button" id="btnUploadCloud" onclick="uploadToCloudStorage()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow-md shadow-blue-600/30 active:scale-95 transition">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 서버에 업로드
+                        </button>
+                        <button type="button" id="btnDownloadCloud" onclick="downloadFromCloudStorage()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> 서버에서 복원
+                        </button>
+                    </div>
                 </div>
 
-                <div class="pt-2 flex flex-col gap-2">
-                    <button type="button" id="btnUploadCloud" onclick="saveCloudSyncKey()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold shadow-lg shadow-blue-600/30 flex items-center justify-center gap-1.5 active:scale-95 transition">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> 현재 데이터를 이 키로 클라우드에 업로드
-                    </button>
-                    <button type="button" id="btnDownloadCloud" onclick="forceFetchFromCloud()" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> 입력된 키로 클라우드 데이터 불러오기
-                    </button>
+                <!-- 2. 클립보드 간편 텍스트 동기화 섹션 (카카오톡/메모장 전송용) -->
+                <div class="bg-gray-900/70 p-3.5 rounded-xl border border-gray-700 space-y-2.5">
+                    <label class="text-gray-200 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-paste text-emerald-400"></i> 클립보드 즉시 백업/복원
+                    </label>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        네트워크 연결 없이 현재 자산 데이터를 텍스트로 즉시 복사하여 카카오톡이나 메모장에 붙여넣고 복원할 수 있습니다.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="copyPortfolioToClipboard()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                            <i class="fa-solid fa-copy"></i> 데이터 복사하기
+                        </button>
+                        <button type="button" onclick="pastePortfolioFromClipboard()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                            <i class="fa-solid fa-clipboard-check"></i> 붙여넣고 복원
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -338,9 +359,9 @@
 
     <!-- 핵심 비즈니스 로직 스크립트 -->
     <script>
-        // 한국 및 미국 대표 종목 실제 시세 데이터베이스 (액면분할 완벽 반영)
+        // 한국 및 미국 대표 종목 시세 내장 DB
         const BUILTIN_STOCKS = {
-            // [미국 대표 주식/ETF]
+            // 미국 대표 주식/ETF
             "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
             "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
             "리얼티인컴": { ticker: "O", name: "Realty Income Corp", market: "US", price: 54.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
@@ -362,7 +383,7 @@
             "VOO": { ticker: "VOO", name: "Vanguard S&P 500 ETF", market: "US", price: 510.00, dps: 6.70, cycle: "quarterly", months: [3, 6, 9, 12] },
             "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", price: 480.00, dps: 2.70, cycle: "quarterly", months: [4, 7, 10, 12] },
 
-            // [한국 대표 주식]
+            // 한국 대표 주식
             "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "삼전": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "005930": { ticker: "005930", name: "삼성전자", market: "KR", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
@@ -391,10 +412,7 @@
         let activeChartTab = 'monthly';
         let cloudSyncKey = '';
 
-        // 클라우드 베이스 API (CORS 프리 Key-Value 스토리지)
-        const CLOUD_API_BASE = 'https://portfolio-sync-v1-default-rtdb.firebaseio.com/sync_data';
-
-        // 앱 초기화 구동
+        // 애플리케이션 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             initCloudSyncStatus();
             await loadPortfolioData();
@@ -402,19 +420,20 @@
             renderAll();
         });
 
-        // 1. 웹 클라우드 동기화 엔진
-        function sanitizeKey(key) {
-            return encodeURIComponent(key.trim().replace(/[\.\$#\[\]\/]/g, '_'));
-        }
-
+        // 1. 공용 고속 REST API 클라우드 동기화 엔진
         function initCloudSyncStatus() {
             cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
             const statusText = document.getElementById('cloudStatusText');
+            const badge = document.getElementById('cloudIdBadge');
             if (cloudSyncKey) {
-                statusText.innerText = `클라우드 ON (${cloudSyncKey})`;
+                statusText.innerText = '클라우드 연동됨';
+                badge.innerText = `ID: ${cloudSyncKey.substring(0, 8)}...`;
+                badge.className = 'text-[10px] text-emerald-400 font-bold';
                 document.getElementById('inputSyncKey').value = cloudSyncKey;
             } else {
                 statusText.innerText = '로컬 전용';
+                badge.innerText = '미연결';
+                badge.className = 'text-[10px] text-gray-400';
             }
         }
 
@@ -427,16 +446,55 @@
             document.getElementById('cloudModal').classList.add('hidden');
         }
 
-        function generateRandomSyncKey() {
-            const randomStr = Math.random().toString(36).substring(2, 8);
-            document.getElementById('inputSyncKey').value = `asset_${randomStr}`;
+        // 새 클라우드 저장소 생성 (POST)
+        async function createNewCloudStorage() {
+            const btn = document.getElementById('btnCreateCloud');
+            const originText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성중';
+            btn.disabled = true;
+
+            try {
+                const payload = {
+                    name: "dividend_portfolio_data",
+                    data: {
+                        updatedAt: new Date().toISOString(),
+                        portfolio: portfolio
+                    }
+                };
+
+                const res = await fetch('https://api.restful-api.dev/objects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error('서버 응답 오류');
+                const result = await res.json();
+
+                if (result && result.id) {
+                    cloudSyncKey = result.id;
+                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                    document.getElementById('inputSyncKey').value = cloudSyncKey;
+                    initCloudSyncStatus();
+
+                    alert(`새 클라우드 공간이 성공적으로 생성되었습니다!\n\n발급된 클라우드 ID:\n${cloudSyncKey}\n\n다른 기기나 브라우저에서 이 ID를 입력하고 [서버에서 복원]을 누르면 언제든 자산 내역을 불러올 수 있습니다.`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('클라우드 공간 생성 중 오류가 발생했습니다. 네트워크 상태를 확인해주세요.');
+            } finally {
+                btn.innerHTML = originText;
+                btn.disabled = false;
+            }
         }
 
-        // 클라우드 키 연결 및 즉시 업로드
-        async function saveCloudSyncKey() {
-            const key = document.getElementById('inputSyncKey').value.trim();
+        // 현재 데이터를 클라우드 서버에 업로드 (PUT 또는 신규 POST)
+        async function uploadToCloudStorage() {
+            let key = document.getElementById('inputSyncKey').value.trim();
             if (!key) {
-                alert('동기화 키를 입력해주세요. (예: dongland)');
+                if (confirm('등록된 클라우드 ID가 없습니다. 새로 발급받아 업로드하시겠습니까?')) {
+                    await createNewCloudStorage();
+                }
                 return;
             }
 
@@ -446,135 +504,187 @@
             btn.disabled = true;
 
             try {
-                cloudSyncKey = key;
-                const success = await pushToCloud();
-                if (success) {
+                const payload = {
+                    name: "dividend_portfolio_data",
+                    data: {
+                        updatedAt: new Date().toISOString(),
+                        portfolio: portfolio
+                    }
+                };
+
+                const res = await fetch(`https://api.restful-api.dev/objects/${encodeURIComponent(key)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    cloudSyncKey = key;
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     initCloudSyncStatus();
-                    alert(`'${cloudSyncKey}' 키로 클라우드에 성공적으로 업로드되었습니다!\n이제 어떤 기기에서든 이 키를 입력하면 포트폴리오가 복구됩니다.`);
+                    alert('현재 포트폴리오가 클라우드 서버에 안전하게 업로드되었습니다!');
                     closeCloudModal();
                 } else {
-                    alert('클라우드 업로드에 실패했습니다. 네트워크 상태를 확인해주세요.');
+                    // ID가 유효하지 않을 경우 재발급 제안
+                    alert('입력된 클라우드 ID를 찾을 수 없습니다. [새 공간 생성]을 눌러 새로 발급받아주세요.');
                 }
             } catch (err) {
                 console.error(err);
-                alert('업로드 통신 중 오류가 발생했습니다.');
+                alert('서버 업로드 중 오류가 발생했습니다.');
             } finally {
                 btn.innerHTML = originText;
                 btn.disabled = false;
             }
         }
 
-        // 웹 클라우드 서버에 데이터 저장 (PUT)
-        async function pushToCloud() {
-            if (!cloudSyncKey) return false;
-            try {
-                const sKey = sanitizeKey(cloudSyncKey);
-                const endpoint = `${CLOUD_API_BASE}/${sKey}.json`;
-                const res = await fetch(endpoint, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(portfolio)
-                });
-                return res.ok;
-            } catch (err) {
-                console.warn('클라우드 업로드 지연:', err);
-                return false;
-            }
-        }
-
-        // 웹 클라우드 서버에서 데이터 불러오기 (GET)
-        async function fetchFromCloud() {
-            if (!cloudSyncKey) return null;
-            try {
-                const sKey = sanitizeKey(cloudSyncKey);
-                const endpoint = `${CLOUD_API_BASE}/${sKey}.json`;
-                const res = await fetch(endpoint);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data)) {
-                        return data;
-                    }
-                }
-            } catch (err) {
-                console.warn('클라우드 데이터 조회 실패:', err);
-            }
-            return null;
-        }
-
-        // 강제 클라우드 다운로드
-        async function forceFetchFromCloud() {
-            const inputKey = document.getElementById('inputSyncKey').value.trim();
-            if (!inputKey) {
-                alert('불러올 동기화 키를 입력해주세요.');
+        // 클라우드 서버에서 데이터 다운로드 복원 (GET)
+        async function downloadFromCloudStorage() {
+            const key = document.getElementById('inputSyncKey').value.trim();
+            if (!key) {
+                alert('복원할 클라우드 ID를 입력해주세요.');
                 return;
             }
 
             const btn = document.getElementById('btnDownloadCloud');
             const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 복원 중...';
             btn.disabled = true;
 
             try {
-                cloudSyncKey = inputKey;
-                const cloudData = await fetchFromCloud();
-                if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-                    portfolio = cloudData;
-                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                    initCloudSyncStatus();
-                    renderAll();
-                    alert(`'${cloudSyncKey}' 키에서 총 ${cloudData.length}개 종목 데이터를 성공적으로 복원했습니다!`);
-                    closeCloudModal();
+                const res = await fetch(`https://api.restful-api.dev/objects/${encodeURIComponent(key)}`);
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result && result.data && Array.isArray(result.data.portfolio)) {
+                        portfolio = result.data.portfolio;
+                        cloudSyncKey = key;
+                        localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                        localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+                        initCloudSyncStatus();
+                        renderAll();
+                        alert(`클라우드에서 총 ${portfolio.length}개의 종목 데이터를 완벽하게 복원했습니다!`);
+                        closeCloudModal();
+                    } else {
+                        alert('저장된 포트폴리오 형식이 올바르지 않습니다.');
+                    }
                 } else {
-                    alert(`'${cloudSyncKey}' 키로 저장된 클라우드 데이터가 없습니다.\n키를 다시 확인하거나 현재 기기의 데이터를 먼저 업로드해주세요.`);
+                    alert('해당 ID의 클라우드 데이터를 찾을 수 없습니다. ID를 다시 확인해주세요.');
                 }
             } catch (err) {
                 console.error(err);
-                alert('클라우드 데이터를 불러오지 못했습니다.');
+                alert('클라우드 데이터를 불러오는 중 통신 오류가 발생했습니다.');
             } finally {
                 btn.innerHTML = originText;
                 btn.disabled = false;
             }
         }
 
-        // 2. 통합 데이터 로드 (클라우드 우선, 로컬 폴백)
-        async function loadPortfolioData() {
-            // 1순위: 클라우드 연동 키가 있을 경우 클라우드 데이터 확인
-            if (cloudSyncKey) {
-                const cloudData = await fetchFromCloud();
-                if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-                    portfolio = cloudData;
-                    localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                    return;
-                }
+        // 백그라운드 자동 동기화 (PUT)
+        async function pushToCloudQuietly() {
+            if (!cloudSyncKey) return;
+            try {
+                const payload = {
+                    name: "dividend_portfolio_data",
+                    data: {
+                        updatedAt: new Date().toISOString(),
+                        portfolio: portfolio
+                    }
+                };
+                await fetch(`https://api.restful-api.dev/objects/${encodeURIComponent(cloudSyncKey)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.warn('자동 백업 지연:', e);
             }
+        }
 
-            // 2순위: 로컬 스토리지 확인
+        // 2. 클립보드 원클릭 텍스트 백업/복원 엔진
+        function copyPortfolioToClipboard() {
+            if (portfolio.length === 0) {
+                alert('복사할 종목 데이터가 없습니다.');
+                return;
+            }
+            const exportText = JSON.stringify(portfolio);
+            navigator.clipboard.writeText(exportText).then(() => {
+                alert('현재 포트폴리오 데이터가 클립보드에 복사되었습니다!\n카카오톡 나에게 보내기나 메모장에 그대로 붙여넣어 보관하세요.');
+            }).catch(() => {
+                prompt('아래 텍스트를 전체 복사하세요:', exportText);
+            });
+        }
+
+        function pastePortfolioFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                if (!text) {
+                    text = prompt('백업했던 데이터 텍스트를 붙여넣으세요:');
+                }
+                processPastedData(text);
+            }).catch(() => {
+                const text = prompt('백업했던 데이터 텍스트를 붙여넣으세요:');
+                processPastedData(text);
+            });
+        }
+
+        function processPastedData(text) {
+            if (!text) return;
+            try {
+                const parsed = JSON.parse(text.trim());
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    portfolio = parsed;
+                    saveToStorage();
+                    renderAll();
+                    alert(`총 ${portfolio.length}개의 종목 데이터를 성공적으로 복원했습니다!`);
+                    closeCloudModal();
+                } else {
+                    alert('올바른 데이터 형식이 아닙니다.');
+                }
+            } catch (e) {
+                alert('데이터 해석에 실패했습니다. 올바른 텍스트인지 확인해주세요.');
+            }
+        }
+
+        // 3. 통합 데이터 로드 (로컬 스토리지 우선, 클라우드 폴백)
+        async function loadPortfolioData() {
             const saved = localStorage.getItem('my_dividend_portfolio_v9');
             if (saved) {
                 try {
                     portfolio = JSON.parse(saved);
+                    return;
                 } catch (e) {
                     portfolio = [];
                 }
-            } else {
-                // 초기 기본 샘플 포트폴리오
-                portfolio = [
-                    { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                    { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
-                ];
-                saveToStorage();
             }
+
+            // 로컬에 없을 때 클라우드 키가 등록되어 있다면 클라우드에서 조회 시도
+            if (cloudSyncKey) {
+                try {
+                    const res = await fetch(`https://api.restful-api.dev/objects/${encodeURIComponent(cloudSyncKey)}`);
+                    if (res.ok) {
+                        const result = await res.json();
+                        if (result && result.data && Array.isArray(result.data.portfolio)) {
+                            portfolio = result.data.portfolio;
+                            localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+                            return;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 기본 샘플 포트폴리오
+            portfolio = [
+                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
+                { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
+            ];
+            saveToStorage();
         }
 
-        // 데이터 저장 (로컬 및 클라우드 실시간 반영)
+        // 데이터 저장 (로컬 저장 + 클라우드 자동 업로드)
         function saveToStorage() {
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-            pushToCloud();
+            pushToCloudQuietly();
         }
 
-        // 3. 실시간 달러-원 환율 조회
+        // 4. 실시간 달러-원 환율 조회
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -588,7 +698,7 @@
             }
         }
 
-        // 4. 온라인 실시간 시세 확인 (1.2초 타임아웃)
+        // 5. 온라인 실시간 시세 초고속 확인 (1.2초 타임아웃)
         async function tryFetchLiveOnline(symbol) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 1200);
@@ -607,7 +717,7 @@
             return null;
         }
 
-        // 5. 지능형 종목 검색 및 자동 완성 엔진
+        // 6. 지능형 종목 검색 및 자동 완성 엔진
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -624,7 +734,7 @@
                 let resolved = null;
                 const upperRaw = inputRaw.toUpperCase();
 
-                // [1단계] 내장 데이터베이스 확인
+                // 1단계: 내장 DB 확인
                 for (const key in BUILTIN_STOCKS) {
                     if (key.toUpperCase() === upperRaw || BUILTIN_STOCKS[key].ticker.toUpperCase() === upperRaw) {
                         resolved = { ...BUILTIN_STOCKS[key] };
@@ -632,7 +742,7 @@
                     }
                 }
 
-                // [2단계] 온라인 실시간 시세 시도
+                // 2단계: 온라인 실시간 시세 조회 시도
                 let querySymbol = upperRaw;
                 if (/^[0-9]{6}$/.test(inputRaw)) {
                     querySymbol = `${inputRaw}.KS`;
@@ -660,7 +770,7 @@
                     }
                 }
 
-                // [3단계] 신규 종목 기본값 구성
+                // 3단계: 기본값 세팅
                 if (!resolved) {
                     const isKR = /^[0-9]{6}$/.test(inputRaw) || document.querySelector('input[name="marketType"]:checked').value === 'KR';
                     resolved = {
@@ -674,7 +784,7 @@
                     };
                 }
 
-                // [4단계] 폼에 결과 자동 바인딩
+                // 4단계: 모달 폼에 바인딩
                 document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
                 handleMarketChange();
 
@@ -707,7 +817,7 @@
             }
         }
 
-        // 6. 전체 종목 일괄 갱신
+        // 7. 전체 종목 일괄 갱신
         async function refreshAllStockData() {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
@@ -730,7 +840,7 @@
             alert(`${updatedCount}개 종목의 시세가 최신 기준으로 갱신되었습니다.`);
         }
 
-        // 7. 화면 렌더링 총괄
+        // 8. 화면 렌더링 총괄
         function renderAll() {
             renderSummaryAndList();
             if (activeChartTab === 'monthly') {
@@ -855,7 +965,7 @@
                 container.appendChild(card);
             });
 
-            // 상단 대시보드 통계 반영
+            // 요약 대시보드 통계 반영
             const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = (totalAnnualDivKRW * (1 - 0.154)) / 12;
@@ -875,7 +985,7 @@
             document.getElementById('monthlyNetDividend').innerText = `${Math.round(monthlyNetKRW).toLocaleString()}원`;
         }
 
-        // 8. 월별 배당금 막대 차트
+        // 9. 월별 배당 막대 차트
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -931,7 +1041,7 @@
             });
         }
 
-        // 9. 종목별 자산 비중 도넛 차트
+        // 10. 종목별 자산 비중 도넛 차트
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
@@ -978,7 +1088,7 @@
             });
         }
 
-        // 10. DRIP(배당 재투자) 복리 시뮬레이터
+        // 11. DRIP(배당 재투자) 복리 시뮬레이터
         function openDripModal() {
             document.getElementById('dripModal').classList.remove('hidden');
             runDripSimulation();
@@ -1075,7 +1185,7 @@
             });
         }
 
-        // 11. 모달 팝업 및 입력 폼 제어
+        // 12. 모달 팝업 및 입력 폼 제어
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -1170,7 +1280,7 @@
             }
         }
 
-        // 12. 수동 JSON 파일 백업 및 복원
+        // 13. 수동 JSON 파일 백업 및 복원
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio, null, 2));
             const a = document.createElement('a');
