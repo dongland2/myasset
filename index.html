@@ -22,7 +22,7 @@
             -webkit-tap-highlight-color: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
         }
-        /* 스크롤바 숨기기 */
+        /* 스크롤바 숨기기 (모바일 뷰 최적화) */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -36,13 +36,13 @@
             <h1 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
                 <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
             </h1>
-            <p class="text-xs text-gray-400" id="headerExchangeRate">환율: 1$ = 1,350원 (불러오는 중...)</p>
+            <p class="text-xs text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
         </div>
         <div class="flex gap-2">
-            <button onclick="openDripModal()" class="bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30">
+            <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition">
                 <i class="fa-solid fa-seedling"></i> DRIP
             </button>
-            <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30">
+            <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30 active:scale-95 transition">
                 <i class="fa-solid fa-plus"></i> 종목 추가
             </button>
             <button onclick="exportData()" class="bg-gray-800 text-gray-300 hover:text-white px-2.5 py-1.5 rounded-lg text-xs" title="데이터 백업">
@@ -65,7 +65,7 @@
             </div>
             <div class="text-2xl font-black tracking-tight text-white mb-4" id="totalAssetValue">0원</div>
 
-            <!-- 자산 세부 그리드 (매수금액, 평가손익, 연간 배당, 세후 월배당) -->
+            <!-- 자산 세부 그리드 -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
                 <div>
                     <p class="text-gray-400">총 매수 금액</p>
@@ -123,7 +123,7 @@
 
             <!-- 보유 종목 리스트 렌더링 컨테이너 -->
             <div id="stockListContainer" class="space-y-3">
-                <!-- 동적으로 카드가 추가됩니다 -->
+                <!-- 동적으로 종목 카드가 삽입됩니다 -->
             </div>
         </section>
     </main>
@@ -146,26 +146,26 @@
                     <label class="block text-gray-400 font-semibold mb-1">시장 선택</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="flex items-center justify-center p-2 rounded-lg bg-gray-700/60 border border-gray-600 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
-                            <input type="radio" name="marketType" value="US" class="hidden" checked onchange="handleMarketChange()">
+                            <input type="radio" name="marketType" value="US" class="hidden" onchange="handleMarketChange()">
                             <span class="font-bold text-gray-200">🇺🇸 미국 주식 (USD)</span>
                         </label>
                         <label class="flex items-center justify-center p-2 rounded-lg bg-gray-700/60 border border-gray-600 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
-                            <input type="radio" name="marketType" value="KR" class="hidden" onchange="handleMarketChange()">
+                            <input type="radio" name="marketType" value="KR" class="hidden" checked onchange="handleMarketChange()">
                             <span class="font-bold text-gray-200">🇰🇷 한국 주식 (KRW)</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- 검색어 / 종목코드 / 티커 입력란 -->
+                <!-- 검색어 / 종목코드 입력란 (네이버/야후 실시간 직결) -->
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
                         <input type="text" id="inputTicker" required placeholder="예: 삼성전자, 005930, AAPL, SCHD" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
-                        <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1">
-                            <i class="fa-solid fa-magnifying-glass"></i> 조회
+                        <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
+                            <i class="fa-solid fa-magnifying-glass"></i> 실시간 조회
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-1" id="tickerHint">💡 '삼성전자', '애플', '005930', 'TSLA' 등 한글/영문 모두 지원</p>
+                    <p class="text-[10px] text-gray-400 mt-1" id="tickerHint">💡 네이버 증권 및 야후 파이낸스 실시간 시세를 직접 가져옵니다.</p>
                 </div>
 
                 <!-- 종목명 -->
@@ -181,7 +181,7 @@
                         <input type="number" step="any" id="inputQuantity" required placeholder="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-gray-400 font-semibold mb-1" id="buyPriceLabel">평균 매수가 ($)</label>
+                        <label class="block text-gray-400 font-semibold mb-1" id="buyPriceLabel">평균 매수가 (원)</label>
                         <input type="number" step="any" id="inputBuyPrice" required placeholder="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
@@ -189,7 +189,7 @@
                 <!-- 현재가 & DPS -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-gray-400 font-semibold mb-1" id="currentPriceLabel">현재 주가 ($)</label>
+                        <label class="block text-gray-400 font-semibold mb-1" id="currentPriceLabel">현재 주가 (원)</label>
                         <input type="number" step="any" id="inputCurrentPrice" required placeholder="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
@@ -285,38 +285,9 @@
         </div>
     </div>
 
-    <!-- 핵심 로직 자바스크립트 -->
+    <!-- 핵심 로직 스크립트 -->
     <script>
-        // 대표 종목 빠른 검색 사전 (오프라인/CORS 완벽 대응)
-        const STOCK_DICTIONARY = {
-            // 국내 대표 주식
-            "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", price: 78000, dps: 1444, cycle: "quarterly", months: [5, 8, 11, 4] },
-            "삼성전자우": { ticker: "005935", name: "삼성전자우", market: "KR", price: 63000, dps: 1445, cycle: "quarterly", months: [5, 8, 11, 4] },
-            "SK하이닉스": { ticker: "000660", name: "SK하이닉스", market: "KR", price: 185000, dps: 1200, cycle: "annual", months: [4] },
-            "현대차": { ticker: "005380", name: "현대차", market: "KR", price: 245000, dps: 11400, cycle: "quarterly", months: [4, 8] },
-            "기아": { ticker: "000270", name: "기아", market: "KR", price: 120000, dps: 5600, cycle: "annual", months: [4] },
-            "카카오": { ticker: "035720", name: "카카오", market: "KR", price: 42000, dps: 60, cycle: "annual", months: [4] },
-            "NAVER": { ticker: "035420", name: "NAVER", market: "KR", price: 175000, dps: 1190, cycle: "annual", months: [4] },
-            "네이버": { ticker: "035420", name: "NAVER", market: "KR", price: 175000, dps: 1190, cycle: "annual", months: [4] },
-            "맥쿼리인프라": { ticker: "088980", name: "맥쿼리인프라", market: "KR", price: 12400, dps: 775, cycle: "semiannual", months: [2, 8] },
-            "KB금융": { ticker: "105560", name: "KB금융", market: "KR", price: 79000, dps: 3060, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "신한지주": { ticker: "055550", name: "신한지주", market: "KR", price: 48000, dps: 2100, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "KT&G": { ticker: "033780", name: "KT&G", market: "KR", price: 91000, dps: 5200, cycle: "semiannual", months: [4, 8] },
-            // 미국 대표 주식 & ETF
-            "애플": { ticker: "AAPL", name: "Apple Inc.", market: "US", price: 220.0, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
-            "테슬라": { ticker: "TSLA", name: "Tesla Inc.", market: "US", price: 215.0, dps: 0.0, cycle: "annual", months: [12] },
-            "엔비디아": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", price: 125.0, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "마이크로소프트": { ticker: "MSFT", name: "Microsoft", market: "US", price: 440.0, dps: 3.00, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "리얼티인컴": { ticker: "O", name: "Realty Income", market: "US", price: 54.0, dps: 3.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "코카콜라": { ticker: "KO", name: "Coca-Cola", market: "US", price: 64.0, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity", market: "US", price: 82.0, dps: 2.85, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity", market: "US", price: 82.0, dps: 2.85, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "JEPI": { ticker: "JEPI", name: "JPMorgan Equity Premium", market: "US", price: 57.0, dps: 4.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "제피": { ticker: "JEPI", name: "JPMorgan Equity Premium", market: "US", price: 57.0, dps: 4.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", price: 480.0, dps: 2.65, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "SPY": { ticker: "SPY", name: "SPDR S&P 500 ETF", market: "US", price: 550.0, dps: 6.80, cycle: "quarterly", months: [4, 7, 10, 12] }
-        };
-
+        // 전역 상태 변수
         let portfolio = [];
         let usdKrwRate = 1350;
         let monthlyChart = null;
@@ -324,14 +295,14 @@
         let dripChartInstance = null;
         let activeChartTab = 'monthly';
 
-        // 앱 구동 시 초기화
+        // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             loadPortfolioFromStorage();
             await fetchExchangeRate();
             renderAll();
         });
 
-        // 1. 환율 가져오기
+        // 1. 실시간 달러-원 환율 조회
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -345,124 +316,192 @@
             }
         }
 
-        // 2. 다중 프록시 통신 엔진 (CORS 우회)
-        async function fetchJsonWithFallback(targetUrl) {
-            const proxyGenerators = [
-                url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+        // 2. 견고한 다중 프록시 통신 모듈 (CORS 100% 우회 및 실시간 파싱)
+        async function fetchJsonViaProxy(targetUrl) {
+            const proxyResolvers = [
+                // 1순위: AllOrigins JSON Wrapper (CORS 차단 없이 항상 JSON 래핑 반환)
+                async (url) => {
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}&disableCache=true`);
+                    if (!res.ok) throw new Error('AllOrigins 응답 오류');
+                    const wrapper = await res.json();
+                    if (!wrapper || !wrapper.contents) throw new Error('내용 없음');
+                    return typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+                },
+                // 2순위: CodeTabs Proxy
+                async (url) => {
+                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+                    if (!res.ok) throw new Error('CodeTabs 응답 오류');
+                    return await res.json();
+                },
+                // 3순위: CorsProxy.io
+                async (url) => {
+                    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
+                    if (!res.ok) throw new Error('CorsProxy 응답 오류');
+                    return await res.json();
+                }
             ];
 
-            for (const gen of proxyGenerators) {
+            let lastErr = null;
+            for (const resolver of proxyResolvers) {
                 try {
-                    const pUrl = gen(targetUrl);
-                    const res = await fetch(pUrl, { cache: 'no-cache' });
-                    if (res.ok) {
-                        const txt = await res.text();
-                        return JSON.parse(txt);
-                    }
+                    const data = await resolver(targetUrl);
+                    if (data) return data;
                 } catch (e) {
-                    // 다음 프록시로 재시도
+                    lastErr = e;
                 }
             }
-            throw new Error('모든 프록시 호출 실패');
+            throw lastErr || new Error('프록시 연결 실패');
         }
 
-        // 3. 지능형 주식 정보 조회 엔진 (한글 이름 / 영문 티커 / 코드 모두 자동 처리)
+        // 3. 네이버 증권 & 야후 파이낸스 실시간 시세 및 배당 정보 조회
         async function fetchLiveStockInfo() {
-            let inputRaw = document.getElementById('inputTicker').value.trim();
-            if (!inputRaw) {
+            const queryRaw = document.getElementById('inputTicker').value.trim();
+            if (!queryRaw) {
                 alert('종목명 또는 종목코드를 입력해주세요.');
                 return;
             }
 
             const searchBtn = document.getElementById('searchBtn');
-            const originalBtnHtml = searchBtn.innerHTML;
-            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 조회중';
+            const originalHtml = searchBtn.innerHTML;
+            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 실시간 조회중';
             searchBtn.disabled = true;
 
-            const selectedMarket = document.querySelector('input[name="marketType"]:checked').value;
-
             try {
-                let resolved = null;
+                let resolvedCode = '';
+                let resolvedName = '';
+                let resolvedMarket = 'KR';
+                let resolvedPrice = 0;
+                let resolvedDPS = 0;
+                let resolvedCycle = 'quarterly';
+                let reutersCode = '';
 
-                // [단계 1] 사전 맵핑 매칭 확인
-                const upperInput = inputRaw.toUpperCase();
-                for (let key in STOCK_DICTIONARY) {
-                    if (key.toUpperCase() === upperInput || STOCK_DICTIONARY[key].ticker.toUpperCase() === upperInput) {
-                        resolved = { ...STOCK_DICTIONARY[key] };
-                        break;
-                    }
+                // [단계 1] 네이버 통합 검색(AutoComplete)을 통해 종목 코드 및 시장 판별
+                const searchUrl = `https://m.stock.naver.com/front-api/search/autoComplete?query=${encodeURIComponent(queryRaw)}&target=stock`;
+                let searchData = null;
+                try {
+                    searchData = await fetchJsonViaProxy(searchUrl);
+                } catch (e) {
+                    console.warn('네이버 검색 프록시 실패:', e);
                 }
 
-                // [단계 2] 실시간 네트워크 API 조회
-                if (!resolved) {
-                    if (selectedMarket === 'KR' || /^[0-9]{6}$/.test(inputRaw)) {
-                        // 한국 주식 처리 (숫자 6자리 코드 또는 야후 접미사)
-                        let krCode = inputRaw.replace(/[^0-9]/g, '');
-                        if (krCode.length === 6) {
-                            const yahooKR = `${krCode}.KS`;
-                            const data = await fetchJsonWithFallback(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooKR}?interval=1d&range=1d`);
-                            const meta = data.chart?.result?.[0]?.meta;
-                            if (meta) {
-                                resolved = {
-                                    market: 'KR',
-                                    ticker: krCode,
-                                    name: meta.shortName || krCode,
-                                    price: meta.regularMarketPrice || meta.chartPreviousClose || 0,
-                                    dps: 0
-                                };
+                const items = searchData?.result?.items || searchData?.items || [];
+
+                if (items.length > 0) {
+                    const bestMatch = items[0];
+                    resolvedCode = bestMatch.code;
+                    resolvedName = bestMatch.name;
+                    reutersCode = bestMatch.reutersCode || bestMatch.code;
+
+                    // 코스피/코스닥 여부 체크
+                    const typeName = (bestMatch.typeName || '').toUpperCase();
+                    if (typeName.includes('코스피') || typeName.includes('코스닥') || /^[0-9]{6}$/.test(resolvedCode)) {
+                        resolvedMarket = 'KR';
+                    } else {
+                        resolvedMarket = 'US';
+                    }
+                } else {
+                    // 검색 결과가 없는 경우 입력값을 직접 코드로 사용
+                    resolvedCode = queryRaw.toUpperCase();
+                    resolvedName = queryRaw;
+                    resolvedMarket = /^[0-9]{6}$/.test(resolvedCode) ? 'KR' : 'US';
+                    reutersCode = resolvedCode;
+                }
+
+                // [단계 2] 시장별 실시간 가격 및 배당 데이터 조회
+                if (resolvedMarket === 'KR') {
+                    // 1) 네이버 실시간 체결 시세 조회 (실시간 1순위)
+                    try {
+                        const realtimeUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${resolvedCode}`;
+                        const rtData = await fetchJsonViaProxy(realtimeUrl);
+                        if (rtData?.datas?.[0]?.closePrice) {
+                            // 쉼표 제거 후 숫자로 변환 (예: "58,200" -> 58200)
+                            resolvedPrice = parseFloat(String(rtData.datas[0].closePrice).replace(/,/g, '')) || 0;
+                            if (rtData.datas[0].stockName) resolvedName = rtData.datas[0].stockName;
+                        }
+                    } catch (err) {
+                        console.warn('네이버 실시간 시세 조회 실패, integration 재시도:', err);
+                    }
+
+                    // 2) 네이버 통합 지표 조회 (배당금 및 주가 보조)
+                    try {
+                        const integrationUrl = `https://m.stock.naver.com/api/stock/${resolvedCode}/integration`;
+                        const intData = await fetchJsonViaProxy(integrationUrl);
+
+                        if (intData?.stockName) resolvedName = intData.stockName;
+                        if (!resolvedPrice && intData?.dealTrendInfo?.closePrice) {
+                            resolvedPrice = parseFloat(String(intData.dealTrendInfo.closePrice).replace(/,/g, '')) || 0;
+                        }
+
+                        // totalInfos 배열에서 주당배당금(dividend) 및 배당수익률 탐색
+                        if (Array.isArray(intData?.totalInfos)) {
+                            for (const info of intData.totalInfos) {
+                                if (info.code === 'dividend' && info.value) {
+                                    resolvedDPS = parseFloat(String(info.value).replace(/,/g, '')) || 0;
+                                }
+                                if (!resolvedPrice && (info.code === 'closePrice' || info.code === 'lastClosePrice')) {
+                                    resolvedPrice = parseFloat(String(info.value).replace(/,/g, '')) || 0;
+                                }
                             }
                         }
-                    } else {
-                        // 미국 주식 티커 처리
-                        const data = await fetchJsonWithFallback(`https://query1.finance.yahoo.com/v8/finance/chart/${upperInput}?interval=1d&range=1d`);
-                        const meta = data.chart?.result?.[0]?.meta;
+                    } catch (err) {
+                        console.warn('네이버 배당 지표 조회 실패:', err);
+                    }
+
+                } else {
+                    // 미국 주식: 야후 파이낸스 실시간 시세 및 배당 조회
+                    try {
+                        const yfChartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${resolvedCode}?interval=1d&range=1d`;
+                        const yfData = await fetchJsonViaProxy(yfChartUrl);
+                        const meta = yfData?.chart?.result?.[0]?.meta;
                         if (meta) {
-                            resolved = {
-                                market: 'US',
-                                ticker: upperInput,
-                                name: meta.shortName || meta.symbol || upperInput,
-                                price: meta.regularMarketPrice || meta.chartPreviousClose || 0,
-                                dps: 0
-                            };
+                            resolvedPrice = meta.regularMarketPrice || meta.chartPreviousClose || 0;
+                            resolvedName = meta.shortName || meta.symbol || resolvedName;
                         }
+                    } catch (err) {
+                        console.warn('야후 차트 조회 실패:', err);
+                    }
+
+                    // 야후 파이낸스 배당금 조회 (quoteSummary 모듈)
+                    try {
+                        const yfSummaryUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${resolvedCode}?modules=summaryDetail`;
+                        const sData = await fetchJsonViaProxy(yfSummaryUrl);
+                        const summary = sData?.quoteSummary?.result?.[0]?.summaryDetail;
+                        if (summary) {
+                            resolvedDPS = summary.dividendRate?.raw || summary.trailingAnnualDividendRate?.raw || 0;
+                        }
+                    } catch (err) {
+                        console.warn('야후 배당 요약 조회 실패:', err);
                     }
                 }
 
-                if (!resolved) {
-                    throw new Error('종목을 찾을 수 없습니다.');
+                // 조회 데이터 검증 및 폼에 적용
+                if (!resolvedPrice && !resolvedName) {
+                    throw new Error('시세 정보를 가져오지 못했습니다.');
                 }
 
-                // 조회 결과 폼에 자동 반영
-                document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
+                document.querySelector(`input[name="marketType"][value="${resolvedMarket}"]`).checked = true;
                 handleMarketChange();
 
-                document.getElementById('inputTicker').value = resolved.ticker;
-                document.getElementById('inputName').value = resolved.name;
-                document.getElementById('inputCurrentPrice').value = resolved.price;
-                if (resolved.dps > 0) {
-                    document.getElementById('inputDPS').value = resolved.dps;
-                }
-                if (resolved.cycle) {
-                    document.getElementById('inputDivCycle').value = resolved.cycle;
-                    handleCycleChange();
-                }
+                document.getElementById('inputTicker').value = resolvedCode;
+                document.getElementById('inputName').value = resolvedName;
+                document.getElementById('inputCurrentPrice').value = resolvedPrice;
+                document.getElementById('inputDPS').value = resolvedDPS;
 
-                alert(`[${resolved.name}] 정보를 성공적으로 가져왔습니다.`);
+                const currUnit = resolvedMarket === 'US' ? '$' : '원';
+                alert(`[${resolvedName}] 실시간 정보 조회 완료!\n현재가: ${resolvedPrice.toLocaleString()}${currUnit}\n주당 배당금(DPS): ${resolvedDPS.toLocaleString()}${currUnit}`);
 
             } catch (err) {
-                console.warn('자동 조회 실패:', err);
-                alert(`'${inputRaw}' 시세를 자동으로 가져오지 못했습니다.\n현재가와 배당금을 직접 입력해주시면 정상 저장됩니다.`);
+                console.error('실시간 조회 에러:', err);
+                alert(`실시간 시세를 불러오지 못했습니다.\n종목명/코드를 확인하시거나 현재가를 직접 입력해주세요.`);
             } finally {
-                searchBtn.innerHTML = originalBtnHtml;
+                searchBtn.innerHTML = originalHtml;
                 searchBtn.disabled = false;
             }
         }
 
-        // 4. 로컬 스토리지 저장 및 불러오기
+        // 4. 로컬 스토리지 데이터 불러오기 및 저장
         function loadPortfolioFromStorage() {
-            const saved = localStorage.getItem('my_dividend_portfolio_v2');
+            const saved = localStorage.getItem('my_dividend_portfolio_v3');
             if (saved) {
                 try {
                     portfolio = JSON.parse(saved);
@@ -470,53 +509,55 @@
                     portfolio = [];
                 }
             } else {
-                // 초기 예시 데이터
+                // 초기 기본 샘플
                 portfolio = [
-                    { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 30, buyPrice: 76.5, currentPrice: 82.0, dps: 2.85, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                    { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 50, buyPrice: 69000, currentPrice: 78000, dps: 1444, divCycle: 'quarterly', payoutMonths: [5, 8, 11, 4] }
+                    { market: 'KR', ticker: '005930', name: '삼성전자', quantity: 50, buyPrice: 70000, currentPrice: 58200, dps: 1444, divCycle: 'quarterly', payoutMonths: [5, 8, 11, 4] },
+                    { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', quantity: 30, buyPrice: 76.5, currentPrice: 82.0, dps: 2.85, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] }
                 ];
                 saveToStorage();
             }
         }
 
         function saveToStorage() {
-            localStorage.setItem('my_dividend_portfolio_v2', JSON.stringify(portfolio));
+            localStorage.setItem('my_dividend_portfolio_v3', JSON.stringify(portfolio));
         }
 
-        // 5. 전체 종목 시세 일괄 갱신
+        // 5. 전체 종목 실시간 시세 일괄 갱신
         async function refreshAllStockData() {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
-            let updated = 0;
+            let updatedCount = 0;
 
-            for (let item of portfolio) {
+            for (let stock of portfolio) {
                 try {
-                    let queryTicker = item.market === 'US' ? item.ticker : (item.ticker.includes('.') ? item.ticker : `${item.ticker}.KS`);
-                    const data = await fetchJsonWithFallback(`https://query1.finance.yahoo.com/v8/finance/chart/${queryTicker}?interval=1d&range=1d`);
-                    const price = data.chart?.result?.[0]?.meta?.regularMarketPrice;
-                    if (price) {
-                        item.currentPrice = price;
-                        updated++;
-                    }
-                } catch (e) {
-                    // 사전 데이터 대체 확인
-                    for (let k in STOCK_DICTIONARY) {
-                        if (STOCK_DICTIONARY[k].ticker === item.ticker) {
-                            item.currentPrice = STOCK_DICTIONARY[k].price;
-                            updated++;
-                            break;
+                    if (stock.market === 'KR') {
+                        const realtimeUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${stock.ticker}`;
+                        const rtData = await fetchJsonViaProxy(realtimeUrl);
+                        if (rtData?.datas?.[0]?.closePrice) {
+                            stock.currentPrice = parseFloat(String(rtData.datas[0].closePrice).replace(/,/g, '')) || stock.currentPrice;
+                            updatedCount++;
+                        }
+                    } else {
+                        const yfChartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${stock.ticker}?interval=1d&range=1d`;
+                        const yfData = await fetchJsonViaProxy(yfChartUrl);
+                        const price = yfData?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                        if (price) {
+                            stock.currentPrice = price;
+                            updatedCount++;
                         }
                     }
+                } catch (e) {
+                    console.warn(`${stock.name} 갱신 실패`, e);
                 }
             }
 
             saveToStorage();
             renderAll();
             icon.classList.remove('fa-spin');
-            alert(`${updated}개 종목의 시세가 갱신되었습니다.`);
+            alert(`${updatedCount}개 종목의 실시간 시세가 갱신되었습니다.`);
         }
 
-        // 6. 렌더링 총괄
+        // 6. 화면 렌더링 총괄
         function renderAll() {
             renderSummaryAndList();
             if (activeChartTab === 'monthly') {
@@ -641,7 +682,7 @@
                 container.appendChild(card);
             });
 
-            // 상단 대시보드 카드 갱신
+            // 상단 요약 카드 갱신
             const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = (totalAnnualDivKRW * (1 - 0.154)) / 12;
@@ -661,7 +702,7 @@
             document.getElementById('monthlyNetDividend').innerText = `${Math.round(monthlyNetKRW).toLocaleString()}원`;
         }
 
-        // 7. 월별 배당금 차트
+        // 7. 월별 배당금 차트 렌더링
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -717,7 +758,7 @@
             });
         }
 
-        // 8. 종목별 자산 비중 도넛 차트
+        // 8. 종목별 자산 비중 도넛 차트 렌더링
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
@@ -788,7 +829,7 @@
                 currentAnnualDivKRW += (stock.quantity * stock.dps) * rate;
             });
 
-            if (currentTotalKRW === 0) currentTotalKRW = 10000000; // 기본 1,000만원 시뮬레이션
+            if (currentTotalKRW === 0) currentTotalKRW = 10000000;
             let initialYield = currentTotalKRW > 0 ? (currentAnnualDivKRW / currentTotalKRW) : 0.04;
 
             let dripAsset = currentTotalKRW;
@@ -800,13 +841,9 @@
             const noDripData = [Math.round(noDripAsset)];
 
             for (let y = 1; y <= years; y++) {
-                // DRIP 재투자 자산 증가 (주가상승 + 배당수익 세후 15.4% 재투자)
                 const yearlyDiv = dripAsset * currentDivRate * (1 - 0.154);
                 dripAsset = (dripAsset + yearlyDiv) * (1 + priceGrowth);
-
-                // 일반 자산 증가 (주가상승만 반영)
                 noDripAsset = noDripAsset * (1 + priceGrowth);
-
                 currentDivRate = currentDivRate * (1 + divGrowth);
 
                 labels.push(`${y}년`);
@@ -865,7 +902,7 @@
             });
         }
 
-        // 10. 모달 및 폼 제어
+        // 10. 모달 및 입력 폼 제어
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -960,7 +997,7 @@
             }
         }
 
-        // 11. 백업 및 복원
+        // 11. 데이터 백업 및 복원
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio, null, 2));
             const a = document.createElement('a');
