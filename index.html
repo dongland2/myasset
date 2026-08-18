@@ -39,7 +39,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.2
+                    v1.5.3
                 </span>
             </div>
 
@@ -80,7 +80,7 @@
                     <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i>
                 </button>
                 <!-- DRIP 복리 시뮬레이터 -->
-                <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-indigo-600/30 active:scale-95 transition whitespace-nowrap" title="DRIP 복리 시뮬레이터">
+                <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition whitespace-nowrap">
                     <i class="fa-solid fa-seedling text-[10px]"></i> DRIP
                 </button>
             </div>
@@ -159,7 +159,7 @@
             </div>
         </section>
 
-        <!-- 대시보드 계좌 선택 콤보박스 (드롭다운) -->
+        <!-- 대시보드 계좌 선택 콤보박스 -->
         <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2">
             <label class="text-xs font-bold text-gray-300 flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-building-columns text-teal-400"></i> 조회 계좌 선택:
@@ -845,7 +845,6 @@
             "카카오": { ticker: "035720", name: "카카오", market: "KR", sector: "성장/기술주", account: "일반계좌", price: 40700, dps: 61, cycle: "annual", months: [4] }
         };
 
-        // 전역 상태 변수
         let portfolio = [];
         let cashBalances = {};
         let selectedDashboardAccount = 'ALL';
@@ -867,7 +866,6 @@
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
-        // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             initDisplayCurrency();
             initFireSettings();
@@ -999,7 +997,6 @@
             alert('계좌별 현금/예수금 잔액이 성공적으로 저장 및 총자산에 반영되었습니다!');
         }
 
-        // [개선: 대시보드 계좌 선택 콤보박스 옵션 갱신]
         function updateDashboardAccountDropdown() {
             const selectEl = document.getElementById('dashboardAccountSelect');
             if (!selectEl) return;
@@ -1034,7 +1031,6 @@
             renderAll();
         }
 
-        // 긴급 데이터 복구 루틴
         function checkAndPromptDataRecovery() {
             if (portfolio.length <= 2) {
                 const backupKeys = [
@@ -1209,13 +1205,16 @@
             }
         }
 
-        // [개선된 클라우드 업로드: ID 오류 시 자동 신규 생성 fallback]
         async function uploadToCloudStorage() {
             let key = document.getElementById('inputSyncKey').value.trim();
-            if (!key) {
-                await createNewCloudStorage();
-                return;
-            }
+            const payload = {
+                name: "dividend_portfolio_data",
+                data: {
+                    updatedAt: new Date().toISOString(),
+                    portfolio: portfolio,
+                    cashBalances: cashBalances
+                }
+            };
 
             const btn = document.getElementById('btnUploadCloud');
             const originText = btn.innerHTML;
@@ -1223,23 +1222,21 @@
             btn.disabled = true;
 
             try {
-                const payload = {
-                    name: "dividend_portfolio_data",
-                    data: {
-                        updatedAt: new Date().toISOString(),
-                        portfolio: portfolio,
-                        cashBalances: cashBalances
+                let success = false;
+                if (key) {
+                    // 기존 ID로 먼저 PUT 시도
+                    let res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        success = true;
                     }
-                };
+                }
 
-                let res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                // 키(ID)가 서버에 없어 404가 나는 경우 자동으로 새로 생성
-                if (!res.ok && res.status === 404) {
+                // 기존 ID가 없거나 서버에서 404로 만료된 경우 자동으로 신규 생성(POST)으로 전환
+                if (!success) {
                     const postRes = await fetch(CLOUD_API_BASE, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1250,19 +1247,19 @@
                         if (postJson && postJson.id) {
                             key = postJson.id;
                             document.getElementById('inputSyncKey').value = key;
-                            res = { ok: true };
+                            success = true;
                         }
                     }
                 }
 
-                if (res.ok) {
+                if (success) {
                     cloudSyncKey = key;
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     initCloudSyncStatus();
-                    alert('현재 포트폴리오 및 예수금이 클라우드 서버에 안전하게 업로드되었습니다!');
+                    alert(`클라우드 서버에 성공적으로 업로드되었습니다!\n클라우드 ID: ${cloudSyncKey}`);
                     closeCloudModal();
                 } else {
-                    alert('클라우드 업로드에 실패했습니다. [새 공간 생성]을 이용해 주세요.');
+                    alert('클라우드 업로드에 실패했습니다. 네트워크 상태를 확인해주세요.');
                 }
             } catch (err) {
                 console.error(err);
@@ -2888,7 +2885,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.5.1',
+                version: '1.5.2',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
