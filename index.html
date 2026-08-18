@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.10
+                    v1.9.11
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -525,7 +525,8 @@
                 <div id="payoutMonthsContainer">
                     <label class="block font-bold mb-1">배당 지급월</label>
                     <div class="grid grid-cols-6 gap-1 text-center">
-                        <script>for(let m=1; m<=12; m++) document.write('<label class="p-1 rounded bg-gray-200 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 cursor-pointer has-[:checked]:bg-emerald-600 has-[:checked]:text-white"><input type="checkbox" name="payoutMonth" value="'+m+'" class="hidden"><span class="text-[11px] font-bold">'+m+'월</span></label>');</script>
+                        <script>for(let m=1; m<=12; m++) document.write('<label class="p-1 rounded bg-gray-200 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 cursor-pointer has-[:checked]:bg-emerald-600 has-[:checked]:text-white" data-payout-month="'+m+'"><input type="checkbox" name="payoutMonth" value="'+m+'" class="hidden" onchange="updatePayoutMonthTooltipsFromForm()"><span class="text-[11px] font-bold">'+m+'월</span></label>');</script>
+                        <p id="payoutDateHelp" class="col-span-6 text-[10px] text-gray-500 dark:text-gray-400 text-left pt-1">💡 체크된 월에 마우스를 올리면 지급일 정보를 볼 수 있습니다.</p>
                     </div>
                 </div>
                 <div class="pt-3 flex gap-2">
@@ -601,6 +602,134 @@
             "코카콜라": { ticker: "KO", name: "Coca-Cola Co", market: "US", sector: "배당성장", price: 68.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] }
         };
 
+        // =========================================================================
+        // [1-1] 배당 지급일 일정
+        // 월 정보만으로 임의의 '몇 일'을 만들어내지 않는다. 확인된 일정만 정확한 날짜로 표시한다.
+        // SCHD 2026: Schwab 2026 분배 일정 기준 지급일.
+        // =========================================================================
+        var PAYOUT_DATE_SCHEDULES = {
+            "SCHD": {
+                year: 2026,
+                dates: ["2026-03-30", "2026-06-29", "2026-09-28", "2026-12-15"],
+                source: "Schwab 2026 distribution schedule"
+            }
+        };
+
+        function getKnownPayoutDateSchedule(ticker) {
+            var key = String(ticker || '').toUpperCase().trim();
+            var schedule = PAYOUT_DATE_SCHEDULES[key];
+            if (!schedule || !Array.isArray(schedule.dates)) return null;
+            return {
+                year: schedule.year,
+                dates: schedule.dates.slice(),
+                source: schedule.source || ''
+            };
+        }
+
+        function defaultMonthsForCycle(cycle, ticker) {
+            cycle = cycle || 'quarterly';
+            var key = String(ticker || '').toUpperCase().trim();
+            var master = MASTER_STOCKS[key];
+            if (master && master.cycle === cycle && Array.isArray(master.months) && master.months.length) {
+                return master.months.slice();
+            }
+            if (cycle === 'monthly') return [1,2,3,4,5,6,7,8,9,10,11,12];
+            if (cycle === 'quarterly') return [3,6,9,12];
+            if (cycle === 'semiannual') return [6,12];
+            if (cycle === 'annual') return [4];
+            return [];
+        }
+
+        function normalizePayoutMonths(cycle, months, ticker) {
+            var cleaned = Array.isArray(months) ? months.map(function(m){ return parseInt(m,10); }) : [];
+            cleaned = cleaned.filter(function(m, idx, arr){ return m >= 1 && m <= 12 && arr.indexOf(m) === idx; }).sort(function(a,b){ return a-b; });
+
+            var master = MASTER_STOCKS[String(ticker || '').toUpperCase().trim()];
+            if (master && master.cycle === cycle && Array.isArray(master.months) && master.months.length) {
+                // 내장 종목은 알려진 실제 지급월을 우선한다. (예: SCHD 3/6/9/12)
+                if (cycle === 'monthly' || cleaned.length === 0 || cleaned.length === 12 || cleaned.length !== master.months.length) {
+                    return master.months.slice();
+                }
+            }
+
+            if (cycle === 'monthly') return [1,2,3,4,5,6,7,8,9,10,11,12];
+            if (cycle === 'quarterly') return cleaned.length === 4 ? cleaned : defaultMonthsForCycle(cycle, ticker);
+            if (cycle === 'semiannual') return cleaned.length === 2 ? cleaned : defaultMonthsForCycle(cycle, ticker);
+            if (cycle === 'annual') return cleaned.length === 1 ? cleaned : defaultMonthsForCycle(cycle, ticker);
+            return cleaned;
+        }
+
+        function normalizeStockPayoutSchedule(stock) {
+            if (!stock) return false;
+            var cycle = stock.divCycle || stock.cycle || 'quarterly';
+            var ticker = stock.ticker || '';
+            var before = JSON.stringify(stock.payoutMonths || stock.months || []);
+            var normalized = normalizePayoutMonths(cycle, stock.payoutMonths || stock.months || [], ticker);
+            if (stock.divCycle !== undefined || stock.payoutMonths !== undefined) stock.payoutMonths = normalized;
+            else stock.months = normalized;
+
+            var known = getKnownPayoutDateSchedule(ticker);
+            if (known) {
+                stock.payoutDates = known.dates.slice();
+                stock.payoutDateSource = known.source;
+            }
+            return before !== JSON.stringify(normalized);
+        }
+
+        function formatPayoutDateKo(iso) {
+            var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+            if (!m) return String(iso || '');
+            return parseInt(m[1],10) + '년 ' + parseInt(m[2],10) + '월 ' + parseInt(m[3],10) + '일';
+        }
+
+        function getPayoutDateForMonth(stock, month) {
+            var dates = [];
+            if (stock && Array.isArray(stock.payoutDates)) dates = stock.payoutDates.slice();
+            if (!dates.length && stock) {
+                var known = getKnownPayoutDateSchedule(stock.ticker);
+                if (known) dates = known.dates;
+            }
+            for (var i=0; i<dates.length; i++) {
+                var mm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dates[i] || ''));
+                if (mm && parseInt(mm[2],10) === parseInt(month,10)) return dates[i];
+            }
+            return '';
+        }
+
+        function updatePayoutMonthTooltips(stock) {
+            var boxes = document.querySelectorAll('input[name="payoutMonth"]');
+            boxes.forEach(function(cb) {
+                var month = parseInt(cb.value, 10);
+                var label = cb.closest('label');
+                if (!label) return;
+                var exact = cb.checked ? getPayoutDateForMonth(stock, month) : '';
+                if (!cb.checked) label.title = month + '월: 배당 지급월 아님';
+                else if (exact) label.title = formatPayoutDateKo(exact) + ' 지급 예정 · 일정은 변경될 수 있음';
+                else label.title = month + '월 배당 지급 · 정확한 지급일 정보 없음';
+            });
+
+            var help = document.getElementById('payoutDateHelp');
+            if (help) {
+                var nextExact = '';
+                var today = new Date();
+                var dates = stock && Array.isArray(stock.payoutDates) ? stock.payoutDates.slice() : [];
+                if (!dates.length && stock) { var known = getKnownPayoutDateSchedule(stock.ticker); if (known) dates = known.dates; }
+                dates.sort();
+                for (var i=0; i<dates.length; i++) {
+                    var d = new Date(dates[i] + 'T23:59:59');
+                    if (!isNaN(d.getTime()) && d >= today) { nextExact = dates[i]; break; }
+                }
+                if (nextExact) help.innerText = '💡 다음 지급 예정일: ' + formatPayoutDateKo(nextExact) + ' · 월 버튼에 마우스를 올리면 날짜가 표시됩니다.';
+                else help.innerText = '💡 체크된 월에 마우스를 올리면 지급일 정보를 볼 수 있습니다. 정확한 날짜가 없는 종목은 “정보 없음”으로 표시합니다.';
+            }
+        }
+
+        function updatePayoutMonthTooltipsFromForm() {
+            var ticker = document.getElementById('inputTicker') ? document.getElementById('inputTicker').value.trim() : '';
+            var known = getKnownPayoutDateSchedule(ticker);
+            updatePayoutMonthTooltips({ ticker: ticker, payoutDates: known ? known.dates : [] });
+        }
+
         // 전역 상태 변수        // =========================================================================
         // [ETF] 최근 12개월 주당 분배금 폴백
         // 일반주식의 DPS와 ETF 분배금은 데이터 소스가 다르다.
@@ -665,7 +794,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.9.10';
+        var CLOUD_SYNC_VERSION = '1.9.11';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -851,7 +980,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.10: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.9.11: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1160,6 +1289,12 @@
                     document.getElementById('inputDPS').value = resolved.dps || '';
 
                     if (resolved.cycle) document.getElementById('inputDivCycle').value = resolved.cycle;
+                    resolved.months = normalizePayoutMonths(resolved.cycle || 'quarterly', resolved.months || [], resolved.ticker);
+                    var knownPayout = getKnownPayoutDateSchedule(resolved.ticker);
+                    if (knownPayout) {
+                        resolved.payoutDates = knownPayout.dates.slice();
+                        resolved.payoutDateSource = knownPayout.source;
+                    }
 
                     var checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
                     checkboxes.forEach(function(cb) {
@@ -1168,6 +1303,7 @@
                         for(var i=0; i<(resolved.months || []).length; i++) { if(resolved.months[i] === val) includes = true; }
                         cb.checked = includes;
                     });
+                    updatePayoutMonthTooltips(resolved);
 
                     var unit = resolved.market === 'US' ? '$' : '원';
                     if (resolved.price > 0) {
@@ -1427,14 +1563,14 @@
                             if (s.buyPrice === 0 && s.currentPrice > 0) s.buyPrice = s.currentPrice;
 
                             s.dps = parseFloat(s.dps) || 0;
+                            normalizeStockPayoutSchedule(s);
                             mapped.push(s); 
                         }
                         portfolio = deduplicatePortfolioByStockAccount(mapped);
                         // 이전 버전의 연속 저장 버그로 생긴 중복 카드도 새로고침 시 자동 정리한다.
-                        if (portfolio.length !== mapped.length) {
-                            localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                            console.info('중복 종목 정리:', (mapped.length - portfolio.length) + '개 제거');
-                        }
+                        // v1.9.11: 배당주기와 지급월 불일치(예: 분기배당인데 1~12월)를 로드 시 자동 교정해 저장한다.
+                        localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+                        if (portfolio.length !== mapped.length) console.info('중복 종목 정리:', (mapped.length - portfolio.length) + '개 제거');
                         return;
                     }
                 } catch (e) {}
@@ -1527,7 +1663,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.9.10: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.9.11: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -1553,20 +1689,32 @@
             return errors;
         }
 
-        // 지급월 정보만 가지고 정확한 배당락일을 계산할 수는 없으므로,
-        // 존재하지 않는 calculateNextExDividendDate()를 호출하지 않고 "다음 배당 지급월"만 표시한다.
+        // 지급월 + 확인된 지급일 일정으로 다음 배당을 표시한다.
+        // 정확한 날짜가 없는 종목은 월까지만 표시하고 날짜를 추측하지 않는다.
         function getNextPayoutMonth(stock) {
+            normalizeStockPayoutSchedule(stock);
             var months = Array.isArray(stock && stock.payoutMonths) ? stock.payoutMonths.slice() : [];
             months = months.map(function(m) { return parseInt(m, 10); })
                            .filter(function(m) { return m >= 1 && m <= 12; })
                            .sort(function(a, b) { return a - b; });
             if (months.length === 0) return null;
 
-            var currentMonth = new Date().getMonth() + 1;
-            for (var i = 0; i < months.length; i++) {
-                if (months[i] >= currentMonth) return { payoutMonth: months[i] };
+            var known = stock && Array.isArray(stock.payoutDates) ? stock.payoutDates.slice() : [];
+            if (!known.length && stock) { var schedule = getKnownPayoutDateSchedule(stock.ticker); if (schedule) known = schedule.dates; }
+            known.sort();
+            var now = new Date();
+            for (var k=0; k<known.length; k++) {
+                var dt = new Date(known[k] + 'T23:59:59');
+                if (!isNaN(dt.getTime()) && dt >= now) {
+                    return { payoutMonth: dt.getMonth()+1, payoutDay: dt.getDate(), payoutDate: known[k], exact: true };
+                }
             }
-            return { payoutMonth: months[0] };
+
+            var currentMonth = now.getMonth() + 1;
+            for (var i = 0; i < months.length; i++) {
+                if (months[i] >= currentMonth) return { payoutMonth: months[i], exact: false };
+            }
+            return { payoutMonth: months[0], exact: false };
         }
 
         function renderSummaryAndList() {
@@ -1791,7 +1939,11 @@
                 var exInfo = getNextPayoutMonth(stock);
                 var dDayBadge = '';
                 if (exInfo) {
-                    dDayBadge = '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 다음 배당 ' + exInfo.payoutMonth + '월</span>';
+                    if (exInfo.exact && exInfo.payoutDate) {
+                        dDayBadge = '<span title="지급 예정일: ' + formatPayoutDateKo(exInfo.payoutDate) + ' · 일정은 변경될 수 있음" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 cursor-help">📅 다음 배당 ' + exInfo.payoutMonth + '/' + exInfo.payoutDay + '</span>';
+                    } else {
+                        dDayBadge = '<span title="' + exInfo.payoutMonth + '월 지급 예정 · 정확한 지급일 정보 없음" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 cursor-help">📅 다음 배당 ' + exInfo.payoutMonth + '월</span>';
+                    }
                 }
 
                 var memoHtml = stock.memo ? '<div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200 font-medium"><i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i><span class="truncate">' + stock.memo + '</span></div>' : '';
@@ -2362,6 +2514,7 @@
             if (editIdx >= 0) {
                 document.getElementById('modalTitle').innerText = '종목 수정';
                 var item = portfolio[editIdx];
+                normalizeStockPayoutSchedule(item);
                 var radio = document.querySelector('input[name="marketType"][value="' + item.market + '"]');
                 if(radio) radio.checked = true;
                 document.getElementById('inputTicker').value = item.ticker;
@@ -2381,6 +2534,7 @@
                     for(var i=0; i<(item.payoutMonths || []).length; i++) { if(item.payoutMonths[i] === parseInt(cb.value)) includes = true; }
                     cb.checked = includes; 
                 });
+                updatePayoutMonthTooltips(item);
             } else {
                 document.getElementById('modalTitle').innerText = '종목 추가';
                 document.getElementById('inputAccount').value = (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌';
@@ -2402,13 +2556,12 @@
 
         function handleCycleChange() {
             var cycle = document.getElementById('inputDivCycle').value;
+            var ticker = document.getElementById('inputTicker') ? document.getElementById('inputTicker').value.trim() : '';
+            var months = defaultMonthsForCycle(cycle, ticker);
             var checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
-            checkboxes.forEach(function(cb) { cb.checked = false; });
-
-            if (cycle === 'monthly') checkboxes.forEach(function(cb) { cb.checked = true; });
-            else if (cycle === 'quarterly') [3, 6, 9, 12].forEach(function(m) { var q = document.querySelector('input[name="payoutMonth"][value="' + m + '"]'); if(q) q.checked = true; });
-            else if (cycle === 'semiannual') [6, 12].forEach(function(m) { var q = document.querySelector('input[name="payoutMonth"][value="' + m + '"]'); if(q) q.checked = true; });
-            else if (cycle === 'annual') [4].forEach(function(m) { var q = document.querySelector('input[name="payoutMonth"][value="' + m + '"]'); if(q) q.checked = true; });
+            checkboxes.forEach(function(cb) { cb.checked = months.indexOf(parseInt(cb.value,10)) >= 0; });
+            var known = getKnownPayoutDateSchedule(ticker);
+            updatePayoutMonthTooltips({ ticker: ticker, payoutDates: known ? known.dates : [] });
         }
 
         function saveStock(e) {
@@ -2439,8 +2592,14 @@
 
                 var payoutMonths = [];
                 document.querySelectorAll('input[name="payoutMonth"]:checked').forEach(function(cb) { payoutMonths.push(parseInt(cb.value)); });
+                payoutMonths = normalizePayoutMonths(divCycle, payoutMonths, ticker);
 
                 var stockData = { market: market, ticker: ticker, name: name, sector: sector, account: account, memo: memo, quantity: quantity, buyPrice: buyPrice, currentPrice: currentPrice, dps: dps, divCycle: divCycle, payoutMonths: payoutMonths };
+                var knownPayoutSchedule = getKnownPayoutDateSchedule(ticker);
+                if (knownPayoutSchedule) {
+                    stockData.payoutDates = knownPayoutSchedule.dates.slice();
+                    stockData.payoutDateSource = knownPayoutSchedule.source;
+                }
 
                 if (editIdx >= 0) {
                     // 수정 중 종목/계좌를 다른 기존 항목과 같게 만든 경우에도 중복 카드를 만들지 않는다.
@@ -3035,7 +3194,7 @@
         }
 
         function exportData() {
-            var payload = { version: '1.9.10', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
+            var payload = { version: '1.9.11', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             var a = document.createElement('a');
             a.setAttribute("href", dataStr); a.setAttribute("download", 'dividend_portfolio_' + new Date().toISOString().slice(0,10) + '.json');
@@ -3059,6 +3218,7 @@
                             s.buyPrice = parseFloat(s.buyPrice) || 0;
                             s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                             s.dps = parseFloat(s.dps) || 0;
+                            normalizeStockPayoutSchedule(s);
                             mapped.push(s); 
                         }
                         portfolio = mapped;
