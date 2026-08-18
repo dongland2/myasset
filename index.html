@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.8
+                    v1.9.9
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -396,9 +396,10 @@
                 <div class="bg-gray-100 dark:bg-gray-900/70 p-3.5 rounded-xl space-y-2.5">
                     <div class="flex justify-between"><label class="font-bold"><i class="fa-solid fa-server text-indigo-500 dark:text-indigo-400"></i> 클라우드 ID</label><span id="cloudIdBadge" class="text-[10px] font-semibold opacity-80">미연결</span></div>
                     <div class="flex gap-1.5">
-                        <input type="text" id="inputSyncKey" placeholder="클라우드 ID 입력" class="flex-1 bg-white dark:bg-gray-800 rounded-lg px-2.5 py-2 font-mono text-xs font-bold">
+                        <input type="text" id="inputSyncKey" placeholder="예: dongland22" class="flex-1 bg-white dark:bg-gray-800 rounded-lg px-2.5 py-2 font-mono text-xs font-bold">
                         <button id="btnCreateCloud" onclick="createNewCloudStorage()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">공간 생성</button>
                     </div>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">입력한 ID가 그대로 클라우드 ID로 사용됩니다. 다른 기기에서 같은 ID로 복원할 수 있습니다. ID는 추측하기 어렵게 만드는 것을 권장합니다.</p>
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <button id="btnUploadCloud" onclick="uploadToCloudStorage()" class="bg-blue-600 text-white py-2 rounded-lg font-bold flex justify-center gap-1"><i class="fa-solid fa-cloud-arrow-up"></i> 업로드</button>
                         <button id="btnDownloadCloud" onclick="downloadFromCloudStorage()" class="bg-gray-200 dark:bg-gray-700 py-2 rounded-lg font-bold flex justify-center gap-1"><i class="fa-solid fa-cloud-arrow-down"></i> 복원</button>
@@ -664,7 +665,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
+        var CLOUD_SYNC_VERSION = '1.9.9';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -839,7 +840,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.8: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.9.9: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1515,7 +1516,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.9.8: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.9.9: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -2682,129 +2683,218 @@
             }
         }
 
+        function normalizeCloudId(value) {
+            return String(value || '').trim();
+        }
+
+        function isValidCloudId(key) {
+            return /^[A-Za-z0-9._-]{6,64}$/.test(normalizeCloudId(key));
+        }
+
+        function getCloudApiBase() {
+            return getMarketProxyBase() + '/cloud';
+        }
+
+        function buildCloudPayload() {
+            return {
+                version: CLOUD_SYNC_VERSION,
+                updatedAt: new Date().toISOString(),
+                portfolio: portfolio,
+                cashBalances: cashBalances
+            };
+        }
+
+        async function readJsonSafe(res) {
+            try { return await res.json(); } catch (e) { return {}; }
+        }
+
         function initCloudSyncStatus() {
             cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
+
+            // v1.9.8 and earlier could create a fake local_space_xxx id when the demo API failed.
+            // It was never a real cloud id, so remove it instead of showing a broken connection.
+            if (/^local_space_/i.test(cloudSyncKey)) {
+                localStorage.removeItem('my_cloud_sync_key');
+                cloudSyncKey = '';
+            }
+
             var statusText = document.getElementById('cloudStatusText');
             var badge = document.getElementById('cloudIdBadge');
+            var input = document.getElementById('inputSyncKey');
             if (cloudSyncKey) {
                 statusText.innerText = '클라우드 ON';
-                badge.innerText = 'ID: ' + cloudSyncKey.substring(0, 8) + '...';
+                badge.innerText = 'ID: ' + cloudSyncKey;
                 badge.className = 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold';
-                document.getElementById('inputSyncKey').value = cloudSyncKey;
+                if (input) input.value = cloudSyncKey;
             } else {
                 statusText.innerText = '로컬 전용';
                 badge.innerText = '미연결';
                 badge.className = 'text-[10px] font-semibold opacity-70';
+                if (input && /^local_space_/i.test(input.value || '')) input.value = '';
             }
         }
 
         function openCloudModal() {
-            document.getElementById('inputSyncKey').value = localStorage.getItem('my_cloud_sync_key') || '';
+            var saved = localStorage.getItem('my_cloud_sync_key') || '';
+            if (/^local_space_/i.test(saved)) saved = '';
+            document.getElementById('inputSyncKey').value = saved;
             document.getElementById('cloudModal').classList.remove('hidden');
         }
 
         function closeCloudModal() { document.getElementById('cloudModal').classList.add('hidden'); }
 
         async function createNewCloudStorage() {
+            var key = normalizeCloudId(document.getElementById('inputSyncKey').value);
+            if (!isValidCloudId(key)) {
+                alert('클라우드 ID는 6~64자의 영문, 숫자, 점(.), 밑줄(_), 하이픈(-)만 사용할 수 있습니다.\n예: dongland22');
+                return;
+            }
+
             var btn = document.getElementById('btnCreateCloud');
             var originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성중'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성중';
+            btn.disabled = true;
+
             try {
-                var payload = {
-                    name: "dividend_portfolio_data",
-                    data: { updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances }
-                };
-                var res = await fetch(CLOUD_API_BASE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!res.ok) throw new Error('서버 오류');
-                var result = await res.json();
-                if (result && result.id) {
-                    cloudSyncKey = result.id;
-                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    initCloudSyncStatus();
-                    alert('새 클라우드 공간이 생성되었습니다!\nID:\n' + cloudSyncKey);
+                var res = await fetch(getCloudApiBase() + '/' + encodeURIComponent(key), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: buildCloudPayload() })
+                });
+                var result = await readJsonSafe(res);
+
+                if (res.status === 409) {
+                    alert('이미 존재하는 클라우드 ID입니다.\n기존 데이터를 사용하려면 [복원]을 누르고, 현재 데이터를 덮어쓰려면 [업로드]을 누르세요.');
+                    return;
                 }
-            } catch (err) {
-                cloudSyncKey = 'local_space_' + Math.random().toString(36).substring(2, 8);
+                if (res.status === 503 && result.error === 'KV_NOT_CONFIGURED') {
+                    alert('Worker의 클라우드 저장소(KV)가 아직 설정되지 않았습니다.\n새 deploy_worker.bat로 Worker를 다시 배포해주세요.');
+                    return;
+                }
+                if (!res.ok || !result.ok) throw new Error(result.error || ('HTTP ' + res.status));
+
+                cloudSyncKey = key;
                 localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                 initCloudSyncStatus();
-                alert('오프라인 모드로 로컬 동기화 ID(' + cloudSyncKey + ')가 생성되었습니다.');
-            } finally { btn.innerHTML = originText; btn.disabled = false; }
+                alert('클라우드 공간이 생성되었습니다!\nID: ' + key + '\n\n입력한 ID가 그대로 사용됩니다.');
+            } catch (err) {
+                console.error('cloud create failed', err);
+                alert('클라우드 공간 생성에 실패했습니다.\nWorker 연결과 KV 배포 상태를 확인해주세요.');
+            } finally {
+                btn.innerHTML = originText;
+                btn.disabled = false;
+            }
         }
 
         async function uploadToCloudStorage() {
-            var key = document.getElementById('inputSyncKey').value.trim();
+            var key = normalizeCloudId(document.getElementById('inputSyncKey').value);
+            if (!isValidCloudId(key)) {
+                alert('올바른 클라우드 ID를 입력해주세요.\n6~64자의 영문/숫자/._- 를 사용할 수 있습니다.');
+                return;
+            }
+
             var btn = document.getElementById('btnUploadCloud');
             var originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
+            btn.disabled = true;
 
             try {
-                var success = false;
-                var payload = { name: "dividend_portfolio_data", data: { updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances } };
-                if (key) {
-                    var res = await fetch(CLOUD_API_BASE + '/' + encodeURIComponent(key), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (res.ok) success = true;
+                // PUT is an upsert: if the ID does not exist yet it is created, otherwise it is updated.
+                var res = await fetch(getCloudApiBase() + '/' + encodeURIComponent(key), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: buildCloudPayload() })
+                });
+                var result = await readJsonSafe(res);
+                if (res.status === 503 && result.error === 'KV_NOT_CONFIGURED') {
+                    alert('Worker의 클라우드 저장소(KV)가 아직 설정되지 않았습니다.\n새 deploy_worker.bat로 Worker를 다시 배포해주세요.');
+                    return;
                 }
-                if (!success) {
-                    var postRes = await fetch(CLOUD_API_BASE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (postRes.ok) {
-                        var postJson = await postRes.json();
-                        if (postJson && postJson.id) { key = postJson.id; document.getElementById('inputSyncKey').value = key; success = true; }
-                    }
-                }
-                if (success) {
-                    cloudSyncKey = key; localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    initCloudSyncStatus(); alert('클라우드 서버에 업로드되었습니다!\nID: ' + cloudSyncKey); closeCloudModal();
-                } else { alert('업로드에 실패했습니다. ID를 확인해주세요.'); }
-            } catch (err) { alert('통신 오류가 발생했습니다.'); }
-            finally { btn.innerHTML = originText; btn.disabled = false; }
+                if (!res.ok || !result.ok) throw new Error(result.error || ('HTTP ' + res.status));
+
+                cloudSyncKey = key;
+                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                initCloudSyncStatus();
+                alert((result.created ? '새 클라우드 공간을 만들고 업로드했습니다.\n' : '클라우드에 업로드했습니다.\n') + 'ID: ' + key);
+                closeCloudModal();
+            } catch (err) {
+                console.error('cloud upload failed', err);
+                alert('업로드에 실패했습니다.\nWorker 연결과 KV 배포 상태를 확인해주세요.');
+            } finally {
+                btn.innerHTML = originText;
+                btn.disabled = false;
+            }
         }
 
         async function downloadFromCloudStorage() {
-            var key = document.getElementById('inputSyncKey').value.trim();
-            if (!key) { alert('ID를 입력해주세요.'); return; }
+            var key = normalizeCloudId(document.getElementById('inputSyncKey').value);
+            if (!isValidCloudId(key)) {
+                alert('올바른 클라우드 ID를 입력해주세요.');
+                return;
+            }
+
             var btn = document.getElementById('btnDownloadCloud');
             var originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 복원 중...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 복원 중...';
+            btn.disabled = true;
 
             try {
-                var res = await fetch(CLOUD_API_BASE + '/' + encodeURIComponent(key));
-                if (res.ok) {
-                    var result = await res.json();
-                    if (result && result.data) {
-                        createSnapshot('클라우드 복원 전 백업');
-                        if (Array.isArray(result.data.portfolio)) {
-                            var mapped = [];
-                            for(var i=0; i<result.data.portfolio.length; i++) { 
-                                var s = result.data.portfolio[i]; 
-                                s.account = s.account || '일반계좌'; 
-                                s.quantity = parseFloat(s.quantity) || 0;
-                                s.buyPrice = parseFloat(s.buyPrice) || 0;
-                                s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
-                                s.dps = parseFloat(s.dps) || 0;
-                                mapped.push(s); 
-                            }
-                            portfolio = mapped;
-                        }
-                        if (result.data.cashBalances) {
-                            cashBalances = result.data.cashBalances;
-                            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                        }
-                        cloudSyncKey = key; localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                        localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                        initCloudSyncStatus(); renderAll();
-                        alert('데이터 복원을 완료했습니다!'); closeCloudModal();
+                var res = await fetch(getCloudApiBase() + '/' + encodeURIComponent(key), { cache: 'no-store' });
+                var result = await readJsonSafe(res);
+                if (res.status === 404) {
+                    alert('해당 클라우드 ID를 찾을 수 없습니다.\nID: ' + key);
+                    return;
+                }
+                if (res.status === 503 && result.error === 'KV_NOT_CONFIGURED') {
+                    alert('Worker의 클라우드 저장소(KV)가 아직 설정되지 않았습니다.\n새 deploy_worker.bat로 Worker를 다시 배포해주세요.');
+                    return;
+                }
+                if (!res.ok || !result.ok || !result.data) throw new Error(result.error || ('HTTP ' + res.status));
+
+                createSnapshot('클라우드 복원 전 백업');
+                if (Array.isArray(result.data.portfolio)) {
+                    var mapped = [];
+                    for (var i = 0; i < result.data.portfolio.length; i++) {
+                        var st = result.data.portfolio[i];
+                        st.account = st.account || '일반계좌';
+                        st.quantity = parseFloat(st.quantity) || 0;
+                        st.buyPrice = parseFloat(st.buyPrice) || 0;
+                        st.currentPrice = parseFloat(st.currentPrice) || st.buyPrice || 0;
+                        st.dps = parseFloat(st.dps) || 0;
+                        mapped.push(st);
                     }
-                } else { alert('해당 ID를 찾을 수 없습니다.'); }
-            } catch (err) { alert('통신 오류가 발생했습니다.'); }
-            finally { btn.innerHTML = originText; btn.disabled = false; }
+                    portfolio = mapped;
+                }
+                if (result.data.cashBalances) cashBalances = result.data.cashBalances;
+
+                cloudSyncKey = key;
+                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+                localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                initCloudSyncStatus();
+                renderAll();
+                alert('클라우드 데이터를 복원했습니다!\nID: ' + key);
+                closeCloudModal();
+            } catch (err) {
+                console.error('cloud download failed', err);
+                alert('클라우드 복원에 실패했습니다.\nWorker 연결 상태를 확인해주세요.');
+            } finally {
+                btn.innerHTML = originText;
+                btn.disabled = false;
+            }
         }
 
         async function pushToCloudQuietly() {
-            if (!cloudSyncKey) return;
+            if (!isValidCloudId(cloudSyncKey)) return;
             try {
-                var payload = { name: "dividend_portfolio_data", data: { updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances } };
-                await fetch(CLOUD_API_BASE + '/' + encodeURIComponent(cloudSyncKey), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            } catch (e) {}
+                await fetch(getCloudApiBase() + '/' + encodeURIComponent(cloudSyncKey), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: buildCloudPayload() })
+                });
+            } catch (e) {
+                console.warn('quiet cloud sync failed', e);
+            }
         }
 
         function copyPortfolioToClipboard() {
