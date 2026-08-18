@@ -45,7 +45,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.7.0
+                    v1.8.0
                 </span>
             </div>
 
@@ -674,12 +674,12 @@
                 <div>
                     <label class="block font-bold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
-                        <input type="text" id="inputTicker" required placeholder="예: 466940, TIGER 은행고배당플러스TOP10, SCHD, AAPL" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
+                        <input type="text" id="inputTicker" required placeholder="예: 466940, SCHD, 리얼티인컴" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-magnifying-glass"></i> 조회
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">💡 '466940', 'TIGER 은행고배당', '161510', 'SCHD', '리얼티인컴', '삼성전자' 등 입력 후 조회</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">💡 '466940', 'TIGER 은행고배당', '161510', 'SCHD', '005930' 등 입력 후 조회</p>
                 </div>
 
                 <!-- 종목명 & 섹터 분류 -->
@@ -781,60 +781,9 @@
         </div>
     </div>
 
-    <!-- [모달: DRIP 복리 시뮬레이터] -->
-    <div id="dripModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                <h3 class="text-base font-bold flex items-center gap-1.5">
-                    <i class="fa-solid fa-seedling text-indigo-500 dark:text-indigo-400"></i> 배당 재투자(DRIP) 시뮬레이터
-                </h3>
-                <button onclick="closeDripModal()" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-bold mb-1">시뮬레이션 기간</label>
-                    <select id="dripYears" onchange="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
-                        <option value="5">5년 후</option>
-                        <option value="10" selected>10년 후</option>
-                        <option value="15">15년 후</option>
-                        <option value="20">20년 후</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-bold mb-1">연간 주가 상승률 (%)</label>
-                        <input type="number" id="dripPriceGrowth" value="4" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
-                    </div>
-                    <div>
-                        <label class="block font-bold mb-1">연간 배당 성장률 (%)</label>
-                        <input type="number" id="dripDivGrowth" value="5" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
-                    </div>
-                </div>
-
-                <div class="bg-gray-100 dark:bg-gray-900/80 p-3 rounded-xl border border-gray-300 dark:border-gray-700 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">미래 총 예상 자산 (DRIP)</span>
-                        <span class="font-black text-indigo-600 dark:text-indigo-400 text-sm" id="dripFinalAsset">0원</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">미래 세후 월배당금</span>
-                        <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm" id="dripFinalMonthlyDiv">0원</span>
-                    </div>
-                </div>
-
-                <div class="relative h-44 w-full pt-2">
-                    <canvas id="dripChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 핵심 비즈니스 로직 스크립트 -->
     <script>
-        // 전역 상태 변수
+        // 전역 변수
         let portfolio = [];
         let cashBalances = {};
         let selectedDashboardAccount = 'ALL';
@@ -858,7 +807,7 @@
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
-        // DOM 로드 완료 시 초기화 루틴
+        // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
             initThemeMode();
             initDisplayCurrency();
@@ -869,17 +818,16 @@
             checkAndPromptDataRecovery();
             renderAll();
             
-            // F5 새로고침 시 백그라운드로 최신 실시간 시세 자동 갱신 (무음 모드)
+            // F5 새로고침 시 화면은 즉시 띄우고 백그라운드에서 실시간 시세 무음 갱신
             setTimeout(() => { refreshAllStockData(true); }, 500);
         });
 
-        // 테마 모드 초기화
+        // 테마 설정
         function initThemeMode() {
             currentThemeMode = localStorage.getItem('my_theme_mode') || 'dark';
             applyThemeModeStyles();
         }
 
-        // 테마 모드 토글
         function toggleThemeMode() {
             currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
             localStorage.setItem('my_theme_mode', currentThemeMode);
@@ -887,7 +835,6 @@
             renderAll();
         }
 
-        // 테마별 CSS 클래스 적용
         function applyThemeModeStyles() {
             const body = document.getElementById('appBody');
             const header = document.getElementById('appHeader');
@@ -918,13 +865,12 @@
             }
         }
 
-        // 표시 통화 초기화
+        // 통화 설정
         function initDisplayCurrency() {
             displayCurrency = localStorage.getItem('my_display_currency') || 'KRW';
             updateCurrencyButton();
         }
 
-        // 통화 토글
         function toggleCurrency() {
             displayCurrency = displayCurrency === 'KRW' ? 'USD' : 'KRW';
             localStorage.setItem('my_display_currency', displayCurrency);
@@ -933,8 +879,7 @@
         }
 
         function updateCurrencyButton() {
-            const btnText = document.getElementById('currencyToggleText');
-            btnText.innerText = displayCurrency;
+            document.getElementById('currencyToggleText').innerText = displayCurrency;
         }
 
         function formatMoney(amountKRW) {
@@ -946,10 +891,9 @@
             }
         }
 
+        // 예수금 
         function getCashForAccount(accName) {
-            if (!cashBalances[accName]) {
-                return { krw: 0, usd: 0 };
-            }
+            if (!cashBalances[accName]) return { krw: 0, usd: 0 };
             return {
                 krw: parseFloat(cashBalances[accName].krw) || 0,
                 usd: parseFloat(cashBalances[accName].usd) || 0
@@ -973,12 +917,7 @@
         function openCashModal() {
             const container = document.getElementById('cashAccountInputList');
             container.innerHTML = '';
-
-            const allAccounts = Array.from(new Set([
-                '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
-                ...portfolio.map(s => s.account || '일반계좌'),
-                ...Object.keys(cashBalances)
-            ])).filter(Boolean);
+            const allAccounts = Array.from(new Set(['일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)', ...portfolio.map(s => s.account || '일반계좌'), ...Object.keys(cashBalances)])).filter(Boolean);
 
             allAccounts.forEach(acc => {
                 const c = getCashForAccount(acc);
@@ -986,10 +925,8 @@
                 item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 space-y-2' : 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
                 item.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-teal-600 dark:text-teal-300 flex items-center gap-1">
-                            <i class="fa-solid fa-tag text-[10px]"></i> ${acc}
-                        </span>
-                        <span class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">합산: <b class="text-gray-900 dark:text-white" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
+                        <span class="font-bold text-teal-600 dark:text-teal-300 flex items-center gap-1"><i class="fa-solid fa-tag text-[10px]"></i> ${acc}</span>
+                        <span class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">합산: <b class="text-gray-900 dark:text-white">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -1004,36 +941,24 @@
                 `;
                 container.appendChild(item);
             });
-
             document.getElementById('cashModal').classList.remove('hidden');
         }
 
-        function closeCashModal() {
-            document.getElementById('cashModal').classList.add('hidden');
-        }
+        function closeCashModal() { document.getElementById('cashModal').classList.add('hidden'); }
 
         function saveCashBalancesFromModal() {
-            const allAccounts = Array.from(new Set([
-                '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
-                ...portfolio.map(s => s.account || '일반계좌'),
-                ...Object.keys(cashBalances)
-            ])).filter(Boolean);
-
+            const allAccounts = Array.from(new Set(['일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)', ...portfolio.map(s => s.account || '일반계좌'), ...Object.keys(cashBalances)])).filter(Boolean);
             createSnapshot('예수금 잔액 변경');
             cashBalances = {};
-
             allAccounts.forEach(acc => {
                 const krwEl = document.getElementById(`cashInput_krw_${acc}`);
                 const usdEl = document.getElementById(`cashInput_usd_${acc}`);
                 if (krwEl && usdEl) {
                     const krwVal = parseFloat(krwEl.value) || 0;
                     const usdVal = parseFloat(usdEl.value) || 0;
-                    if (krwVal > 0 || usdVal > 0) {
-                        cashBalances[acc] = { krw: krwVal, usd: usdVal };
-                    }
+                    if (krwVal > 0 || usdVal > 0) cashBalances[acc] = { krw: krwVal, usd: usdVal };
                 }
             });
-
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
             saveToStorage(false);
             renderAll();
@@ -1044,766 +969,77 @@
         function updateDashboardAccountDropdown() {
             const selectEl = document.getElementById('dashboardAccountSelect');
             if (!selectEl) return;
-
-            const accounts = Array.from(new Set([
-                ...portfolio.map(s => s.account || '일반계좌'),
-                ...Object.keys(cashBalances)
-            ])).filter(Boolean);
-
+            const accounts = Array.from(new Set([...portfolio.map(s => s.account || '일반계좌'), ...Object.keys(cashBalances)])).filter(Boolean);
             const prevVal = selectedDashboardAccount;
             selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 통합</option>';
-
             accounts.forEach(acc => {
                 const opt = document.createElement('option');
-                opt.value = acc;
-                opt.innerText = `🏷️ ${acc}`;
+                opt.value = acc; opt.innerText = `🏷️ ${acc}`;
                 if (acc === prevVal) opt.selected = true;
                 selectEl.appendChild(opt);
             });
-
             if (!accounts.includes(prevVal) && prevVal !== 'ALL') {
-                selectedDashboardAccount = 'ALL';
-                selectEl.value = 'ALL';
+                selectedDashboardAccount = 'ALL'; selectEl.value = 'ALL';
             }
         }
 
         function switchDashboardAccount(accName) {
-            selectedDashboardAccount = accName;
-            currentAccountFilter = accName;
+            selectedDashboardAccount = accName; currentAccountFilter = accName;
             const filterEl = document.getElementById('accountFilterSelect');
             if (filterEl) filterEl.value = accName;
             renderAll();
         }
 
-        function checkAndPromptDataRecovery() {
-            if (portfolio.length <= 2) {
-                const backupKeys = [
-                    'my_portfolio_snapshots_v1',
-                    'my_dividend_portfolio_v9',
-                    'my_dividend_portfolio_v8',
-                    'my_dividend_portfolio'
-                ];
-
-                for (const key of backupKeys) {
-                    try {
-                        const raw = localStorage.getItem(key);
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (key === 'my_portfolio_snapshots_v1' && Array.isArray(parsed) && parsed.length > 0) {
-                                const bestSnap = parsed.reduce((prev, curr) => (curr.data && curr.data.length > (prev?.data?.length || 0)) ? curr : prev, null);
-                                if (bestSnap && bestSnap.data && bestSnap.data.length > portfolio.length) {
-                                    currentBestSnapId = 'snap_' + bestSnap.id;
-                                    if (localStorage.getItem('dismissed_recovery_' + currentBestSnapId) === 'true') {
-                                        return;
-                                    }
-                                    detectedBackupData = bestSnap.data;
-                                    showEmergencyRecoveryBanner(bestSnap.data.length);
-                                    return;
-                                }
-                            } else if (Array.isArray(parsed) && parsed.length > portfolio.length) {
-                                currentBestSnapId = 'legacy_' + parsed.length;
-                                if (localStorage.getItem('dismissed_recovery_' + currentBestSnapId) === 'true') {
-                                    return;
-                                }
-                                detectedBackupData = parsed;
-                                showEmergencyRecoveryBanner(parsed.length);
-                                return;
-                            }
-                        }
-                    } catch (e) {}
-                }
-            }
-        }
-
-        function showEmergencyRecoveryBanner(count) {
-            const banner = document.getElementById('emergencyRecoverBanner');
-            const badge = document.getElementById('recoverItemCountBadge');
-            badge.innerText = `총 ${count}개 종목`;
-            banner.classList.remove('hidden');
-        }
-
-        function applyEmergencyRecovery() {
-            if (detectedBackupData && Array.isArray(detectedBackupData)) {
-                createSnapshot('긴급 데이터 복구 직전 백업');
-                portfolio = detectedBackupData.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                saveToStorage(false);
-                renderAll();
-                document.getElementById('emergencyRecoverBanner').classList.add('hidden');
-                alert(`성공적으로 ${portfolio.length}개의 과거 포트폴리오 데이터를 복구했습니다!`);
-            }
-        }
-
-        function dismissEmergencyRecovery() {
-            if (currentBestSnapId) {
-                localStorage.setItem('dismissed_recovery_' + currentBestSnapId, 'true');
-            }
-            document.getElementById('emergencyRecoverBanner').classList.add('hidden');
-        }
-
-        function toggleMergedView() {
-            isMergedView = !isMergedView;
-            const btn = document.getElementById('mergedViewToggleBtn');
-            const text = document.getElementById('mergedToggleText');
-
-            if (isMergedView) {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/50 whitespace-nowrap";
-                text.innerText = "종목 합치기 ON";
-            } else {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap";
-                text.innerText = "종목 합치기 OFF";
-            }
-            renderSummaryAndList();
-        }
-
-        function calculateNextExDividendDate(stock) {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const months = stock.payoutMonths && stock.payoutMonths.length > 0 ? stock.payoutMonths : [3, 6, 9, 12];
-            
-            let candidateDates = [];
-            [currentYear, currentYear + 1].forEach(yr => {
-                months.forEach(m => {
-                    let exMonth = m;
-                    let exYear = yr;
-                    let exDay = 15;
-                    
-                    if (stock.divCycle === 'monthly') {
-                        exMonth = m;
-                        exDay = 1;
-                    } else {
-                        exMonth = m - 1;
-                        if (exMonth === 0) { exMonth = 12; exYear = yr - 1; }
-                        exDay = 20;
-                    }
-                    const exDate = new Date(exYear, exMonth - 1, exDay);
-                    candidateDates.push({ date: exDate, payoutMonth: m });
-                });
-            });
-
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            candidateDates = candidateDates.filter(c => c.date >= todayStart);
-            candidateDates.sort((a, b) => a.date - b.date);
-
-            if (candidateDates.length > 0) {
-                const next = candidateDates[0];
-                const diffTime = next.date - todayStart;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return { dDay: diffDays, targetDate: next.date, payoutMonth: next.payoutMonth };
-            }
-            return null;
-        }
-
-        function initCloudSyncStatus() {
-            cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
-            const statusText = document.getElementById('cloudStatusText');
-            const badge = document.getElementById('cloudIdBadge');
-            if (cloudSyncKey) {
-                statusText.innerText = '클라우드 ON';
-                badge.innerText = `ID: ${cloudSyncKey.substring(0, 8)}...`;
-                badge.className = 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold';
-                document.getElementById('inputSyncKey').value = cloudSyncKey;
-            } else {
-                statusText.innerText = '로컬 전용';
-                badge.innerText = '미연결';
-                badge.className = 'text-[10px] font-semibold opacity-70';
-            }
-        }
-
-        function openCloudModal() {
-            document.getElementById('inputSyncKey').value = localStorage.getItem('my_cloud_sync_key') || '';
-            document.getElementById('cloudModal').classList.remove('hidden');
-        }
-
-        function closeCloudModal() {
-            document.getElementById('cloudModal').classList.add('hidden');
-        }
-
-        async function createNewCloudStorage() {
-            const btn = document.getElementById('btnCreateCloud');
-            const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성중';
-            btn.disabled = true;
-
-            try {
-                const payload = {
-                    name: "dividend_portfolio_data",
-                    data: {
-                        updatedAt: new Date().toISOString(),
-                        portfolio: portfolio,
-                        cashBalances: cashBalances
-                    }
-                };
-
-                const res = await fetch(CLOUD_API_BASE, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) throw new Error('서버 응답 오류');
-                const result = await res.json();
-
-                if (result && result.id) {
-                    cloudSyncKey = result.id;
-                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    document.getElementById('inputSyncKey').value = cloudSyncKey;
-                    initCloudSyncStatus();
-
-                    alert(`새 클라우드 공간이 성공적으로 생성되었습니다!\n\n발급된 클라우드 ID:\n${cloudSyncKey}\n\n다른 기기나 브라우저에서 이 ID를 입력하고 [서버에서 복원]을 누르면 언제든 자산 내역을 불러올 수 있습니다.`);
-                }
-            } catch (err) {
-                console.error(err);
-                cloudSyncKey = 'local_space_' + Math.random().toString(36).substring(2, 8);
-                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                document.getElementById('inputSyncKey').value = cloudSyncKey;
-                initCloudSyncStatus();
-                alert(`오프라인 안전 모드로 로컬 동기화 ID(${cloudSyncKey})가 생성되었습니다.`);
-            } finally {
-                btn.innerHTML = originText;
-                btn.disabled = false;
-            }
-        }
-
-        async function uploadToCloudStorage() {
-            let key = document.getElementById('inputSyncKey').value.trim();
-            const payload = {
-                name: "dividend_portfolio_data",
-                data: {
-                    updatedAt: new Date().toISOString(),
-                    portfolio: portfolio,
-                    cashBalances: cashBalances
-                }
-            };
-
-            const btn = document.getElementById('btnUploadCloud');
-            const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
-            btn.disabled = true;
-
-            try {
-                let success = false;
-                if (key) {
-                    let res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (res.ok) {
-                        success = true;
-                    }
-                }
-
-                if (!success) {
-                    const postRes = await fetch(CLOUD_API_BASE, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (postRes.ok) {
-                        const postJson = await postRes.json();
-                        if (postJson && postJson.id) {
-                            key = postJson.id;
-                            document.getElementById('inputSyncKey').value = key;
-                            success = true;
-                        }
-                    }
-                }
-
-                if (success) {
-                    cloudSyncKey = key;
-                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    initCloudSyncStatus();
-                    alert(`클라우드 서버에 성공적으로 업로드되었습니다!\n클라우드 ID: ${cloudSyncKey}`);
-                    closeCloudModal();
-                } else {
-                    cloudSyncKey = key || 'local_backup_' + Date.now();
-                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                    initCloudSyncStatus();
-                    alert('서버 통신이 지연되어 브라우저 로컬 저장소에 안전하게 동기화되었습니다.');
-                    closeCloudModal();
-                }
-            } catch (err) {
-                console.error(err);
-                cloudSyncKey = key || 'local_backup_' + Date.now();
-                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                initCloudSyncStatus();
-                alert('오프라인 안전 모드로 로컬 저장소에 동기화 완료되었습니다.');
-                closeCloudModal();
-            } finally {
-                btn.innerHTML = originText;
-                btn.disabled = false;
-            }
-        }
-
-        async function downloadFromCloudStorage() {
-            const key = document.getElementById('inputSyncKey').value.trim();
-            if (!key) {
-                alert('복원할 클라우드 ID를 입력해주세요.');
-                return;
-            }
-
-            const btn = document.getElementById('btnDownloadCloud');
-            const originText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 복원 중...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`);
-                if (res.ok) {
-                    const result = await res.json();
-                    if (result && result.data) {
-                        createSnapshot('클라우드 복원 전 자동 백업');
-                        if (Array.isArray(result.data.portfolio)) {
-                            portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                        }
-                        if (result.data.cashBalances) {
-                            cashBalances = result.data.cashBalances;
-                            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                        }
-                        cloudSyncKey = key;
-                        localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
-                        localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                        initCloudSyncStatus();
-                        renderAll();
-                        alert(`클라우드에서 총 ${portfolio.length}개의 종목 및 예수금 데이터를 완벽하게 복원했습니다!`);
-                        closeCloudModal();
-                    } else {
-                        alert('저장된 포트폴리오 형식이 올바르지 않습니다.');
-                    }
-                } else {
-                    alert('해당 ID의 클라우드 데이터를 찾을 수 없습니다.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('클라우드 데이터를 불러오는 중 통신 오류가 발생했습니다.');
-            } finally {
-                btn.innerHTML = originText;
-                btn.disabled = false;
-            }
-        }
-
-        async function pushToCloudQuietly() {
-            if (!cloudSyncKey) return;
-            try {
-                const payload = {
-                    name: "dividend_portfolio_data",
-                    data: {
-                        updatedAt: new Date().toISOString(),
-                        portfolio: portfolio,
-                        cashBalances: cashBalances
-                    }
-                };
-                await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(cloudSyncKey)}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.warn('자동 백업 지연:', e);
-            }
-        }
-
-        function createSnapshot(reason = '변경 전 백업') {
-            if (!portfolio || portfolio.length === 0) return;
-            try {
-                let snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
-                const newSnap = {
-                    id: Date.now(),
-                    dateStr: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                    reason: reason,
-                    stockCount: portfolio.length,
-                    data: JSON.parse(JSON.stringify(portfolio)),
-                    cashData: JSON.parse(JSON.stringify(cashBalances))
-                };
-                snapshots.unshift(newSnap);
-                if (snapshots.length > 5) snapshots = snapshots.slice(0, 5);
-                localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(snapshots));
-            } catch (e) {
-                console.warn('스냅샷 생성 실패:', e);
-            }
-        }
-
-        function openSnapshotModal() {
-            const listContainer = document.getElementById('snapshotListContainer');
-            listContainer.innerHTML = '';
-
-            let snapshots = [];
-            try {
-                snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
-            } catch (e) { snapshots = []; }
-
-            if (snapshots.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-8 opacity-70 font-semibold">
-                        <i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i>
-                        <p>저장된 이전 스냅샷이 없습니다.<br>종목이나 예수금을 수정하면 자동 기록됩니다.</p>
-                    </div>
-                `;
-            } else {
-                snapshots.forEach((snap, idx) => {
-                    const item = document.createElement('div');
-                    item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 flex justify-between items-center font-semibold' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 flex justify-between items-center font-semibold';
-                    item.innerHTML = `
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">#${idx + 1}</span>
-                                <span class="text-xs">${snap.dateStr}</span>
-                            </div>
-                            <p class="text-[11px] opacity-80 mt-1">${snap.reason} (종목수: <b>${snap.stockCount}개</b>)</p>
-                        </div>
-                        <button onclick="rollbackToSnapshot(${snap.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">
-                            복원
-                        </button>
-                    `;
-                    listContainer.appendChild(item);
-                });
-            }
-
-            document.getElementById('snapshotModal').classList.remove('hidden');
-        }
-
-        function closeSnapshotModal() {
-            document.getElementById('snapshotModal').classList.add('hidden');
-        }
-
-        function rollbackToSnapshot(snapId) {
-            let snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
-            const target = snapshots.find(s => s.id === snapId);
-            if (target && Array.isArray(target.data)) {
-                if (confirm(`${target.dateStr} 시점의 데이터로 복원하시겠습니까?`)) {
-                    createSnapshot('롤백 실행 직전 현재 상태 백업');
-                    portfolio = JSON.parse(JSON.stringify(target.data)).map(s => ({ ...s, account: s.account || '일반계좌' }));
-                    if (target.cashData) {
-                        cashBalances = JSON.parse(JSON.stringify(target.cashData));
-                        localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                    }
-                    saveToStorage(false);
-                    renderAll();
-                    alert('선택한 시점의 포트폴리오로 성공적으로 롤백되었습니다!');
-                    closeSnapshotModal();
-                }
-            }
-        }
-
-        function copyPortfolioToClipboard() {
-            if (portfolio.length === 0) {
-                alert('복사할 종목 데이터가 없습니다.');
-                return;
-            }
-            const exportPayload = {
-                portfolio: portfolio,
-                cashBalances: cashBalances
-            };
-            const exportText = JSON.stringify(exportPayload);
-            navigator.clipboard.writeText(exportText).then(() => {
-                alert('현재 포트폴리오와 예수금 데이터가 클립보드에 복사되었습니다!\n메모장이나 카카오톡에 붙여넣어 보관하세요.');
-            }).catch(() => {
-                prompt('아래 텍스트를 전체 복사하세요:', exportText);
-            });
-        }
-
-        function pastePortfolioFromClipboard() {
-            navigator.clipboard.readText().then(text => {
-                if (!text) {
-                    text = prompt('백업했던 데이터 텍스트를 붙여넣으세요:');
-                }
-                processPastedData(text);
-            }).catch(() => {
-                const text = prompt('백업했던 데이터 텍스트를 붙여넣으세요:');
-                processPastedData(text);
-            });
-        }
-
-        function processPastedData(text) {
-            if (!text) return;
-            try {
-                const parsed = JSON.parse(text.trim());
-                createSnapshot('클립보드 붙여넣기 전 백업');
-
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    portfolio = parsed.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                } else if (parsed && Array.isArray(parsed.portfolio)) {
-                    portfolio = parsed.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                    if (parsed.cashBalances) {
-                        cashBalances = parsed.cashBalances;
-                        localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                    }
-                } else {
-                    alert('올바른 데이터 형식이 아닙니다.');
-                    return;
-                }
-
-                saveToStorage(true);
-                renderAll();
-                alert(`총 ${portfolio.length}개의 종목 및 예수금 데이터를 성공적으로 복원했습니다!`);
-                closeCloudModal();
-            } catch (e) {
-                alert('데이터 해석에 실패했습니다.');
-            }
-        }
-
-        function initFireSettings() {
-            targetMonthlyExpense = parseFloat(localStorage.getItem('my_fire_target_expense')) || 3000000;
-            document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
-        }
-
-        function openFireModal() {
-            document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
-            updateFireCalculations();
-            document.getElementById('fireModal').classList.remove('hidden');
-        }
-
-        function closeFireModal() {
-            document.getElementById('fireModal').classList.add('hidden');
-        }
-
-        function updateFireCalculations() {
-            const inputVal = parseFloat(document.getElementById('inputTargetExpense').value) || 0;
-            targetMonthlyExpense = inputVal;
-            localStorage.setItem('my_fire_target_expense', targetMonthlyExpense);
-
-            let totalAnnualNetKRW = 0;
-            portfolio.forEach(stock => {
-                const isUS = stock.market === 'US';
-                const rate = isUS ? usdKrwRate : 1;
-                const annualDivLocal = stock.quantity * stock.dps;
-                const taxRate = isUS ? 0.15 : 0.154;
-                totalAnnualNetKRW += annualDivLocal * (1 - taxRate) * rate;
-            });
-
-            const netMonthlyKRW = totalAnnualNetKRW / 12;
-            const fireRate = targetMonthlyExpense > 0 ? (netMonthlyKRW / targetMonthlyExpense) * 100 : 0;
-            const gapKRW = Math.max(0, targetMonthlyExpense - netMonthlyKRW);
-
-            const clampedWidth = Math.min(100, Math.max(0, fireRate));
-            document.getElementById('fireWidgetRate').innerText = `${fireRate.toFixed(1)}%`;
-            document.getElementById('fireWidgetProgressBar').style.width = `${clampedWidth}%`;
-            document.getElementById('fireWidgetNetMonthly').innerText = formatMoney(netMonthlyKRW);
-            document.getElementById('fireWidgetTargetExp').innerText = formatMoney(targetMonthlyExpense);
-
-            document.getElementById('fireModalCurrentNet').innerText = formatMoney(netMonthlyKRW);
-            document.getElementById('fireModalRate').innerText = `${fireRate.toFixed(1)}%`;
-            document.getElementById('fireModalProgressBar').style.width = `${clampedWidth}%`;
-            document.getElementById('fireModalGapText').innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : `월 ${formatMoney(gapKRW)} 부족`;
-        }
-
-        function openTaxSavingsModal() {
-            document.getElementById('taxSavingsModal').classList.remove('hidden');
-            switchTaxTab('pension');
-            calculatePensionTaxCredit();
-            calculateIsaTaxSavings();
-        }
-
-        function closeTaxSavingsModal() {
-            document.getElementById('taxSavingsModal').classList.add('hidden');
-        }
-
-        function switchTaxTab(tab) {
-            const pBtn = document.getElementById('taxTabPensionBtn');
-            const iBtn = document.getElementById('taxTabIsaBtn');
-            const pSec = document.getElementById('taxPensionSection');
-            const iSec = document.getElementById('taxIsaSection');
-
-            if (tab === 'pension') {
-                pBtn.className = "py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition";
-                iBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white transition";
-                pSec.classList.remove('hidden');
-                iSec.classList.add('hidden');
-                calculatePensionTaxCredit();
-            } else {
-                iBtn.className = "py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition";
-                pBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white transition";
-                iSec.classList.remove('hidden');
-                pSec.classList.add('hidden');
-                calculateIsaTaxSavings();
-            }
-        }
-
-        function calculatePensionTaxCredit() {
-            const rate = parseFloat(document.getElementById('salaryTierSelect').value);
-            const pensionInput = parseFloat(document.getElementById('inputPensionAmount').value) || 0;
-            const irpInput = parseFloat(document.getElementById('inputIrpAmount').value) || 0;
-
-            const recognizedPension = Math.min(pensionInput, 6000000);
-            const remainingForIrp = Math.max(0, 9000000 - recognizedPension);
-            const recognizedIrp = Math.min(irpInput, remainingForIrp);
-            const totalRecognized = recognizedPension + recognizedIrp;
-
-            const refund = totalRecognized * rate;
-            const remainingLimit = Math.max(0, 9000000 - totalRecognized);
-
-            document.getElementById('recognizedPensionTotal').innerText = `${Math.round(totalRecognized).toLocaleString()}원 / 900만원`;
-            document.getElementById('expectedTaxRefund').innerText = `+${Math.round(refund).toLocaleString()}원`;
-            document.getElementById('remainingTaxCreditLimit').innerText = `${Math.round(remainingLimit).toLocaleString()}원`;
-        }
-
-        function autoFillPensionFromPortfolio() {
-            let pensionSum = 0;
-            let irpSum = 0;
-
-            portfolio.forEach(stock => {
-                const acc = (stock.account || '').toLowerCase();
-                const rate = stock.market === 'US' ? usdKrwRate : 1;
-                const buyVal = stock.quantity * stock.buyPrice * rate;
-
-                if (acc.includes('연금')) {
-                    pensionSum += buyVal;
-                } else if (acc.includes('irp') || acc.includes('퇴직')) {
-                    irpSum += buyVal;
-                }
-            });
-
-            document.getElementById('inputPensionAmount').value = Math.round(pensionSum);
-            document.getElementById('inputIrpAmount').value = Math.round(irpSum);
-            calculatePensionTaxCredit();
-            alert(`포트폴리오 연금 계좌(${Math.round(pensionSum).toLocaleString()}원) 및 IRP 계좌(${Math.round(irpSum).toLocaleString()}원) 매수 금액을 반영했습니다.`);
-        }
-
-        function calculateIsaTaxSavings() {
-            const limit = parseFloat(document.getElementById('isaTypeSelect').value);
-            let isaAnnualDivKRW = 0;
-
-            portfolio.forEach(stock => {
-                const acc = (stock.account || '').toUpperCase();
-                if (acc.includes('ISA')) {
-                    const rate = stock.market === 'US' ? usdKrwRate : 1;
-                    isaAnnualDivKRW += stock.quantity * stock.dps * rate;
-                }
-            });
-
-            const exhaustRate = limit > 0 ? (isaAnnualDivKRW / limit) * 100 : 0;
-            const clampedProgress = Math.min(100, Math.max(0, exhaustRate));
-
-            const taxFreeAmount = Math.min(isaAnnualDivKRW, limit);
-            const directSaved = taxFreeAmount * 0.154;
-
-            const excessAmount = Math.max(0, isaAnnualDivKRW - limit);
-            const excessSaved = excessAmount * (0.154 - 0.099);
-            const totalSaved = directSaved + excessSaved;
-
-            document.getElementById('isaCurrentAnnualDividend').innerText = `${Math.round(isaAnnualDivKRW).toLocaleString()}원`;
-            document.getElementById('isaLimitExhaustRate').innerText = `${exhaustRate.toFixed(1)}% (한도 ${Math.round(limit/10000)}만원)`;
-            document.getElementById('isaLimitProgressBar').style.width = `${clampedProgress}%`;
-            document.getElementById('isaTotalTaxSaved').innerText = `+${Math.round(totalSaved).toLocaleString()}원`;
-        }
-
-        async function loadPortfolioData() {
-            const savedCash = localStorage.getItem('my_cash_balances_v1');
-            if (savedCash) {
-                try { cashBalances = JSON.parse(savedCash) || {}; } catch(e) { cashBalances = {}; }
-            }
-
-            const saved = localStorage.getItem('my_dividend_portfolio_v9');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        portfolio = parsed.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                        return;
-                    }
-                } catch (e) {}
-            }
-
-            if (cloudSyncKey) {
-                try {
-                    const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(cloudSyncKey)}`);
-                    if (res.ok) {
-                        const result = await res.json();
-                        if (result && result.data) {
-                            if (Array.isArray(result.data.portfolio) && result.data.portfolio.length > 0) {
-                                portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                            }
-                            if (result.data.cashBalances) {
-                                cashBalances = result.data.cashBalances;
-                                localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                            }
-                            localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-                            return;
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // 기본 샘플 데이터
-            portfolio = [
-                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '미국 핵심 배당성장 ETF', quantity: 100, buyPrice: 28.00, currentPrice: 28.50, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 대표 은행 고배당 월배당 ETF', quantity: 200, buyPrice: 12000, currentPrice: 12450, dps: 780, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
-            ];
-            saveToStorage(false);
-        }
-
-        function saveToStorage(recordSnapshot = true) {
-            if (recordSnapshot) {
-                createSnapshot('데이터 변경');
-            }
-            localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
-            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            pushToCloudQuietly();
-        }
-
-        async function fetchExchangeRate() {
-            try {
-                const res = await fetch('https://open.er-api.com/v6/latest/USD');
-                const data = await res.json();
-                if (data && data.rates && data.rates.KRW) {
-                    usdKrwRate = data.rates.KRW;
-                    document.getElementById('headerExchangeRate').innerText = `환율: 1$ = ${usdKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 1 })}원`;
-                }
-            } catch (err) {
-                document.getElementById('headerExchangeRate').innerText = `환율: 1$ = ${usdKrwRate.toLocaleString()}원`;
-            }
-        }
-
         // =========================================================================
-        // [초고속 프록시 통신 엔진] 4개 프록시 병렬 레이스 (타임아웃 1.5초)
+        // [초고속 프록시 통신 엔진] 무조건 최신 데이터를 위해 타임스탬프 캐시 무효화 도입
         // =========================================================================
-        async function fetchJsonViaFastRace(targetUrl, timeoutMs = 1500) {
+        async function fetchJsonViaFastRace(targetUrl, timeoutMs = 3000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-            const engines = [
-                (async () => {
-                    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-                    if (!res.ok) throw new Error('fail');
-                    return await res.json();
-                })(),
-                (async () => {
-                    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
-                    if (!res.ok) throw new Error('fail');
-                    return await res.json();
-                })(),
-                (async () => {
-                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
-                    if (!res.ok) throw new Error('fail');
-                    const d = await res.json();
-                    return JSON.parse(d.contents);
-                })(),
-                (async () => {
-                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-                    if (!res.ok) throw new Error('fail');
-                    return await res.json();
-                })()
+            // 강제 캐시 무효화 (_=시간 파라미터)
+            const cacheBusterUrl = targetUrl + (targetUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
+            const encoded = encodeURIComponent(cacheBusterUrl);
+
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encoded}`,
+                `https://corsproxy.io/?${encoded}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encoded}`
             ];
 
+            const promises = proxies.map(url => 
+                fetch(url, { signal: controller.signal, cache: 'no-store' })
+                    .then(async r => {
+                        if (!r.ok) throw new Error('HTTP Error');
+                        const data = await r.json();
+                        // 올바른 API 응답 구조인지 최소 검증
+                        if (data && (data.quotes || data.totalInfos || data.datas || data.chart || data.quoteSummary)) {
+                            return data;
+                        }
+                        throw new Error('Invalid JSON format');
+                    })
+            );
+
             try {
-                const data = await Promise.any(engines);
+                // 가장 빨리 정상 응답(올바른 JSON)을 반환한 프록시 결과를 채택
+                const data = await Promise.any(promises);
                 clearTimeout(timer);
                 return data;
-            } catch (err) {
+            } catch (e) {
                 clearTimeout(timer);
                 return null;
             }
         }
 
         // =========================================================================
-        // [핵심 엔진] 지능형 종목 및 시세 해결사 (네트워크 실패 시 내장 DB로 100% 매칭)
+        // [핵심 추출기] 지능형 종목 탐색 & 실시간 시세 파서
         // =========================================================================
         async function resolveStockData(rawInput) {
-            const clean = rawInput.trim();
-            const upper = clean.toUpperCase().replace(/\s+/g, '');
-            const isSixDigit = /^[0-9]{6}$/.test(clean);
+            let clean = rawInput.trim();
+            if (!clean) return null;
+            let upper = clean.toUpperCase().replace(/\s+/g, '');
+            let isSixDigit = /^[0-9]{6}$/.test(clean);
 
-            // 1. 기본 뼈대 구성
             let result = {
                 ticker: clean.toUpperCase(),
                 name: clean,
@@ -1812,86 +1048,122 @@
                 account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
                 price: 0,
                 dps: 0,
-                cycle: 'monthly',
-                months: [1,2,3,4,5,6,7,8,9,10,11,12]
+                cycle: 'quarterly',
+                months: [3, 6, 9, 12]
             };
 
-            // 2. 알려진 인기 배당 ETF 및 주식 매핑 테이블
+            // 1. 내장 인기 종목 사전 로드 (네트워크 오류 발생 대비 기본값 확보)
             const KNOWN_MAP = {
                 '466940': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 'TIGER은행고배당플러스TOP10': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 'TIGER은행고배당': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                
                 '161510': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 'PLUS고배당주': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'PLUS고배당': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'ARIRANG고배당주': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-
                 '446720': { ticker: '446720', name: 'SOL 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10450, dps: 380, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 'SOL미국배당다우존스': { ticker: '446720', name: 'SOL 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10450, dps: 380, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-
                 '458730': { ticker: '458730', name: 'TIGER 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10500, dps: 385, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 'TIGER미국배당다우존스': { ticker: '458730', name: 'TIGER 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10500, dps: 385, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-
                 '088980': { ticker: '088980', name: '맥쿼리인프라', market: 'KR', sector: '고배당/리츠', price: 11800, dps: 775, cycle: 'semiannual', months: [2, 8] },
-                '맥쿼리인프라': { ticker: '088980', name: '맥쿼리인프라', market: 'KR', sector: '고배당/리츠', price: 11800, dps: 775, cycle: 'semiannual', months: [2, 8] },
-
                 '005930': { ticker: '005930', name: '삼성전자', market: 'KR', sector: '배당성장', price: 74500, dps: 1675, cycle: 'quarterly', months: [4, 5, 8, 11] },
                 '삼성전자': { ticker: '005930', name: '삼성전자', market: 'KR', sector: '배당성장', price: 74500, dps: 1675, cycle: 'quarterly', months: [4, 5, 8, 11] },
-                '삼전': { ticker: '005930', name: '삼성전자', market: 'KR', sector: '배당성장', price: 74500, dps: 1675, cycle: 'quarterly', months: [4, 5, 8, 11] },
-
-                '005935': { ticker: '005935', name: '삼성전자우', market: 'KR', sector: '배당성장', price: 61500, dps: 1676, cycle: 'quarterly', months: [4, 5, 8, 11] },
-                '삼성전자우': { ticker: '005935', name: '삼성전자우', market: 'KR', sector: '배당성장', price: 61500, dps: 1676, cycle: 'quarterly', months: [4, 5, 8, 11] },
-
                 'SCHD': { ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', market: 'US', sector: '배당성장', price: 28.50, dps: 1.05, cycle: 'quarterly', months: [3, 6, 9, 12] },
-                '슈드': { ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', market: 'US', sector: '배당성장', price: 28.50, dps: 1.05, cycle: 'quarterly', months: [3, 6, 9, 12] },
-
                 'O': { ticker: 'O', name: 'Realty Income Corp', market: 'US', sector: '고배당/리츠', price: 55.20, dps: 3.16, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
                 '리얼티인컴': { ticker: 'O', name: 'Realty Income Corp', market: 'US', sector: '고배당/리츠', price: 55.20, dps: 3.16, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-
                 'JEPI': { ticker: 'JEPI', name: 'JPMorgan Equity Premium Income ETF', market: 'US', sector: '커버드콜', price: 58.50, dps: 4.25, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                '제피': { ticker: 'JEPI', name: 'JPMorgan Equity Premium Income ETF', market: 'US', sector: '커버드콜', price: 58.50, dps: 4.25, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-
-                'JEPQ': { ticker: 'JEPQ', name: 'JPMorgan Nasdaq Equity Premium Income ETF', market: 'US', sector: '커버드콜', price: 54.80, dps: 5.15, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'AAPL': { ticker: 'AAPL', name: 'Apple Inc.', market: 'US', sector: '성장/기술주', price: 230.00, dps: 1.00, cycle: 'quarterly', months: [2, 5, 8, 11] },
-                '애플': { ticker: 'AAPL', name: 'Apple Inc.', market: 'US', sector: '성장/기술주', price: 230.00, dps: 1.00, cycle: 'quarterly', months: [2, 5, 8, 11] }
+                'AAPL': { ticker: 'AAPL', name: 'Apple Inc.', market: 'US', sector: '성장/기술주', price: 230.00, dps: 1.00, cycle: 'quarterly', months: [2, 5, 8, 11] }
             };
 
             if (KNOWN_MAP[upper] || KNOWN_MAP[clean]) {
                 result = { ...result, ...(KNOWN_MAP[upper] || KNOWN_MAP[clean]) };
             }
 
-            // 3. 실시간 웹 API 시세 갱신 시도
-            try {
-                if (result.market === 'KR' || /^[0-9]{6}$/.test(result.ticker)) {
-                    const code = result.ticker;
-                    const pollUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${code}`;
-                    const pollData = await fetchJsonViaFastRace(pollUrl, 1200);
+            // 2. 한글명 입력 시 야후 파이낸스 Search API로 종목 티커 매칭 (예: TIGER 은행고배당 -> 466940.KS)
+            let searchSymbol = result.ticker;
+            if (!/^[0-9]{6}$/.test(clean) && !/^[A-Za-z]+$/.test(clean)) {
+                const searchUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(clean)}`;
+                const searchData = await fetchJsonViaFastRace(searchUrl, 2000);
+                if (searchData && searchData.quotes && searchData.quotes.length > 0) {
+                    const first = searchData.quotes.find(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF') || searchData.quotes[0];
+                    searchSymbol = first.symbol;
+                    result.name = first.shortname || first.longname || clean;
+                }
+            } else if (/^[0-9]{6}$/.test(clean)) {
+                searchSymbol = clean;
+            }
+
+            const isKorean = /^[0-9]{6}$/.test(searchSymbol) || searchSymbol.endsWith('.KS') || searchSymbol.endsWith('.KQ');
+            const pureTicker = searchSymbol.replace('.KS', '').replace('.KQ', '');
+            
+            result.ticker = pureTicker;
+            result.market = isKorean ? 'KR' : 'US';
+
+            // 한국 월배당 자동 판별 휴리스틱
+            const isMonthly = /고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(result.name) || /O|JEPI|JEPQ|SOL|TIGER/i.test(result.ticker);
+            if (isMonthly && !/SCHD/i.test(result.ticker) && isKorean) {
+                result.cycle = 'monthly';
+                result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
+            }
+
+            // 3. 네이버 및 야후 실시간 시세 조회
+            if (isKorean) {
+                // A. 네이버 Integration API (가장 정확한 현재가 및 DPS)
+                const integUrl = `https://m.stock.naver.com/api/stock/${pureTicker}/integration`;
+                const integData = await fetchJsonViaFastRace(integUrl, 2000);
+                if (integData) {
+                    if (integData.stockName) result.name = integData.stockName;
+                    let foundPrice = 0; let foundDps = 0;
+                    if (Array.isArray(integData.totalInfos)) {
+                        integData.totalInfos.forEach(info => {
+                            if (info.code === 'lastClosePrice' || info.key === '현재가') {
+                                foundPrice = parseFloat(String(info.value).replace(/,/g, '')) || 0;
+                            }
+                            if (info.code === 'dividend' || info.key === '주당배당금') {
+                                foundDps = parseFloat(String(info.value).replace(/,/g, '')) || 0;
+                            }
+                        });
+                    }
+                    if (foundPrice > 0) result.price = foundPrice;
+                    if (foundDps > 0) result.dps = foundDps;
+                }
+
+                // B. 혹시 실패했으면 네이버 실시간 Polling API 재시도
+                if (result.price === 0) {
+                    const pollUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${pureTicker}`;
+                    const pollData = await fetchJsonViaFastRace(pollUrl, 2000);
                     if (pollData && pollData.datas && pollData.datas[0]) {
                         const d = pollData.datas[0];
                         if (d.stockName) result.name = d.stockName;
-                        if (d.closePrice) {
-                            result.price = typeof d.closePrice === 'string' ? parseFloat(d.closePrice.replace(/,/g, '')) : d.closePrice;
-                        }
-                    }
-                } else if (result.market === 'US' || /^[A-Za-z]+$/.test(clean)) {
-                    const symbol = result.ticker;
-                    const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
-                    const yData = await fetchJsonViaFastRace(yUrl, 1200);
-                    const meta = yData?.chart?.result?.[0]?.meta;
-                    if (meta && (meta.regularMarketPrice || meta.chartPreviousClose)) {
-                        result.price = meta.regularMarketPrice || meta.chartPreviousClose;
-                        if (meta.shortName) result.name = meta.shortName;
+                        if (d.closePrice) result.price = parseFloat(d.closePrice.replace(/,/g, '')) || 0;
                     }
                 }
-            } catch (e) {
-                // 프록시 통신 실패 시 기본 DB 유지
+            }
+            
+            // 4. 미국 주식 및 네이버 조회 실패 한국 주식은 야후 파이낸스 활용
+            if (result.price === 0 || !isKorean) {
+                const ySymbol = isKorean ? `${pureTicker}.KS` : pureTicker;
+                const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ySymbol}?interval=1d&range=1d`;
+                const chartData = await fetchJsonViaFastRace(chartUrl, 2000);
+                const meta = chartData?.chart?.result?.[0]?.meta;
+                if (meta) {
+                    result.price = meta.regularMarketPrice || meta.chartPreviousClose || result.price;
+                    if (meta.shortName && !isKorean) result.name = meta.shortName;
+                }
+
+                // 미국 배당금 별도 추출
+                if (!isKorean && result.dps === 0) {
+                    const quoteUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ySymbol}?modules=summaryDetail`;
+                    const quoteData = await fetchJsonViaFastRace(quoteUrl, 2000);
+                    const summary = quoteData?.quoteSummary?.result?.[0]?.summaryDetail;
+                    if (summary && summary.dividendRate && summary.dividendRate.raw) {
+                        result.dps = summary.dividendRate.raw;
+                    }
+                }
             }
 
             return result;
         }
 
-        // 종목 조회 버튼 클릭 시 호출
+        // 종목 추가/수정 모달 검색
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -1901,13 +1173,16 @@
 
             const searchBtn = document.getElementById('searchBtn');
             const originalHtml = searchBtn.innerHTML;
-            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 조회중';
+            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 탐색중';
             searchBtn.disabled = true;
 
             try {
                 const resolved = await resolveStockData(inputRaw);
+                if (!resolved) {
+                    alert('종목을 찾을 수 없습니다. 직접 정보를 기입해주세요.');
+                    return;
+                }
 
-                // 모달 폼 필드 채우기
                 document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
                 handleMarketChange();
 
@@ -1929,14 +1204,14 @@
 
                 const unit = resolved.market === 'US' ? '$' : '원';
                 if (resolved.price > 0) {
-                    alert(`[${resolved.name} (${resolved.ticker})]\n정보 확인 완료!\n현재가: ${resolved.price.toLocaleString()}${unit} / DPS: ${resolved.dps.toLocaleString()}${unit}`);
+                    alert(`[${resolved.name} (${resolved.ticker})]\n조회 및 실시간 단가 반영 성공!\n\n현재가: ${resolved.price.toLocaleString()}${unit}\n연간배당금(DPS): ${resolved.dps.toLocaleString()}${unit}`);
                 } else {
-                    alert(`[${resolved.name}] 종목이 확인되었습니다. 현재가와 주당 배당금을 입력해주세요.`);
+                    alert(`[${resolved.name}] 이름은 식별되었으나 시세를 불러오지 못했습니다. 직접 입력해주세요.`);
                 }
 
             } catch (err) {
                 console.error(err);
-                alert('종목 조회 중 문제가 발생했습니다. 직접 입력해주세요.');
+                alert('통신 지연이 발생했습니다. 방화벽 문제일 수 있으니 수동으로 입력해주세요.');
             } finally {
                 searchBtn.innerHTML = originalHtml;
                 searchBtn.disabled = false;
@@ -1944,7 +1219,7 @@
         }
 
         // =========================================================================
-        // [시세 일괄 갱신] 병렬 처리 & 스냅샷 히스토리 누적 차단
+        // [시세 일괄 갱신] 병렬 비동기 처리 & 스냅샷 히스토리 누적 차단
         // =========================================================================
         async function refreshAllStockData(isSilent = false) {
             if (portfolio.length === 0) {
@@ -1963,6 +1238,9 @@
                     if (liveInfo.name && (!stock.name || stock.name === stock.ticker)) {
                         stock.name = liveInfo.name;
                     }
+                    if (liveInfo.dps > 0 && stock.dps === 0) {
+                        stock.dps = liveInfo.dps;
+                    }
                     updatedCount++;
                 }
             });
@@ -1975,10 +1253,11 @@
             if (icon) icon.classList.remove('fa-spin');
             
             if (!isSilent) {
-                alert(`총 ${updatedCount}개 종목의 시세가 최신 기준으로 일괄 갱신되었습니다.`);
+                alert(`성공! 총 ${updatedCount}개 종목의 실시간 시세가 최신 기준으로 일괄 갱신되었습니다.`);
             }
         }
 
+        // 필터 및 정렬 제어
         function setFilter(filterType) {
             currentFilter = filterType;
             ['ALL', 'US', 'KR', 'MONTHLY'].forEach(type => {
@@ -2009,25 +1288,17 @@
 
         function updateAccountFilterDropdown() {
             const selectEl = document.getElementById('accountFilterSelect');
-            const accounts = Array.from(new Set([
-                ...portfolio.map(s => s.account || '일반계좌'),
-                ...Object.keys(cashBalances)
-            ])).filter(Boolean);
-            
+            const accounts = Array.from(new Set([...portfolio.map(s => s.account || '일반계좌'), ...Object.keys(cashBalances)])).filter(Boolean);
             const prevVal = currentAccountFilter;
             selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 보기</option>';
-            
             accounts.forEach(acc => {
                 const opt = document.createElement('option');
-                opt.value = acc;
-                opt.innerText = `🏷️ ${acc}`;
+                opt.value = acc; opt.innerText = `🏷️ ${acc}`;
                 if (acc === prevVal) opt.selected = true;
                 selectEl.appendChild(opt);
             });
-
             if (!accounts.includes(prevVal) && prevVal !== 'ALL') {
-                currentAccountFilter = 'ALL';
-                selectEl.value = 'ALL';
+                currentAccountFilter = 'ALL'; selectEl.value = 'ALL';
             }
         }
 
@@ -2036,17 +1307,11 @@
             updateAccountFilterDropdown();
             renderSummaryAndList();
             updateFireCalculations();
-            if (activeChartTab === 'monthly') {
-                renderMonthlyDividendChart();
-            } else if (activeChartTab === 'pie') {
-                renderAssetPieChart();
-            } else if (activeChartTab === 'sector') {
-                renderSectorPieChart();
-            } else if (activeChartTab === 'account') {
-                renderAccountPieChart();
-            } else {
-                renderTimelineGrid();
-            }
+            if (activeChartTab === 'monthly') renderMonthlyDividendChart();
+            else if (activeChartTab === 'pie') renderAssetPieChart();
+            else if (activeChartTab === 'sector') renderSectorPieChart();
+            else if (activeChartTab === 'account') renderAccountPieChart();
+            else renderTimelineGrid();
         }
 
         function switchChartTab(tab) {
@@ -2069,39 +1334,26 @@
 
             if (tab === 'monthly') {
                 mBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
-                mWrap.classList.remove('hidden');
-                tip.classList.remove('hidden');
-                renderMonthlyDividendChart();
+                mWrap.classList.remove('hidden'); tip.classList.remove('hidden'); renderMonthlyDividendChart();
             } else if (tab === 'pie') {
                 pBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
-                pWrap.classList.remove('hidden');
-                tip.classList.add('hidden');
-                renderAssetPieChart();
+                pWrap.classList.remove('hidden'); tip.classList.add('hidden'); renderAssetPieChart();
             } else if (tab === 'sector') {
                 sBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
-                sWrap.classList.remove('hidden');
-                tip.classList.add('hidden');
-                renderSectorPieChart();
+                sWrap.classList.remove('hidden'); tip.classList.add('hidden'); renderSectorPieChart();
             } else if (tab === 'account') {
                 aBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
-                aWrap.classList.remove('hidden');
-                tip.classList.add('hidden');
-                renderAccountPieChart();
+                aWrap.classList.remove('hidden'); tip.classList.add('hidden'); renderAccountPieChart();
             } else {
                 tBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
-                tWrap.classList.remove('hidden');
-                tip.classList.remove('hidden');
-                renderTimelineGrid();
+                tWrap.classList.remove('hidden'); tip.classList.remove('hidden'); renderTimelineGrid();
             }
         }
 
         function renderSummaryAndList() {
-            let totalInvestedKRW = 0;
-            let totalStockCurrentKRW = 0;
-            let totalAnnualGrossKRW = 0;
-            let totalAnnualNetKRW = 0;
-            let totalUsdAssetUSD = 0;
-            let totalKrwAssetKRW = 0;
+            let totalInvestedKRW = 0; let totalStockCurrentKRW = 0;
+            let totalAnnualGrossKRW = 0; let totalAnnualNetKRW = 0;
+            let totalUsdAssetUSD = 0; let totalKrwAssetKRW = 0;
 
             const container = document.getElementById('stockListContainer');
             container.innerHTML = '';
@@ -2133,18 +1385,15 @@
             const targetCashKRW = getTotalCashKRW(selectedDashboardAccount);
             const totalAccountValueKRW = totalStockCurrentKRW + targetCashKRW;
 
-            let cashUsdSum = 0;
-            let cashKrwSum = 0;
+            let cashUsdSum = 0; let cashKrwSum = 0;
             if (selectedDashboardAccount === 'ALL') {
                 for (const acc in cashBalances) {
                     const c = getCashForAccount(acc);
-                    cashKrwSum += c.krw;
-                    cashUsdSum += c.usd;
+                    cashKrwSum += c.krw; cashUsdSum += c.usd;
                 }
             } else {
                 const c = getCashForAccount(selectedDashboardAccount);
-                cashKrwSum = c.krw;
-                cashUsdSum = c.usd;
+                cashKrwSum = c.krw; cashUsdSum = c.usd;
             }
             totalUsdAssetUSD += cashUsdSum;
             totalKrwAssetKRW += cashKrwSum;
@@ -2162,63 +1411,39 @@
 
             if (totalAnnualGrossKRW >= 20000000 && selectedDashboardAccount === 'ALL') {
                 taxBanner.className = "p-3 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between shadow-md";
-                taxIcon.innerText = "🚨";
-                taxTitle.innerText = "금융소득종합과세 대상 (연 2,000만 원 초과)";
+                taxIcon.innerText = "🚨"; taxTitle.innerText = "금융소득종합과세 대상 (연 2,000만 원 초과)";
                 taxDesc.innerText = `현재 연 세전 배당금: ${formatMoney(totalAnnualGrossKRW)} (초과액: ${formatMoney(totalAnnualGrossKRW - 20000000)})`;
                 taxBanner.classList.remove('hidden');
             } else if (totalAnnualGrossKRW >= 18000000 && selectedDashboardAccount === 'ALL') {
                 taxBanner.className = "p-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between shadow-md";
-                taxIcon.innerText = "⚠️";
-                taxTitle.innerText = "금융소득종합과세 주의 (연 2,000만 원 한도 근접)";
+                taxIcon.innerText = "⚠️"; taxTitle.innerText = "금융소득종합과세 주의 (연 2,000만 원 한도 근접)";
                 taxDesc.innerText = `한도까지 약 ${formatMoney(20000000 - totalAnnualGrossKRW)} 남았습니다.`;
                 taxBanner.classList.remove('hidden');
-            } else {
-                taxBanner.classList.add('hidden');
-            }
+            } else { taxBanner.classList.add('hidden'); }
 
             let displayList = portfolio.map((stock, originalIndex) => ({ ...stock, originalIndex }));
 
-            if (currentFilter === 'US') {
-                displayList = displayList.filter(s => s.market === 'US');
-            } else if (currentFilter === 'KR') {
-                displayList = displayList.filter(s => s.market === 'KR');
-            } else if (currentFilter === 'MONTHLY') {
-                displayList = displayList.filter(s => s.divCycle === 'monthly' || (s.payoutMonths && s.payoutMonths.length === 12));
-            }
+            if (currentFilter === 'US') displayList = displayList.filter(s => s.market === 'US');
+            else if (currentFilter === 'KR') displayList = displayList.filter(s => s.market === 'KR');
+            else if (currentFilter === 'MONTHLY') displayList = displayList.filter(s => s.divCycle === 'monthly' || (s.payoutMonths && s.payoutMonths.length === 12));
 
-            if (currentAccountFilter !== 'ALL') {
-                displayList = displayList.filter(s => (s.account || '일반계좌') === currentAccountFilter);
-            }
+            if (currentAccountFilter !== 'ALL') displayList = displayList.filter(s => (s.account || '일반계좌') === currentAccountFilter);
 
             if (isMergedView && currentAccountFilter === 'ALL') {
                 const mergedMap = {};
                 displayList.forEach(stock => {
                     const key = (stock.ticker || stock.name).toUpperCase();
                     if (!mergedMap[key]) {
-                        mergedMap[key] = {
-                            ...stock,
-                            isMerged: true,
-                            quantity: 0,
-                            totalInvestedLocal: 0,
-                            accounts: [],
-                            originalIndices: []
-                        };
+                        mergedMap[key] = { ...stock, isMerged: true, quantity: 0, totalInvestedLocal: 0, accounts: [], originalIndices: [] };
                     }
                     mergedMap[key].quantity += stock.quantity;
                     mergedMap[key].totalInvestedLocal += (stock.quantity * stock.buyPrice);
-                    if (stock.account && !mergedMap[key].accounts.includes(stock.account)) {
-                        mergedMap[key].accounts.push(stock.account);
-                    }
+                    if (stock.account && !mergedMap[key].accounts.includes(stock.account)) mergedMap[key].accounts.push(stock.account);
                     mergedMap[key].originalIndices.push(stock.originalIndex);
                 });
-
                 displayList = Object.values(mergedMap).map(m => {
                     const avgBuyPrice = m.quantity > 0 ? (m.totalInvestedLocal / m.quantity) : 0;
-                    return {
-                        ...m,
-                        buyPrice: avgBuyPrice,
-                        account: m.accounts.join(', ')
-                    };
+                    return { ...m, buyPrice: avgBuyPrice, account: m.accounts.join(', ') };
                 });
             }
 
@@ -2229,8 +1454,7 @@
                 const bVal = b.quantity * b.currentPrice * bRate;
                 const aInvest = a.quantity * a.buyPrice * aRate;
                 const bInvest = b.quantity * b.buyPrice * bRate;
-                const aProfit = aVal - aInvest;
-                const bProfit = bVal - bInvest;
+                const aProfit = aVal - aInvest; const bProfit = bVal - bInvest;
                 const aProfitRate = aInvest > 0 ? (aProfit / aInvest) : 0;
                 const bProfitRate = bInvest > 0 ? (bProfit / bInvest) : 0;
                 const aYield = a.currentPrice > 0 ? (a.dps / a.currentPrice) : 0;
@@ -2280,15 +1504,10 @@
                 const exInfo = calculateNextExDividendDate(stock);
                 let dDayBadge = '';
                 if (exInfo) {
-                    if (exInfo.dDay <= 0) {
-                        dDayBadge = `<span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white animate-pulse">🚨 D-Day 오늘 배당락</span>`;
-                    } else if (exInfo.dDay <= 7) {
-                        dDayBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/40">🚨 D-${exInfo.dDay} (이번주)</span>`;
-                    } else if (exInfo.dDay <= 30) {
-                        dDayBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">⏰ D-${exInfo.dDay}</span>`;
-                    } else {
-                        dDayBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 D-${exInfo.dDay} (${exInfo.payoutMonth}월 지급)</span>`;
-                    }
+                    if (exInfo.dDay <= 0) { dDayBadge = `<span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white animate-pulse">🚨 D-Day 오늘 배당락</span>`; }
+                    else if (exInfo.dDay <= 7) { dDayBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/40">🚨 D-${exInfo.dDay} (이번주)</span>`; }
+                    else if (exInfo.dDay <= 30) { dDayBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">⏰ D-${exInfo.dDay}</span>`; }
+                    else { dDayBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 D-${exInfo.dDay} (${exInfo.payoutMonth}월 지급)</span>`; }
                 }
 
                 const memoHtml = stock.memo ? `
@@ -2573,65 +1792,41 @@
             });
 
             if (matchCount === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-6 text-gray-500 font-bold">
-                        <p>${month}월에는 지급 예정된 배당금이 없습니다.</p>
-                    </div>
-                `;
+                list.innerHTML = `<div class="text-center py-6 text-gray-500 font-bold"><p>${month}월에는 지급 예정된 배당금이 없습니다.</p></div>`;
             }
 
             summary.innerText = `총 예상 세전: ${formatMoney(totalMonthGrossKRW)} / 세후: ${formatMoney(totalMonthNetKRW)}`;
             modal.classList.remove('hidden');
         }
 
-        function closeMonthDetailModal() {
-            document.getElementById('monthDetailModal').classList.add('hidden');
-        }
+        function closeMonthDetailModal() { document.getElementById('monthDetailModal').classList.add('hidden'); }
 
         function renderAssetPieChart() {
-            const labels = [];
-            const values = [];
+            const labels = []; const values = [];
             const bgColors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#84CC16'];
 
             portfolio.forEach(stock => {
                 const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
                 if (!matchesDashboardAcc) return;
-
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
                 labels.push(stock.name);
                 values.push(Math.round(stock.quantity * stock.currentPrice * rate));
             });
 
             const cashKRW = getTotalCashKRW(selectedDashboardAccount);
-            if (cashKRW > 0) {
-                labels.push('💵 현금 / 예수금');
-                values.push(Math.round(cashKRW));
-            }
+            if (cashKRW > 0) { labels.push('💵 현금 / 예수금'); values.push(Math.round(cashKRW)); }
 
             const ctx = document.getElementById('assetPieChart').getContext('2d');
             if (pieChart) pieChart.destroy();
 
             pieChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: bgColors.slice(0, labels.length),
-                        borderWidth: 2,
-                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}` } }
                     }
                 }
             });
@@ -2644,7 +1839,6 @@
             portfolio.forEach(stock => {
                 const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
                 if (!matchesDashboardAcc) return;
-
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
                 const val = Math.round(stock.quantity * stock.currentPrice * rate);
                 const sector = stock.sector || '기타';
@@ -2652,37 +1846,20 @@
             });
 
             const cashKRW = getTotalCashKRW(selectedDashboardAccount);
-            if (cashKRW > 0) {
-                sectorMap['현금성 자산'] = (sectorMap['현금성 자산'] || 0) + Math.round(cashKRW);
-            }
+            if (cashKRW > 0) { sectorMap['현금성 자산'] = (sectorMap['현금성 자산'] || 0) + Math.round(cashKRW); }
 
-            const labels = Object.keys(sectorMap);
-            const values = Object.values(sectorMap);
-
+            const labels = Object.keys(sectorMap); const values = Object.values(sectorMap);
             const ctx = document.getElementById('sectorPieChart').getContext('2d');
             if (sectorChart) sectorChart.destroy();
 
             sectorChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: bgColors.slice(0, labels.length),
-                        borderWidth: 2,
-                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}` } }
                     }
                 }
             });
@@ -2702,59 +1879,35 @@
             for (const acc in cashBalances) {
                 const c = getCashForAccount(acc);
                 const cashTotal = Math.round(c.krw + (c.usd * usdKrwRate));
-                if (cashTotal > 0) {
-                    accountMap[acc] = (accountMap[acc] || 0) + cashTotal;
-                }
+                if (cashTotal > 0) accountMap[acc] = (accountMap[acc] || 0) + cashTotal;
             }
 
-            const labels = Object.keys(accountMap);
-            const values = Object.values(accountMap);
-
+            const labels = Object.keys(accountMap); const values = Object.values(accountMap);
             const ctx = document.getElementById('accountPieChart').getContext('2d');
             if (accountChart) accountChart.destroy();
 
             accountChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: bgColors.slice(0, labels.length),
-                        borderWidth: 2,
-                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}` } }
                     }
                 }
             });
         }
 
-        function openDripModal() {
-            document.getElementById('dripModal').classList.remove('hidden');
-            runDripSimulation();
-        }
-
-        function closeDripModal() {
-            document.getElementById('dripModal').classList.add('hidden');
-        }
+        function openDripModal() { document.getElementById('dripModal').classList.remove('hidden'); runDripSimulation(); }
+        function closeDripModal() { document.getElementById('dripModal').classList.add('hidden'); }
 
         function runDripSimulation() {
             const years = parseInt(document.getElementById('dripYears').value);
             const priceGrowth = (parseFloat(document.getElementById('dripPriceGrowth').value) || 0) / 100;
             const divGrowth = (parseFloat(document.getElementById('dripDivGrowth').value) || 0) / 100;
 
-            let currentTotalKRW = 0;
-            let currentAnnualDivKRW = 0;
+            let currentTotalKRW = 0; let currentAnnualDivKRW = 0;
 
             portfolio.forEach(stock => {
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
@@ -2765,13 +1918,11 @@
             if (currentTotalKRW === 0) currentTotalKRW = 10000000;
             let initialYield = currentTotalKRW > 0 ? (currentAnnualDivKRW / currentTotalKRW) : 0.04;
 
-            let dripAsset = currentTotalKRW;
-            let noDripAsset = currentTotalKRW;
+            let dripAsset = currentTotalKRW; let noDripAsset = currentTotalKRW;
             let currentDivRate = initialYield;
 
             const labels = ['현재'];
-            const dripData = [Math.round(dripAsset)];
-            const noDripData = [Math.round(noDripAsset)];
+            const dripData = [Math.round(dripAsset)]; const noDripData = [Math.round(noDripAsset)];
 
             for (let y = 1; y <= years; y++) {
                 const yearlyDiv = dripAsset * currentDivRate * (1 - 0.154);
@@ -2797,34 +1948,19 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: '배당 재투자(DRIP)',
-                            data: dripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v),
-                            borderColor: '#6366F1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: '단순 보유(재투자 X)',
-                            data: noDripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v),
-                            borderColor: '#9CA3AF',
-                            borderDash: [4, 4],
-                            tension: 0.3
-                        }
+                        { label: '배당 재투자(DRIP)', data: dripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v), borderColor: '#6366F1', backgroundColor: 'rgba(99, 102, 241, 0.2)', fill: true, tension: 0.3 },
+                        { label: '단순 보유(재투자 X)', data: noDripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v), borderColor: '#9CA3AF', borderDash: [4, 4], tension: 0.3 }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } },
                     scales: {
                         x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9, weight: 'bold' } } },
                         y: {
                             grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
-                                font: { size: 9, weight: 'bold' },
+                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9, weight: 'bold' },
                                 callback: val => displayCurrency === 'USD' ? `$${val}` : (val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val))
                             }
                         }
@@ -2853,9 +1989,7 @@
                 document.getElementById('inputDivCycle').value = item.divCycle || 'monthly';
 
                 const checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
-                checkboxes.forEach(cb => {
-                    cb.checked = (item.payoutMonths || []).includes(parseInt(cb.value));
-                });
+                checkboxes.forEach(cb => { cb.checked = (item.payoutMonths || []).includes(parseInt(cb.value)); });
             } else {
                 document.getElementById('modalTitle').innerText = '종목 추가';
                 document.getElementById('inputAccount').value = (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌';
@@ -2866,9 +2000,7 @@
             document.getElementById('stockModal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('stockModal').classList.add('hidden');
-        }
+        function closeModal() { document.getElementById('stockModal').classList.add('hidden'); }
 
         function handleMarketChange() {
             const isUS = document.querySelector('input[name="marketType"]:checked').value === 'US';
@@ -2882,15 +2014,10 @@
             const checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
             checkboxes.forEach(cb => cb.checked = false);
 
-            if (cycle === 'monthly') {
-                checkboxes.forEach(cb => cb.checked = true);
-            } else if (cycle === 'quarterly') {
-                [3, 6, 9, 12].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
-            } else if (cycle === 'semiannual') {
-                [6, 12].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
-            } else if (cycle === 'annual') {
-                [4].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
-            }
+            if (cycle === 'monthly') checkboxes.forEach(cb => cb.checked = true);
+            else if (cycle === 'quarterly') [3, 6, 9, 12].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
+            else if (cycle === 'semiannual') [6, 12].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
+            else if (cycle === 'annual') [4].forEach(m => document.querySelector(`input[name="payoutMonth"][value="${m}"]`).checked = true);
         }
 
         function saveStock(e) {
@@ -2909,17 +2036,12 @@
             const divCycle = document.getElementById('inputDivCycle').value;
 
             const payoutMonths = [];
-            document.querySelectorAll('input[name="payoutMonth"]:checked').forEach(cb => {
-                payoutMonths.push(parseInt(cb.value));
-            });
+            document.querySelectorAll('input[name="payoutMonth"]:checked').forEach(cb => { payoutMonths.push(parseInt(cb.value)); });
 
             const stockData = { market, ticker, name, sector, account, memo, quantity, buyPrice, currentPrice, dps, divCycle, payoutMonths };
 
-            if (editIdx >= 0) {
-                portfolio[editIdx] = stockData;
-            } else {
-                portfolio.push(stockData);
-            }
+            if (editIdx >= 0) portfolio[editIdx] = stockData;
+            else portfolio.push(stockData);
 
             saveToStorage(true);
             renderAll();
@@ -2936,65 +2058,36 @@
 
         function exportCSV() {
             if (portfolio.length === 0 && Object.keys(cashBalances).length === 0) {
-                alert('내보낼 데이터가 없습니다.');
-                return;
+                alert('내보낼 데이터가 없습니다.'); return;
             }
 
             const headers = ['구분(Type)', '시장(Market)', '티커(Ticker)', '종목명(Name)', '계좌(Account)', '섹터(Sector)', '투자메모(Memo)', '보유수량/잔액(Qty/Cash)', '매수가(BuyPrice)', '현재가(CurrentPrice)', '주당배당금(DPS)', '배당주기(Cycle)', '배당지급월(Months)'];
             
             const rows = portfolio.map(s => [
-                'STOCK',
-                s.market,
-                s.ticker,
-                `"${(s.name || '').replace(/"/g, '""')}"`,
-                `"${(s.account || '일반계좌').replace(/"/g, '""')}"`,
-                `"${(s.sector || '').replace(/"/g, '""')}"`,
-                `"${(s.memo || '').replace(/"/g, '""')}"`,
-                s.quantity,
-                s.buyPrice,
-                s.currentPrice,
-                s.dps,
-                s.divCycle,
-                `"${(s.payoutMonths || []).join(',')}"`
+                'STOCK', s.market, s.ticker, `"${(s.name || '').replace(/"/g, '""')}"`, `"${(s.account || '일반계좌').replace(/"/g, '""')}"`, `"${(s.sector || '').replace(/"/g, '""')}"`, `"${(s.memo || '').replace(/"/g, '""')}"`,
+                s.quantity, s.buyPrice, s.currentPrice, s.dps, s.divCycle, `"${(s.payoutMonths || []).join(',')}"`
             ]);
 
             for (const acc in cashBalances) {
                 const c = getCashForAccount(acc);
-                if (c.krw > 0) {
-                    rows.push(['CASH_KRW', 'KR', 'KRW_CASH', '원화 예수금', `"${acc}"`, '현금성자산', '원화 잔액', c.krw, 1, 1, 0, 'none', '""']);
-                }
-                if (c.usd > 0) {
-                    rows.push(['CASH_USD', 'US', 'USD_CASH', '달러 예수금', `"${acc}"`, '현금성자산', '달러 환전 잔액', c.usd, 1, 1, 0, 'none', '""']);
-                }
+                if (c.krw > 0) rows.push(['CASH_KRW', 'KR', 'KRW_CASH', '원화 예수금', `"${acc}"`, '현금성자산', '원화 잔액', c.krw, 1, 1, 0, 'none', '""']);
+                if (c.usd > 0) rows.push(['CASH_USD', 'US', 'USD_CASH', '달러 예수금', `"${acc}"`, '현금성자산', '달러 환전 잔액', c.usd, 1, 1, 0, 'none', '""']);
             }
 
             const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `dividend_portfolio_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            a.href = url; a.download = `dividend_portfolio_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         }
 
         function exportData() {
-            const payload = {
-                version: '1.7.0',
-                updatedAt: new Date().toISOString(),
-                portfolio: portfolio,
-                cashBalances: cashBalances
-            };
+            const payload = { version: '1.8.0', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a');
-            a.setAttribute("href", dataStr);
-            a.setAttribute("download", `dividend_portfolio_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+            a.setAttribute("href", dataStr); a.setAttribute("download", `dividend_portfolio_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(a); a.click(); a.remove();
         }
 
         function importData(event) {
@@ -3005,7 +2098,6 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     createSnapshot('JSON 파일 복원 전 백업');
-
                     if (Array.isArray(imported)) {
                         portfolio = imported.map(s => ({ ...s, account: s.account || '일반계좌' }));
                     } else if (imported && Array.isArray(imported.portfolio)) {
@@ -3014,17 +2106,10 @@
                             cashBalances = imported.cashBalances;
                             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
                         }
-                    } else {
-                        alert('올바른 백업 JSON 파일 형식이 아닙니다.');
-                        return;
-                    }
-
-                    saveToStorage(true);
-                    renderAll();
+                    } else { alert('올바른 백업 JSON 파일 형식이 아닙니다.'); return; }
+                    saveToStorage(true); renderAll();
                     alert('포트폴리오 및 예수금 데이터를 성공적으로 복원했습니다.');
-                } catch (err) {
-                    alert('올바른 백업 JSON 파일이 아닙니다.');
-                }
+                } catch (err) { alert('올바른 백업 JSON 파일이 아닙니다.'); }
             };
             reader.readAsText(file);
         }
