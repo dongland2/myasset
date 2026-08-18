@@ -53,7 +53,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.11.0
+                    v1.11.1
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -140,20 +140,7 @@
             </div>
         </div>
 
-        <!-- FIRE 생활비 충당률 위젯 -->
-        <section id="fireWidgetCard" onclick="openFireModal()" class="bg-gradient-to-r from-orange-100 via-amber-50 to-white dark:from-orange-900/40 dark:via-amber-900/30 dark:to-gray-800 p-3.5 rounded-2xl border border-orange-500/30 shadow-lg cursor-pointer hover:border-orange-500/50 transition">
-            <div class="flex justify-between items-center mb-1.5">
-                <span class="text-xs font-bold text-orange-700 dark:text-orange-300 flex items-center gap-1.5"><i class="fa-solid fa-fire-flame-curved text-orange-600 dark:text-orange-400"></i> 은퇴 FIRE 생활비 충당률</span>
-                <span class="text-xs font-black text-orange-700 dark:text-orange-300" id="fireWidgetRate">0.0%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-900/80 rounded-full h-2 overflow-hidden border border-gray-300 dark:border-gray-700">
-                <div id="fireWidgetProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            <div class="flex justify-between items-center text-[10px] text-gray-700 dark:text-gray-300 mt-1.5 font-semibold">
-                <span>월 배당: <b class="text-gray-900 dark:text-white" id="fireWidgetNetMonthly">0원</b></span>
-                <span>목표 생활비: <b class="text-gray-900 dark:text-white" id="fireWidgetTargetExp">3,000,000원</b></span>
-            </div>
-        </section>
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.1에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -547,11 +534,21 @@
                 <div><h3 class="text-base font-bold"><i class="fa-solid fa-magnifying-glass text-blue-500"></i> 검색 결과 선택</h3><p id="stockSearchResultQuery" class="text-[10px] opacity-70 mt-0.5"></p></div>
                 <button onclick="cancelStockSearchSelection()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex items-center gap-2">
-                <label class="text-[10px] font-bold whitespace-nowrap text-gray-600 dark:text-gray-300">운용사</label>
-                <select id="stockSearchManagerFilter" onchange="renderKoreanStockCandidateList()" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-[11px] font-bold">
-                    <option value="ALL">전체 운용사</option>
-                </select>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] font-bold mb-1 text-gray-600 dark:text-gray-300">시장</label>
+                    <select id="stockSearchMarketFilter" onchange="renderStockCandidateList()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-[11px] font-bold">
+                        <option value="ALL">🇰🇷🇺🇸 전체</option>
+                        <option value="KR">🇰🇷 한국</option>
+                        <option value="US">🇺🇸 미국</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold mb-1 text-gray-600 dark:text-gray-300">ETF 운용사</label>
+                    <select id="stockSearchManagerFilter" onchange="renderStockCandidateList()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-[11px] font-bold">
+                        <option value="ALL">전체 운용사</option>
+                    </select>
+                </div>
             </div>
             <div id="stockSearchResultList" class="space-y-2"></div>
             <button onclick="cancelStockSearchSelection()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold text-xs">취소</button>
@@ -648,7 +645,7 @@
                         <input type="text" id="inputTicker" required placeholder="예: 현대차, 466940, SCHD" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-1">💡 '현대차', 'TIGER 은행고배당', '466940', 'SCHD' 등 입력 후 조회 클릭</p>
+                    <p class="text-[10px] text-gray-500 mt-1">💡 한국/미국을 동시에 검색합니다. 예: 'NC' 입력 시 🇰🇷 NC(036570)와 🇺🇸 NC(NACCO)를 함께 선택 가능</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div><label class="block font-bold mb-1">정식 종목명</label><input type="text" id="inputName" required placeholder="예: 현대차" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold"></div>
@@ -1147,7 +1144,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.11.0';
+        var CLOUD_SYNC_VERSION = '1.11.1';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -1415,7 +1412,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.11.0: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.11.1: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1496,44 +1493,33 @@
             return String(v || '').toUpperCase().replace(/[\s·ㆍ()\-_\.]/g, '');
         }
 
-        function pickBestKoreanSearchItem(items, query) {
-            if (!Array.isArray(items) || items.length === 0) return null;
-            var q = normalizeStockName(query);
-            var domestic = items.filter(function(x) {
-                if (!x) return false;
-                var code = String(x.code || x.itemCode || x.symbol || '').replace(/^A/, '');
-                return /^[0-9A-Z]{6}$/.test(code) || /코스피|코스닥|KOSPI|KOSDAQ/i.test(String(x.typeName || x.market || ''));
-            });
-            if (domestic.length === 0) domestic = items;
-
-            for (var i = 0; i < domestic.length; i++) {
-                if (normalizeStockName(domestic[i].name || domestic[i].itemName) === q) return domestic[i];
-            }
-            for (var j = 0; j < domestic.length; j++) {
-                var n = normalizeStockName(domestic[j].name || domestic[j].itemName);
-                if (n.indexOf(q) !== -1 || q.indexOf(n) !== -1) return domestic[j];
-            }
-            return domestic[0] || null;
+        function normalizeSearchTicker(v) {
+            return String(v || '').trim().toUpperCase().replace(/^A(?=\d{6}$)/, '');
         }
 
-        function parseLegacyNaverItems(data) {
-            var out = [];
-            if (!data) return out;
-            if (data.result && Array.isArray(data.result.items)) return data.result.items;
-            if (Array.isArray(data.items)) {
-                // ac.stock.naver.com / 구형 ac 응답: 2중 배열 또는 객체 배열 모두 처리
-                data.items.forEach(function(group) {
-                    if (Array.isArray(group)) {
-                        group.forEach(function(row) {
-                            if (Array.isArray(row)) {
-                                out.push({ code: row[0], name: row[1], typeName: row[2] || '' });
-                            } else if (row && typeof row === 'object') out.push(row);
-                        });
-                    } else if (group && typeof group === 'object') out.push(group);
-                });
-                if (out.length > 0) return out;
-            }
-            return out;
+        function stockCandidateMatchRank(item, query) {
+            var qName = normalizeStockName(query);
+            var qTicker = normalizeSearchTicker(query);
+            var ticker = normalizeSearchTicker(item && item.ticker);
+            var name = normalizeStockName(item && item.name);
+            if (ticker && ticker === qTicker) return 0;
+            if (name && name === qName) return 0;
+            if ((ticker && ticker.indexOf(qTicker) === 0) || (name && name.indexOf(qName) === 0)) return 1;
+            if ((ticker && ticker.indexOf(qTicker) !== -1) || (name && name.indexOf(qName) !== -1)) return 2;
+            return 3;
+        }
+
+        function sortStockSearchCandidates(items, query) {
+            return (items || []).slice().sort(function(a, b) {
+                var ar = stockCandidateMatchRank(a, query);
+                var br = stockCandidateMatchRank(b, query);
+                if (ar !== br) return ar - br;
+                // 같은 검색 정확도라면 한국 종목을 먼저 보여준다. NC처럼 양 시장 티커가 겹치는 경우 국내가 위에 온다.
+                var am = a.market === 'KR' ? 0 : 1;
+                var bm = b.market === 'KR' ? 0 : 1;
+                if (am !== bm) return am - bm;
+                return String(a.name || a.ticker || '').localeCompare(String(b.name || b.ticker || ''), 'ko');
+            });
         }
 
         async function searchKoreanStockCandidates(name) {
@@ -1550,73 +1536,125 @@
                 seen[code] = true;
                 var displayName = item.name || item.itemName || code;
                 var etfMeta = getEtfBrandManager(displayName);
-                out.push({ ticker: code, name: displayName, typeName: item.typeName || item.market || '', etfBrand: etfMeta.brand || '', etfManager: etfMeta.manager || '' });
+                out.push({ market:'KR', ticker: code, name: displayName, typeName: item.typeName || item.market || '국내 종목', exchange: item.exchange || '', etfBrand: etfMeta.brand || '', etfManager: etfMeta.manager || '' });
             });
             // 전체 ETF 캐시에 있는 결과도 합친다. 자동완성 API가 일부 ETF 브랜드를 놓쳐도 검색 가능하다.
             findEtfsInUniverse(name).forEach(function(item) {
                 var code = normalizeKoreanTicker(item.ticker || item.code || '');
                 if (!isKoreanTicker(code) || seen[code]) return;
                 seen[code] = true;
-                out.push({ ticker:code, name:item.name, typeName:'ETF 전체목록', etfBrand:item.brand||'', etfManager:item.manager||'' });
+                out.push({ market:'KR', ticker:code, name:item.name, typeName:'ETF 전체목록', exchange:'KRX', etfBrand:item.brand||'', etfManager:item.manager||'' });
             });
-            var q = normalizeStockName(name);
-            out.sort(function(a,b) {
-                var ae = normalizeStockName(a.name) === q ? 0 : 1;
-                var be = normalizeStockName(b.name) === q ? 0 : 1;
-                if (ae !== be) return ae - be;
-                return a.name.localeCompare(b.name, 'ko');
-            });
-            return out.slice(0, 80);
+            return sortStockSearchCandidates(out, name).slice(0, 80);
         }
 
-        function chooseKoreanStockCandidate(name) {
-            return searchKoreanStockCandidates(name).then(function(items) {
+        async function searchUsStockCandidates(name) {
+            var data = await marketProxyFetch('/ussearch?q=' + encodeURIComponent(name), 9000);
+            var items = data && Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+            var out = []; var seen = {};
+            items.forEach(function(item) {
+                if (!item) return;
+                var ticker = normalizeSearchTicker(item.symbol || item.ticker || item.code || '');
+                if (!ticker || seen[ticker]) return;
+                seen[ticker] = true;
+                out.push({
+                    market:'US', ticker:ticker, name:item.name || item.shortName || item.longName || ticker,
+                    typeName:item.typeName || item.quoteType || '미국 종목', exchange:item.exchangeName || item.exchange || '',
+                    etfBrand:'', etfManager:''
+                });
+            });
+            return sortStockSearchCandidates(out, name).slice(0, 50);
+        }
+
+        function makeDirectUsTickerCandidate(query) {
+            var ticker = normalizeSearchTicker(query);
+            if (!/^[A-Z][A-Z0-9.\-]{0,9}$/.test(ticker)) return null;
+            return { market:'US', ticker:ticker, name:ticker, typeName:'미국 티커 직접조회', exchange:'', etfBrand:'', etfManager:'', direct:true };
+        }
+
+        async function searchAllStockCandidates(name) {
+            var krItems = [];
+            var usItems = [];
+            var results = await Promise.allSettled([
+                searchKoreanStockCandidates(name),
+                searchUsStockCandidates(name)
+            ]);
+            if (results[0].status === 'fulfilled') krItems = results[0].value || [];
+            if (results[1].status === 'fulfilled') usItems = results[1].value || [];
+
+            // 구버전 Worker이거나 Yahoo 검색이 일시 실패해도 영문 티커 직접 조회는 가능하게 둔다.
+            var directUs = makeDirectUsTickerCandidate(name);
+            if (directUs && !usItems.some(function(x){ return normalizeSearchTicker(x.ticker) === directUs.ticker; })) usItems.push(directUs);
+
+            var merged = []; var seen = {};
+            krItems.concat(usItems).forEach(function(item) {
+                var key = item.market + ':' + normalizeSearchTicker(item.ticker);
+                if (!item.ticker || seen[key]) return;
+                seen[key] = true;
+                merged.push(item);
+            });
+            return sortStockSearchCandidates(merged, name).slice(0, 100);
+        }
+
+        function chooseStockCandidate(name) {
+            return searchAllStockCandidates(name).then(function(items) {
                 if (!items.length) return null;
+                var exactItems = items.filter(function(item) { return stockCandidateMatchRank(item, name) === 0; });
+                // 정확히 일치하는 후보가 하나뿐이면 바로 사용한다. NC처럼 한국/미국이 동시에 정확 일치하면 반드시 팝업으로 선택.
+                if (exactItems.length === 1) return exactItems[0];
                 if (items.length === 1) return items[0];
                 return new Promise(function(resolve) {
-                    stockSearchSelectionState = { items: items, resolve: resolve };
+                    stockSearchSelectionState = { items: items, resolve: resolve, query:name };
                     var qEl = document.getElementById('stockSearchResultQuery');
-                    if (qEl) qEl.innerText = '“' + name + '” 검색 결과 · 원하는 종목을 선택하세요.';
+                    if (qEl) qEl.innerText = '“' + name + '” 한국/미국 통합 검색 결과 · 원하는 종목을 선택하세요.';
+                    var marketFilter = document.getElementById('stockSearchMarketFilter');
+                    if (marketFilter) marketFilter.value = 'ALL';
                     var managerFilter = document.getElementById('stockSearchManagerFilter');
                     if (managerFilter) {
                         managerFilter.innerHTML = '<option value="ALL">전체 운용사</option>';
                         var managers = {};
-                        items.forEach(function(item) { if (item.etfManager) managers[item.etfManager] = true; });
+                        items.forEach(function(item) { if (item.market === 'KR' && item.etfManager) managers[item.etfManager] = true; });
                         Object.keys(managers).sort(function(a,b){return a.localeCompare(b,'ko');}).forEach(function(manager){
                             var opt = document.createElement('option'); opt.value = manager; opt.innerText = manager; managerFilter.appendChild(opt);
                         });
                         managerFilter.value = 'ALL';
                     }
-                    renderKoreanStockCandidateList();
+                    renderStockCandidateList();
                     document.getElementById('stockSearchResultModal').classList.remove('hidden');
                 });
             });
         }
 
-        function renderKoreanStockCandidateList() {
+        function renderStockCandidateList() {
             var list = document.getElementById('stockSearchResultList');
             if (!list) return;
             list.innerHTML = '';
             if (!stockSearchSelectionState || !Array.isArray(stockSearchSelectionState.items)) return;
+            var marketFilter = document.getElementById('stockSearchMarketFilter');
+            var selectedMarket = marketFilter ? marketFilter.value : 'ALL';
             var managerFilter = document.getElementById('stockSearchManagerFilter');
             var selectedManager = managerFilter ? managerFilter.value : 'ALL';
             var count = 0;
             stockSearchSelectionState.items.forEach(function(item, idx) {
+                if (selectedMarket !== 'ALL' && item.market !== selectedMarket) return;
                 if (selectedManager !== 'ALL' && item.etfManager !== selectedManager) return;
                 count++;
                 var btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:border-blue-500 text-left flex justify-between items-center gap-3';
-                var meta = escapeHtml(item.typeName || '국내 종목');
-                if (item.etfManager) meta += ' · ' + escapeHtml(item.etfManager);
-                btn.innerHTML = '<div class="min-w-0"><p class="font-black text-sm truncate">' + escapeHtml(item.name) + '</p><p class="text-[10px] opacity-70 mt-0.5 truncate">' + meta + '</p></div><span class="font-mono font-black text-blue-600 dark:text-blue-300 shrink-0">' + item.ticker + '</span>';
-                btn.onclick = function() { selectKoreanSearchCandidate(idx); };
+                var marketText = item.market === 'KR' ? '🇰🇷 한국' : '🇺🇸 미국';
+                var metaParts = [marketText];
+                if (item.exchange) metaParts.push(item.exchange);
+                if (item.typeName) metaParts.push(item.typeName);
+                if (item.etfManager) metaParts.push(item.etfManager);
+                btn.innerHTML = '<div class="min-w-0"><p class="font-black text-sm truncate">' + escapeHtml(item.name || item.ticker) + '</p><p class="text-[10px] opacity-70 mt-0.5 truncate">' + metaParts.map(escapeHtml).join(' · ') + '</p></div><span class="font-mono font-black ' + (item.market === 'KR' ? 'text-emerald-600 dark:text-emerald-300' : 'text-blue-600 dark:text-blue-300') + ' shrink-0">' + escapeHtml(item.ticker) + '</span>';
+                btn.onclick = function() { selectStockSearchCandidate(idx); };
                 list.appendChild(btn);
             });
-            if (!count) list.innerHTML = '<div class="text-center py-6 text-gray-500 text-xs font-bold">선택한 운용사의 검색 결과가 없습니다.</div>';
+            if (!count) list.innerHTML = '<div class="text-center py-6 text-gray-500 text-xs font-bold">선택한 필터의 검색 결과가 없습니다.</div>';
         }
 
-        function selectKoreanSearchCandidate(index) {
+        function selectStockSearchCandidate(index) {
             if (!stockSearchSelectionState) return;
             var item = stockSearchSelectionState.items[index] || null;
             var resolve = stockSearchSelectionState.resolve;
@@ -1682,7 +1720,6 @@
 
             var upper = clean.toUpperCase().replace(/\s+/g, '');
             var isSixDigit = isKoreanTicker(clean);
-            var containsKorean = /[가-힣]/.test(clean);
             var result = {
                 ticker: upper, name: clean, market: isSixDigit ? 'KR' : 'US',
                 sector: '기타', account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
@@ -1707,18 +1744,31 @@
                 isSixDigit = result.market === 'KR' && isKoreanTicker(result.ticker);
             }
 
-            // 한글 이름은 무조건 Worker -> 네이버 자동완성으로 실제 종목코드를 찾는다.
-            if (containsKorean) {
+            // 6자리 국내 종목코드가 아닌 입력은 한국/미국을 동시에 검색한다.
+            // 예: NC -> 한국 NC(036570) + 미국 NC(NACCO) 모두 후보로 보여주고 사용자가 선택한다.
+            if (!isSixDigit) {
                 try {
-                    var found = await chooseKoreanStockCandidate(clean);
+                    var found = await chooseStockCandidate(clean);
                     if (found && found.cancelled) return null;
                     if (found) {
                         result.ticker = found.ticker;
-                        result.name = found.name;
-                        result.market = 'KR';
-                        isSixDigit = true;
-                    } else if (!match) return null;
+                        result.name = found.name || found.ticker;
+                        result.market = found.market || 'US';
+                        isSixDigit = result.market === 'KR' && isKoreanTicker(result.ticker);
+
+                        // 선택된 실제 티커가 내장 사전에 있으면 배당주기/섹터 등 보조 메타만 다시 반영한다.
+                        var selectedMatch = MASTER_STOCKS[result.ticker] || MASTER_STOCKS[result.name];
+                        if (selectedMatch && selectedMatch.market === result.market) {
+                            result.sector = selectedMatch.sector || result.sector;
+                            result.dps = selectedMatch.dps || result.dps;
+                            result.cycle = selectedMatch.cycle || result.cycle;
+                            result.months = selectedMatch.months || result.months;
+                        }
+                    } else if (!match) {
+                        return null;
+                    }
                 } catch (e) {
+                    // 기존 내장 종목이면 검색 서비스 장애 시에도 계속 진행한다.
                     if (!match) throw e;
                 }
             }
@@ -2174,7 +2224,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.11.0: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.11.1: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2249,7 +2299,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.11.0: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.11.1: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -3839,7 +3889,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.11.0부터 비활성화.
+            // v1.11.1부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -3938,7 +3988,7 @@
         }
 
         // =========================================================================
-        // v1.11.0 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.11.1 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4106,7 +4156,7 @@
         }
 
         // =========================================================================
-        // v1.11.0: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.11.1: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -4487,7 +4537,7 @@
         }
 
         function copyDiagnosticRawData(){
-            var payload={version:'1.11.0',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
+            var payload={version:'1.11.1',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
             var text=JSON.stringify(payload,null,2);
             if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('진단 원본 JSON을 클립보드에 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);});else prompt('아래 JSON을 복사하세요:',text);
         }
