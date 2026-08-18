@@ -14,7 +14,6 @@
     <!-- 외부 스타일시트 및 아이콘, 차트 라이브러리 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind CDN 다크모드 클래스 모드 활성화
         tailwind.config = {
             darkMode: 'class',
         }
@@ -45,15 +44,15 @@
                 <h1 class="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
-                <!-- 버전 표시 뱃지 (v1.6.3 다크모드 가독성 완벽 해결) -->
+                <!-- 버전 표시 뱃지 (v1.6.4 가독성 최종 개선) -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.6.3
+                    v1.6.4
                 </span>
             </div>
 
             <!-- 환율 및 클라우드 동기화 상태 -->
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
-                <p class="text-[10px] text-gray-600 dark:text-gray-300" id="headerExchangeRate">환율: 조회중...</p>
+                <p class="text-[10px] text-gray-600 dark:text-gray-300 font-semibold" id="headerExchangeRate">환율: 조회중...</p>
                 <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1 whitespace-nowrap">
                     <i class="fa-solid fa-cloud text-[9px]"></i> <span id="cloudStatusText">로컬 전용</span>
                 </span>
@@ -64,7 +63,7 @@
         <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-gray-200 dark:border-gray-800/80">
             <div class="flex items-center gap-1 flex-wrap">
                 <!-- 라이트/다크 모드 테마 토글 버튼 -->
-                <button onclick="toggleThemeMode()" id="themeToggleBtn" class="bg-gray-100 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="화면 테마 변경 (다크/라이트)">
+                <button onclick="toggleThemeMode()" id="themeToggleBtn" class="bg-gray-200 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 border border-gray-300 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-700 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="화면 테마 변경 (다크/라이트)">
                     <i class="fa-solid fa-moon text-[10px]" id="themeIcon"></i>
                 </button>
                 <!-- 통화 전환 토글 버튼 -->
@@ -72,7 +71,7 @@
                     <i class="fa-solid fa-right-left text-[9px]"></i> <span id="currencyToggleText">KRW</span>
                 </button>
                 <!-- 현금/예수금 관리 모달 버튼 -->
-                <button onclick="openCashModal()" class="bg-emerald-600/90 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-emerald-600/30 active:scale-95 transition whitespace-nowrap" title="계좌별 현금/예수금 관리">
+                <button onclick="openCashModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-emerald-600/30 active:scale-95 transition whitespace-nowrap" title="계좌별 현금/예수금 관리">
                     <i class="fa-solid fa-money-bill-wave text-[10px]"></i> 예수금
                 </button>
                 <!-- 은퇴 FIRE 계산기 -->
@@ -125,19 +124,19 @@
         <div id="emergencyRecoverBanner" class="hidden p-3.5 rounded-xl border border-amber-500/60 bg-amber-500/15 text-amber-800 dark:text-amber-200 text-xs shadow-lg space-y-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-amber-500 dark:text-amber-400 text-sm"></i>
+                    <i class="fa-solid fa-shield-halved text-amber-600 dark:text-amber-400 text-sm"></i>
                     <span class="font-bold">과거 저장 데이터 복구 가능</span>
                 </div>
                 <span id="recoverItemCountBadge" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-800 dark:text-amber-300 font-bold"></span>
             </div>
-            <p class="text-[11px] opacity-90 leading-relaxed">
+            <p class="text-[11px] font-medium leading-relaxed">
                 이전에 기록된 포트폴리오 백업본이 발견되었습니다. 지금 즉시 이전 데이터를 복구하시겠습니까?
             </p>
             <div class="flex gap-2 pt-1">
                 <button onclick="applyEmergencyRecovery()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-1.5 rounded-lg text-xs transition">
                     <i class="fa-solid fa-rotate-left"></i> 발견된 데이터로 복원하기
                 </button>
-                <button onclick="dismissEmergencyRecovery()" class="px-3 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-xs">
+                <button onclick="dismissEmergencyRecovery()" class="px-3 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">
                     닫기
                 </button>
             </div>
@@ -149,7 +148,7 @@
                 <span id="taxWarningIcon" class="text-base">⚠️</span>
                 <div>
                     <p id="taxWarningTitle" class="font-bold"></p>
-                    <p id="taxWarningDesc" class="text-[11px] opacity-90 mt-0.5"></p>
+                    <p id="taxWarningDesc" class="text-[11px] font-medium mt-0.5"></p>
                 </div>
             </div>
         </div>
@@ -157,15 +156,15 @@
         <!-- FIRE 생활비 달성률 요약 위젯 카드 -->
         <section id="fireWidgetCard" onclick="openFireModal()" class="bg-gradient-to-r from-orange-100 via-amber-50 to-white dark:from-orange-900/40 dark:via-amber-900/30 dark:to-gray-800 p-3.5 rounded-2xl border border-orange-500/30 shadow-lg cursor-pointer hover:border-orange-500/50 transition">
             <div class="flex justify-between items-center mb-1.5">
-                <span class="text-xs font-bold text-orange-600 dark:text-orange-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-fire-flame-curved text-orange-500 dark:text-orange-400"></i> 은퇴 FIRE 생활비 충당률
+                <span class="text-xs font-bold text-orange-700 dark:text-orange-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-fire-flame-curved text-orange-600 dark:text-orange-400"></i> 은퇴 FIRE 생활비 충당률
                 </span>
-                <span class="text-xs font-black text-orange-600 dark:text-orange-300" id="fireWidgetRate">0.0%</span>
+                <span class="text-xs font-black text-orange-700 dark:text-orange-300" id="fireWidgetRate">0.0%</span>
             </div>
             <div class="w-full bg-gray-200 dark:bg-gray-900/80 rounded-full h-2 overflow-hidden border border-gray-300 dark:border-gray-700">
                 <div id="fireWidgetProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <div class="flex justify-between items-center text-[10px] text-gray-600 dark:text-gray-300 mt-1.5">
+            <div class="flex justify-between items-center text-[10px] text-gray-700 dark:text-gray-300 mt-1.5 font-semibold">
                 <span>월 배당: <b class="text-gray-900 dark:text-white" id="fireWidgetNetMonthly">0원</b></span>
                 <span>목표 생활비: <b class="text-gray-900 dark:text-white" id="fireWidgetTargetExp">3,000,000원</b></span>
             </div>
@@ -174,7 +173,7 @@
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-colors duration-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm" id="dashboardAccountSelectBox">
             <label class="text-xs font-bold flex items-center gap-1.5 whitespace-nowrap text-gray-800 dark:text-gray-200" id="dashboardAccountSelectLabel">
-                <i class="fa-solid fa-building-columns text-teal-500 dark:text-teal-400"></i> 조회 계좌 선택:
+                <i class="fa-solid fa-building-columns text-teal-600 dark:text-teal-400"></i> 조회 계좌 선택:
             </label>
             <select id="dashboardAccountSelect" onchange="switchDashboardAccount(this.value)" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-teal-500/50 text-teal-700 dark:text-teal-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-teal-400 transition">
                 <option value="ALL">🏦 전체 계좌 통합</option>
@@ -185,25 +184,25 @@
         <section class="p-5 rounded-2xl shadow-xl space-y-3 transition-colors duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border border-gray-200 dark:border-gray-700/60 text-gray-900 dark:text-gray-100" id="mainDashboardCard">
             <div class="flex justify-between items-start">
                 <div>
-                    <span class="text-xs font-semibold text-gray-600 dark:text-gray-400" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
-                    <p class="text-[11px] text-teal-600 dark:text-teal-400 font-bold mt-0.5" id="dashboardActiveAccountName">🏦 전체 계좌 통합</p>
+                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
+                    <p class="text-[11px] text-teal-700 dark:text-teal-400 font-black mt-0.5" id="dashboardActiveAccountName">🏦 전체 계좌 통합</p>
                 </div>
                 <span id="totalProfitBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">+0.0%</span>
             </div>
             <div class="text-2xl font-black tracking-tight text-gray-900 dark:text-white" id="totalAssetValue">0원</div>
 
             <!-- 현금성 자산(예수금) 서브 대시보드 슬롯 -->
-            <div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs text-gray-900 dark:text-gray-100" id="cashSummarySlot">
+            <div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs text-gray-900 dark:text-gray-100 font-semibold" id="cashSummarySlot">
                 <div class="flex items-center gap-2">
-                    <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
                         <i class="fa-solid fa-wallet text-xs"></i>
                     </span>
                     <div>
-                        <p class="text-[10px] text-gray-600 dark:text-gray-400 font-semibold">대기 예수금 / 현금 잔액</p>
-                        <p class="font-bold text-gray-900 dark:text-gray-100 mt-0.5" id="dashboardCashSummary">0원</p>
+                        <p class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">대기 예수금 / 현금 잔액</p>
+                        <p class="font-black text-gray-900 dark:text-white mt-0.5" id="dashboardCashSummary">0원</p>
                     </div>
                 </div>
-                <button onclick="openCashModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-500/30 transition">
+                <button onclick="openCashModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-500/30 transition">
                     <i class="fa-solid fa-pen-to-square"></i> 현금 관리
                 </button>
             </div>
@@ -211,37 +210,37 @@
             <!-- 달러 자산 & 원화 자산 분리 표시 그리드 -->
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700/50">
                 <div class="p-2.5 rounded-xl border border-gray-300 dark:border-gray-700/40 bg-gray-50 dark:bg-gray-900/60" id="usdAssetBox">
-                    <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1">
+                    <p class="text-[11px] text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-1">
                         <i class="fa-solid fa-dollar-sign"></i> 미국 달러 자산
                     </p>
-                    <p class="font-bold text-indigo-700 dark:text-indigo-300 text-sm mt-0.5" id="totalUsdAssetValue">$0</p>
-                    <p class="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5" id="totalUsdAssetSubValue">0원</p>
+                    <p class="font-black text-indigo-800 dark:text-indigo-200 text-sm mt-0.5" id="totalUsdAssetValue">$0</p>
+                    <p class="text-[10px] text-gray-700 dark:text-gray-300 font-semibold mt-0.5" id="totalUsdAssetSubValue">0원</p>
                 </div>
                 <div class="p-2.5 rounded-xl border border-gray-300 dark:border-gray-700/40 bg-gray-50 dark:bg-gray-900/60" id="krwAssetBox">
-                    <p class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
+                    <p class="text-[11px] text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1">
                         <i class="fa-solid fa-won-sign"></i> 한국 원화 자산
                     </p>
-                    <p class="font-bold text-rose-700 dark:text-rose-300 text-sm mt-0.5" id="totalKrwAssetValue">0원</p>
-                    <p class="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5" id="totalKrwAssetSubValue">국내 자산 총액</p>
+                    <p class="font-black text-rose-800 dark:text-rose-200 text-sm mt-0.5" id="totalKrwAssetValue">0원</p>
+                    <p class="text-[10px] text-gray-700 dark:text-gray-300 font-semibold mt-0.5" id="totalKrwAssetSubValue">국내 자산 총액</p>
                 </div>
             </div>
 
             <!-- 환율 변동 영향 (FX Impact) 카드 -->
             <div class="p-3 rounded-xl border border-indigo-500/30 space-y-2 text-xs bg-gray-50 dark:bg-gray-900/70" id="fxImpactBox">
                 <div class="flex justify-between items-center">
-                    <span class="text-indigo-600 dark:text-indigo-300 font-bold flex items-center gap-1">
+                    <span class="text-indigo-700 dark:text-indigo-300 font-bold flex items-center gap-1">
                         <i class="fa-solid fa-chart-line"></i> 환율 변동 영향 (FX 민감도)
                     </span>
-                    <span class="text-[10px] text-gray-600 dark:text-gray-400" id="fxRateBenchmark">기준: 1,350원</span>
+                    <span class="text-[10px] text-gray-700 dark:text-gray-300 font-semibold" id="fxRateBenchmark">기준: 1,350원</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
                     <div class="p-2 rounded-lg border border-gray-300 dark:border-gray-700/50 bg-white dark:bg-gray-800/80" id="fxPlusBox">
-                        <span class="text-gray-600 dark:text-gray-400">환율 +50원 상승 시</span>
-                        <p class="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5" id="fxImpactPlus50">+0원</p>
+                        <span class="text-gray-700 dark:text-gray-300 font-semibold">환율 +50원 상승 시</span>
+                        <p class="font-bold text-emerald-700 dark:text-emerald-400 mt-0.5" id="fxImpactPlus50">+0원</p>
                     </div>
                     <div class="p-2 rounded-lg border border-gray-300 dark:border-gray-700/50 bg-white dark:bg-gray-800/80" id="fxMinusBox">
-                        <span class="text-gray-600 dark:text-gray-400">환율 -50원 하락 시</span>
-                        <p class="font-bold text-rose-600 dark:text-rose-400 mt-0.5" id="fxImpactMinus50">0원</p>
+                        <span class="text-gray-700 dark:text-gray-300 font-semibold">환율 -50원 하락 시</span>
+                        <p class="font-bold text-rose-700 dark:text-rose-400 mt-0.5" id="fxImpactMinus50">-0원</p>
                     </div>
                 </div>
             </div>
@@ -249,41 +248,41 @@
             <!-- 자산 세부 통계 그리드 -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-300 dark:border-gray-700/50 text-xs">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400">총 매수 금액 (주식)</p>
-                    <p class="font-bold text-gray-900 dark:text-gray-200 mt-0.5" id="totalInvested">0원</p>
+                    <p class="text-gray-700 dark:text-gray-300 font-semibold">총 매수 금액 (주식)</p>
+                    <p class="font-black text-gray-900 dark:text-white mt-0.5" id="totalInvested">0원</p>
                 </div>
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400">주식 평가 손익</p>
-                    <p class="font-bold mt-0.5" id="totalProfitLoss">0원</p>
+                    <p class="text-gray-700 dark:text-gray-300 font-semibold">주식 평가 손익</p>
+                    <p class="font-black mt-0.5" id="totalProfitLoss">0원</p>
                 </div>
                 <div>
-                    <p class="text-emerald-600 dark:text-emerald-400 font-semibold">연간 세전 배당금</p>
-                    <p class="font-bold text-emerald-700 dark:text-emerald-300 mt-0.5" id="totalAnnualDividend">0원</p>
+                    <p class="text-emerald-700 dark:text-emerald-400 font-bold">연간 세전 배당금</p>
+                    <p class="font-black text-emerald-800 dark:text-emerald-300 mt-0.5" id="totalAnnualDividend">0원</p>
                 </div>
                 <div>
-                    <p class="text-emerald-600 dark:text-emerald-400 font-semibold">월평균 세후 배당금 <span class="text-[10px] text-gray-600 dark:text-gray-400 font-normal">(US 15%/KR 15.4%)</span></p>
-                    <p class="font-bold text-emerald-700 dark:text-emerald-300 mt-0.5" id="monthlyNetDividend">0원</p>
+                    <p class="text-emerald-700 dark:text-emerald-400 font-bold">월평균 세후 배당금 <span class="text-[10px] text-gray-600 dark:text-gray-400 font-semibold">(US 15%/KR 15.4%)</span></p>
+                    <p class="font-black text-emerald-800 dark:text-emerald-300 mt-0.5" id="monthlyNetDividend">0원</p>
                 </div>
             </div>
         </section>
 
         <!-- 차트 및 캘린더 영역 -->
-        <section class="p-4 rounded-2xl shadow-lg transition-colors duration-300 bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60" id="chartSectionBox">
+        <section class="p-4 rounded-2xl shadow-lg transition-colors duration-300 bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60 text-gray-900 dark:text-gray-100" id="chartSectionBox">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
-                    <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40">
+                    <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40">
                         <i class="fa-solid fa-calendar-days"></i> 월별 차트
                     </button>
-                    <button id="tabPieBtn" onclick="switchChartTab('pie')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                    <button id="tabPieBtn" onclick="switchChartTab('pie')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white">
                         <i class="fa-solid fa-chart-pie"></i> 종목 비중
                     </button>
-                    <button id="tabSectorBtn" onclick="switchChartTab('sector')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                    <button id="tabSectorBtn" onclick="switchChartTab('sector')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white">
                         <i class="fa-solid fa-layer-group"></i> 섹터 비중
                     </button>
-                    <button id="tabAccountBtn" onclick="switchChartTab('account')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                    <button id="tabAccountBtn" onclick="switchChartTab('account')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white">
                         <i class="fa-solid fa-building-columns"></i> 계좌 비중
                     </button>
-                    <button id="tabTimelineBtn" onclick="switchChartTab('timeline')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                    <button id="tabTimelineBtn" onclick="switchChartTab('timeline')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white">
                         <i class="fa-solid fa-table-cells"></i> 1년 캘린더
                     </button>
                 </div>
@@ -314,14 +313,14 @@
                 <div class="grid grid-cols-3 gap-2" id="timelineGridContainer"></div>
             </div>
 
-            <p id="monthlyChartTip" class="text-[10px] text-gray-600 dark:text-gray-400 text-center mt-2">💡 막대 그래프나 월별 카드를 터치하면 해당 월의 배당 종목을 상세 확인합니다.</p>
+            <p id="monthlyChartTip" class="text-[10px] text-gray-700 dark:text-gray-300 font-semibold text-center mt-2">💡 막대 그래프나 월별 카드를 터치하면 해당 월의 배당 종목을 상세 확인합니다.</p>
         </section>
 
         <!-- 보유 종목 리스트 섹션 -->
         <section class="space-y-3">
             <div class="flex justify-between items-center px-1">
-                <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
-                    <i class="fa-solid fa-list-check text-blue-500 dark:text-blue-400"></i> 보유 종목 현황 (<span id="stockCount">0</span>)
+                <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-blue-600 dark:text-blue-400"></i> 보유 종목 현황 (<span id="stockCount">0</span>)
                 </h2>
                 <button onclick="refreshAllStockData()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
                     <i class="fa-solid fa-rotate" id="refreshIcon"></i> 시세 일괄 갱신 (15~20분 지연)
@@ -329,28 +328,28 @@
             </div>
 
             <!-- 필터 칩 & 종목 합치기 토글 & 계좌 필터 & 정렬 -->
-            <div class="p-2.5 rounded-xl border space-y-2 text-xs transition-colors duration-300 bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700/50 text-gray-800 dark:text-gray-100" id="filterControlBox">
+            <div class="p-2.5 rounded-xl border space-y-2 text-xs transition-colors duration-300 bg-gray-50 dark:bg-gray-800/60 border-gray-300 dark:border-gray-700/50 text-gray-900 dark:text-gray-100" id="filterControlBox">
                 <div class="flex justify-between items-center gap-1">
                     <div class="flex gap-1 overflow-x-auto pb-0.5">
-                        <button onclick="setFilter('ALL')" id="filterBtn_ALL" class="px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap">전체</button>
-                        <button onclick="setFilter('US')" id="filterBtn_US" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">🇺🇸 미국</button>
-                        <button onclick="setFilter('KR')" id="filterBtn_KR" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">🇰🇷 한국</button>
-                        <button onclick="setFilter('MONTHLY')" id="filterBtn_MONTHLY" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">🗓️ 월배당</button>
+                        <button onclick="setFilter('ALL')" id="filterBtn_ALL" class="px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap">전체</button>
+                        <button onclick="setFilter('US')" id="filterBtn_US" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white whitespace-nowrap">🇺🇸 미국</button>
+                        <button onclick="setFilter('KR')" id="filterBtn_KR" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white whitespace-nowrap">🇰🇷 한국</button>
+                        <button onclick="setFilter('MONTHLY')" id="filterBtn_MONTHLY" class="px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white whitespace-nowrap">🗓️ 월배당</button>
                     </div>
 
-                    <button onclick="toggleMergedView()" id="mergedViewToggleBtn" class="px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-gray-200 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap">
+                    <button onclick="toggleMergedView()" id="mergedViewToggleBtn" class="px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap">
                         <i class="fa-solid fa-code-merge text-[10px]"></i> <span id="mergedToggleText">종목 합치기 OFF</span>
                     </button>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-1 border-t border-gray-300 dark:border-gray-700/40">
                     <div>
-                        <select id="accountFilterSelect" onchange="setAccountFilter(this.value)" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-teal-600 dark:text-teal-300 rounded-md px-2 py-1.5 focus:outline-none focus:border-teal-500 font-semibold text-[11px]">
+                        <select id="accountFilterSelect" onchange="setAccountFilter(this.value)" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-teal-700 dark:text-teal-300 rounded-md px-2 py-1.5 focus:outline-none focus:border-teal-500 font-bold text-[11px]">
                             <option value="ALL">🏦 전체 계좌 보기</option>
                         </select>
                     </div>
                     <div>
-                        <select id="sortSelect" onchange="setSort(this.value)" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:border-emerald-500 font-semibold text-[11px]">
+                        <select id="sortSelect" onchange="setSort(this.value)" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-2 py-1.5 focus:outline-none focus:border-emerald-500 font-bold text-[11px]">
                             <option value="VALUE_DESC">평가금액 높은순</option>
                             <option value="VALUE_ASC">평가금액 낮은순</option>
                             <option value="PROFIT_DESC">평가손익 높은순</option>
@@ -381,7 +380,7 @@
                 </button>
             </div>
 
-            <p class="text-xs opacity-90 leading-relaxed">
+            <p class="text-xs font-medium leading-relaxed">
                 각 계좌에 남아있는 **원화 예수금**과 **달러 환전 잔액**을 입력하면 총 평가 자산에 자동 합산되어 실제 매수 여력을 함께 관리할 수 있습니다.
             </p>
 
@@ -414,15 +413,15 @@
                 <button id="taxTabPensionBtn" onclick="switchTaxTab('pension')" class="py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition">
                     연말정산 세액공제
                 </button>
-                <button id="taxTabIsaBtn" onclick="switchTaxTab('isa')" class="py-1.5 text-xs font-bold rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                <button id="taxTabIsaBtn" onclick="switchTaxTab('isa')" class="py-1.5 text-xs font-bold rounded-lg text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition">
                     ISA 비과세 트래커
                 </button>
             </div>
 
             <div id="taxPensionSection" class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">총급여 / 소득 구간 (공제율 결정)</label>
-                    <select id="salaryTierSelect" onchange="calculatePensionTaxCredit()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-semibold">
+                    <label class="block font-bold mb-1">총급여 / 소득 구간 (공제율 결정)</label>
+                    <select id="salaryTierSelect" onchange="calculatePensionTaxCredit()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                         <option value="0.165" selected>총급여 5,500만원 이하 (세액공제율 16.5%)</option>
                         <option value="0.132">총급여 5,500만원 초과 (세액공제율 13.2%)</option>
                     </select>
@@ -431,44 +430,44 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="opacity-80 font-semibold">연금저축 납입액</label>
+                            <label class="font-bold">연금저축 납입액</label>
                             <span class="text-[10px] text-gray-500">최대 600만</span>
                         </div>
                         <input type="number" id="inputPensionAmount" oninput="calculatePensionTaxCredit()" placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="opacity-80 font-semibold">IRP(퇴직연금) 납입액</label>
+                            <label class="font-bold">IRP(퇴직연금) 납입액</label>
                             <span class="text-[10px] text-gray-500">합산 900만</span>
                         </div>
                         <input type="number" id="inputIrpAmount" oninput="calculatePensionTaxCredit()" placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                     </div>
                 </div>
 
-                <button type="button" onclick="autoFillPensionFromPortfolio()" class="w-full py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                <button type="button" onclick="autoFillPensionFromPortfolio()" class="w-full py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> 포트폴리오 연금/IRP 계좌 금액 자동 불러오기
                 </button>
 
                 <div class="bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-850 p-4 rounded-xl border border-teal-500/30 space-y-2.5">
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">세액공제 인정 납입 총액</span>
+                        <span class="font-semibold">세액공제 인정 납입 총액</span>
                         <span class="font-bold text-sm" id="recognizedPensionTotal">0원 / 900만원</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-semibold">연말정산 13월의 월급 환급 예상액</span>
+                        <span class="font-bold">연말정산 13월의 월급 환급 예상액</span>
                         <span class="font-black text-teal-600 dark:text-teal-300 text-base" id="expectedTaxRefund">0원</span>
                     </div>
-                    <div class="pt-2 border-t border-gray-300 dark:border-gray-800 flex justify-between items-center text-[11px] opacity-80">
+                    <div class="pt-2 border-t border-gray-300 dark:border-gray-800 flex justify-between items-center text-[11px] font-semibold">
                         <span>최대 공제 한도까지 추가 가능액</span>
-                        <span class="font-bold text-amber-500 dark:text-amber-400" id="remainingTaxCreditLimit">9,000,000원</span>
+                        <span class="font-bold text-amber-600 dark:text-amber-400" id="remainingTaxCreditLimit">9,000,000원</span>
                     </div>
                 </div>
             </div>
 
             <div id="taxIsaSection" class="hidden space-y-3.5 text-xs">
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">ISA 가입 유형 선택</label>
-                    <select id="isaTypeSelect" onchange="calculateIsaTaxSavings()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-semibold">
+                    <label class="block font-bold mb-1">ISA 가입 유형 선택</label>
+                    <select id="isaTypeSelect" onchange="calculateIsaTaxSavings()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                         <option value="2000000" selected>일반형 (비과세 한도 200만 원)</option>
                         <option value="4000000">서민형 / 농어민형 (비과세 한도 400만 원)</option>
                     </select>
@@ -476,24 +475,24 @@
 
                 <div class="bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-850 p-4 rounded-xl border border-teal-500/30 space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">ISA 계좌 연간 배당 소득</span>
+                        <span class="font-semibold">ISA 계좌 연간 배당 소득</span>
                         <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="isaCurrentAnnualDividend">0원</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">비과세 한도 소진율</span>
+                        <span class="font-semibold">비과세 한도 소진율</span>
                         <span class="font-black text-teal-600 dark:text-teal-300 text-sm" id="isaLimitExhaustRate">0.0%</span>
                     </div>
                     <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden border border-gray-300 dark:border-gray-700">
                         <div id="isaLimitProgressBar" class="bg-gradient-to-r from-teal-500 to-emerald-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                     <div class="pt-2 border-t border-gray-300 dark:border-gray-800 flex justify-between items-center">
-                        <span class="font-semibold">ISA 배당소득 절세 효과 (15.4% 감면)</span>
+                        <span class="font-bold">ISA 배당소득 절세 효과 (15.4% 감면)</span>
                         <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm" id="isaTotalTaxSaved">0원</span>
                     </div>
                 </div>
             </div>
 
-            <button type="button" onclick="closeTaxSavingsModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2.5 rounded-lg font-bold">
+            <button type="button" onclick="closeTaxSavingsModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2.5 rounded-lg font-bold">
                 닫기
             </button>
         </div>
@@ -513,29 +512,29 @@
 
             <div class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">목표 월 생활비 (원)</label>
+                    <label class="block font-bold mb-1">목표 월 생활비 (원)</label>
                     <input type="number" id="inputTargetExpense" oninput="updateFireCalculations()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold text-sm focus:outline-none focus:border-orange-500">
                 </div>
 
                 <div class="bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-850 p-4 rounded-xl border border-orange-500/30 space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">현재 월 세후 배당 소득</span>
+                        <span class="font-semibold">현재 월 세후 배당 소득</span>
                         <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="fireModalCurrentNet">0원</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">목표 생활비 충당률</span>
-                        <span class="font-black text-orange-500 dark:text-orange-400 text-base" id="fireModalRate">0.0%</span>
+                        <span class="font-semibold">목표 생활비 충당률</span>
+                        <span class="font-black text-orange-600 dark:text-orange-400 text-base" id="fireModalRate">0.0%</span>
                     </div>
                     <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-300 dark:border-gray-700">
                         <div id="fireModalProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
-                    <div class="pt-2 border-t border-gray-300 dark:border-gray-800 flex justify-between items-center text-[11px] opacity-80">
+                    <div class="pt-2 border-t border-gray-300 dark:border-gray-800 flex justify-between items-center text-[11px] font-semibold">
                         <span>완전한 경제적 자유까지</span>
-                        <span class="font-bold text-gray-800 dark:text-gray-200" id="fireModalGapText">월 0원 부족</span>
+                        <span class="font-bold text-gray-900 dark:text-gray-200" id="fireModalGapText">월 0원 부족</span>
                     </div>
                 </div>
 
-                <button type="button" onclick="closeFireModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2.5 rounded-lg font-bold">
+                <button type="button" onclick="closeFireModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2.5 rounded-lg font-bold">
                     닫기
                 </button>
             </div>
@@ -550,7 +549,7 @@
                     <h3 class="text-base font-bold flex items-center gap-1.5">
                         <i class="fa-solid fa-clock-rotate-left text-blue-500 dark:text-blue-400"></i> 스냅샷 롤백 (로컬 히스토리)
                     </h3>
-                    <p class="text-xs opacity-80 mt-0.5">최근 5개 시점의 데이터로 즉시 되돌릴 수 있습니다.</p>
+                    <p class="text-xs font-semibold opacity-80 mt-0.5">최근 5개 시점의 데이터로 즉시 되돌릴 수 있습니다.</p>
                 </div>
                 <button onclick="closeSnapshotModal()" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg">
                     <i class="fa-solid fa-xmark"></i>
@@ -559,7 +558,7 @@
 
             <div id="snapshotListContainer" class="space-y-2.5 text-xs"></div>
 
-            <button type="button" onclick="closeSnapshotModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2.5 rounded-lg font-bold">
+            <button type="button" onclick="closeSnapshotModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2.5 rounded-lg font-bold">
                 닫기
             </button>
         </div>
@@ -573,7 +572,7 @@
                     <h3 class="text-base font-bold flex items-center gap-1.5" id="monthModalTitle">
                         <i class="fa-solid fa-calendar-check text-emerald-500 dark:text-emerald-400"></i> 배당 지급 상세
                     </h3>
-                    <p class="text-xs opacity-80 mt-0.5" id="monthModalSummary">총 예상 배당금: 0원</p>
+                    <p class="text-xs font-semibold opacity-80 mt-0.5" id="monthModalSummary">총 예상 배당금: 0원</p>
                 </div>
                 <button onclick="closeMonthDetailModal()" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg">
                     <i class="fa-solid fa-xmark"></i>
@@ -582,7 +581,7 @@
 
             <div id="monthDetailList" class="space-y-2.5 text-xs"></div>
 
-            <button type="button" onclick="closeMonthDetailModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2.5 rounded-lg font-bold">
+            <button type="button" onclick="closeMonthDetailModal()" class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2.5 rounded-lg font-bold">
                 닫기
             </button>
         </div>
@@ -606,13 +605,13 @@
                         <label class="font-bold flex items-center gap-1">
                             <i class="fa-solid fa-server text-indigo-500 dark:text-indigo-400"></i> 클라우드 동기화 ID
                         </label>
-                        <span id="cloudIdBadge" class="text-[10px] opacity-70">미연결</span>
+                        <span id="cloudIdBadge" class="text-[10px] font-semibold opacity-80">미연결</span>
                     </div>
-                    <p class="text-[11px] opacity-80 leading-relaxed">
+                    <p class="text-[11px] font-medium opacity-90 leading-relaxed">
                         [새 공간 생성]을 누르면 전용 클라우드 ID가 발급되어 서버에 안전하게 영구 보관됩니다.
                     </p>
                     <div class="flex gap-1.5">
-                        <input type="text" id="inputSyncKey" placeholder="발급된 클라우드 ID 입력" class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 font-mono text-xs">
+                        <input type="text" id="inputSyncKey" placeholder="발급된 클라우드 ID 입력" class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 font-mono text-xs font-bold">
                         <button type="button" id="btnCreateCloud" onclick="createNewCloudStorage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-bold whitespace-nowrap active:scale-95 transition">
                             새 공간 생성
                         </button>
@@ -621,7 +620,7 @@
                         <button type="button" id="btnUploadCloud" onclick="uploadToCloudStorage()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow-md shadow-blue-600/30 active:scale-95 transition">
                             <i class="fa-solid fa-cloud-arrow-up"></i> 서버에 업로드
                         </button>
-                        <button type="button" id="btnDownloadCloud" onclick="downloadFromCloudStorage()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                        <button type="button" id="btnDownloadCloud" onclick="downloadFromCloudStorage()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-cloud-arrow-down"></i> 서버에서 복원
                         </button>
                     </div>
@@ -635,7 +634,7 @@
                         <button type="button" onclick="copyPortfolioToClipboard()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-copy"></i> 데이터 복사하기
                         </button>
-                        <button type="button" onclick="pastePortfolioFromClipboard()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
+                        <button type="button" onclick="pastePortfolioFromClipboard()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-clipboard-check"></i> 붙여넣고 복원
                         </button>
                     </div>
@@ -659,7 +658,7 @@
 
                 <!-- 시장 선택 -->
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">시장 선택</label>
+                    <label class="block font-bold mb-1">시장 선택</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="flex items-center justify-center p-2 rounded-lg bg-gray-100 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10">
                             <input type="radio" name="marketType" value="KR" class="hidden" checked onchange="handleMarketChange()">
@@ -674,7 +673,7 @@
 
                 <!-- 종목 검색 입력란 -->
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">종목명 또는 코드/티커</label>
+                    <label class="block font-bold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
                         <input type="text" id="inputTicker" required placeholder="예: SCHD, AAPL, 삼성전자, 005930" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
@@ -687,12 +686,12 @@
                 <!-- 종목명 & 섹터 분류 -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1">종목명</label>
-                        <input type="text" id="inputName" required placeholder="예: SCHD / 삼성전자" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                        <label class="block font-bold mb-1">종목명</label>
+                        <input type="text" id="inputName" required placeholder="예: SCHD / 삼성전자" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1">섹터 / 자산군</label>
-                        <select id="inputSector" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                        <label class="block font-bold mb-1">섹터 / 자산군</label>
+                        <select id="inputSector" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                             <option value="배당성장">배당성장</option>
                             <option value="고배당/리츠">고배당/리츠</option>
                             <option value="지수 ETF">지수 ETF</option>
@@ -705,8 +704,8 @@
 
                 <!-- 계좌 선택 및 직접 입력 필드 -->
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">보유 계좌 (Account)</label>
-                    <input type="text" id="inputAccount" list="accountSuggestions" required placeholder="예: ISA, 연금저축1, 연금저축2, 퇴직연금, 일반계좌 등" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-teal-600 dark:text-teal-300 font-semibold focus:outline-none focus:border-teal-500">
+                    <label class="block font-bold mb-1">보유 계좌 (Account)</label>
+                    <input type="text" id="inputAccount" list="accountSuggestions" required placeholder="예: ISA, 연금저축1, 연금저축2, 퇴직연금, 일반계좌 등" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-teal-700 dark:text-teal-300 font-bold focus:outline-none focus:border-teal-500">
                     <datalist id="accountSuggestions">
                         <option value="일반계좌"></option>
                         <option value="ISA"></option>
@@ -720,11 +719,11 @@
                 <!-- 수량 & 평단가 -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1">보유 수량 (주)</label>
+                        <label class="block font-bold mb-1">보유 수량 (주)</label>
                         <input type="number" step="any" id="inputQuantity" required placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1" id="buyPriceLabel">평균 매수가 (원)</label>
+                        <label class="block font-bold mb-1" id="buyPriceLabel">평균 매수가 (원)</label>
                         <input type="number" step="any" id="inputBuyPrice" required placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                 </div>
@@ -732,25 +731,25 @@
                 <!-- 현재 주가 & DPS -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1" id="currentPriceLabel">현재 주가 (원)</label>
+                        <label class="block font-bold mb-1" id="currentPriceLabel">현재 주가 (원)</label>
                         <input type="number" step="any" id="inputCurrentPrice" required placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1" id="dpsLabel">주당 연간 배당금 (DPS)</label>
+                        <label class="block font-bold mb-1" id="dpsLabel">주당 연간 배당금 (DPS)</label>
                         <input type="number" step="any" id="inputDPS" required placeholder="0" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                 </div>
 
                 <!-- 종목별 투자 메모장 -->
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">투자 메모 & 목표 (선택)</label>
-                    <input type="text" id="inputMemo" placeholder="예: 목표 100주 달성, 배당락일 3월/9월, 매달 2주씩 추가 매수" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                    <label class="block font-bold mb-1">투자 메모 & 목표 (선택)</label>
+                    <input type="text" id="inputMemo" placeholder="예: 목표 100주 달성, 배당락일 3월/9월, 매달 2주씩 추가 매수" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-medium">
                 </div>
 
                 <!-- 배당 주기 -->
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">배당 주기</label>
-                    <select id="inputDivCycle" onchange="handleCycleChange()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                    <label class="block font-bold mb-1">배당 주기</label>
+                    <select id="inputDivCycle" onchange="handleCycleChange()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <option value="quarterly">분기 배당 (연 4회)</option>
                         <option value="monthly">월 배당 (연 12회)</option>
                         <option value="semiannual">반기 배당 (연 2회)</option>
@@ -760,7 +759,7 @@
 
                 <!-- 배당 지급월 선택 체크박스 -->
                 <div id="payoutMonthsContainer">
-                    <label class="block opacity-80 font-semibold mb-1">배당 지급월 선택</label>
+                    <label class="block font-bold mb-1">배당 지급월 선택</label>
                     <div class="grid grid-cols-6 gap-1 text-center">
                         <script>
                             for(let m=1; m<=12; m++) {
@@ -797,8 +796,8 @@
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block opacity-80 font-semibold mb-1">시뮬레이션 기간</label>
-                    <select id="dripYears" onchange="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2">
+                    <label class="block font-bold mb-1">시뮬레이션 기간</label>
+                    <select id="dripYears" onchange="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                         <option value="5">5년 후</option>
                         <option value="10" selected>10년 후</option>
                         <option value="15">15년 후</option>
@@ -807,23 +806,23 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1">연간 주가 상승률 (%)</label>
-                        <input type="number" id="dripPriceGrowth" value="4" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2">
+                        <label class="block font-bold mb-1">연간 주가 상승률 (%)</label>
+                        <input type="number" id="dripPriceGrowth" value="4" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                     </div>
                     <div>
-                        <label class="block opacity-80 font-semibold mb-1">연간 배당 성장률 (%)</label>
-                        <input type="number" id="dripDivGrowth" value="5" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2">
+                        <label class="block font-bold mb-1">연간 배당 성장률 (%)</label>
+                        <input type="number" id="dripDivGrowth" value="5" step="0.5" oninput="runDripSimulation()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold">
                     </div>
                 </div>
 
                 <div class="bg-gray-100 dark:bg-gray-900/80 p-3 rounded-xl border border-gray-300 dark:border-gray-700 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">미래 총 예상 자산 (DRIP)</span>
-                        <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm" id="dripFinalAsset">0원</span>
+                        <span class="font-bold">미래 총 예상 자산 (DRIP)</span>
+                        <span class="font-black text-indigo-600 dark:text-indigo-400 text-sm" id="dripFinalAsset">0원</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="opacity-80">미래 세후 월배당금</span>
-                        <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="dripFinalMonthlyDiv">0원</span>
+                        <span class="font-bold">미래 세후 월배당금</span>
+                        <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm" id="dripFinalMonthlyDiv">0원</span>
                     </div>
                 </div>
 
@@ -933,14 +932,16 @@
             const accountSelectBox = document.getElementById('dashboardAccountSelectBox');
 
             if (currentThemeMode === 'light') {
+                document.documentElement.classList.remove('dark');
                 body.className = "bg-gray-100 text-gray-900 min-h-screen pb-24 transition-colors duration-300";
                 header.className = "sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-3.5 py-2.5 space-y-2 transition-colors duration-300";
                 icon.className = "fa-solid fa-sun text-[10px]";
                 if (mainCard) mainCard.className = "bg-gradient-to-br from-white to-gray-50 p-5 rounded-2xl border border-gray-200 shadow-xl space-y-3 transition-colors duration-300 text-gray-900";
                 if (chartBox) chartBox.className = "bg-white p-4 rounded-2xl border border-gray-200 shadow-lg transition-colors duration-300 text-gray-900";
-                if (filterBox) filterBox.className = "bg-gray-50 p-2.5 rounded-xl border border-gray-200 space-y-2 text-xs transition-colors duration-300 text-gray-800";
-                if (accountSelectBox) accountSelectBox.className = "bg-white p-2.5 rounded-xl border border-gray-200 flex items-center justify-between gap-2 transition-colors duration-300 text-gray-800";
+                if (filterBox) filterBox.className = "bg-gray-50 p-2.5 rounded-xl border border-gray-200 space-y-2 text-xs transition-colors duration-300 text-gray-900";
+                if (accountSelectBox) accountSelectBox.className = "bg-white p-2.5 rounded-xl border border-gray-200 flex items-center justify-between gap-2 transition-colors duration-300 text-gray-900";
             } else {
+                document.documentElement.classList.add('dark');
                 body.className = "bg-gray-900 text-gray-100 min-h-screen pb-24 transition-colors duration-300";
                 header.className = "sticky top-0 z-30 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3.5 py-2.5 space-y-2 transition-colors duration-300";
                 icon.className = "fa-solid fa-moon text-[10px]";
@@ -1017,18 +1018,18 @@
                 item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 space-y-2' : 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
                 item.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-teal-600 dark:text-teal-300 flex items-center gap-1">
+                        <span class="font-bold text-teal-700 dark:text-teal-300 flex items-center gap-1">
                             <i class="fa-solid fa-tag text-[10px]"></i> ${acc}
                         </span>
-                        <span class="text-[10px] text-gray-500 dark:text-gray-400">합산: <b class="text-gray-900 dark:text-white" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
+                        <span class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">합산: <b class="text-gray-900 dark:text-white" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">원화 예수금 (KRW)</label>
+                            <label class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">원화 예수금 (KRW)</label>
                             <input type="number" id="cashInput_krw_${acc}" value="${c.krw}" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">달러 예수금 (USD)</label>
+                            <label class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">달러 예수금 (USD)</label>
                             <input type="number" step="any" id="cashInput_usd_${acc}" value="${c.usd}" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
                         </div>
                     </div>
@@ -1177,10 +1178,10 @@
             const text = document.getElementById('mergedToggleText');
 
             if (isMergedView) {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-teal-500/20 text-teal-600 dark:text-teal-300 border border-teal-500/50 whitespace-nowrap";
+                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/50 whitespace-nowrap";
                 text.innerText = "종목 합치기 ON";
             } else {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-gray-200 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap";
+                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 transition bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap";
                 text.innerText = "종목 합치기 OFF";
             }
             renderSummaryAndList();
@@ -1236,7 +1237,7 @@
             } else {
                 statusText.innerText = '로컬 전용';
                 badge.innerText = '미연결';
-                badge.className = 'text-[10px] opacity-70';
+                badge.className = 'text-[10px] font-semibold opacity-70';
             }
         }
 
@@ -1465,7 +1466,7 @@
 
             if (snapshots.length === 0) {
                 listContainer.innerHTML = `
-                    <div class="text-center py-8 opacity-70">
+                    <div class="text-center py-8 opacity-70 font-semibold">
                         <i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i>
                         <p>저장된 이전 스냅샷이 없습니다.<br>종목이나 예수금을 수정하면 자동 기록됩니다.</p>
                     </div>
@@ -1473,12 +1474,12 @@
             } else {
                 snapshots.forEach((snap, idx) => {
                     const item = document.createElement('div');
-                    item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 flex justify-between items-center' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 flex justify-between items-center';
+                    item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 flex justify-between items-center font-semibold' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 flex justify-between items-center font-semibold';
                     item.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-300">#${idx + 1}</span>
-                                <span class="font-bold text-xs">${snap.dateStr}</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">#${idx + 1}</span>
+                                <span class="text-xs">${snap.dateStr}</span>
                             </div>
                             <p class="text-[11px] opacity-80 mt-1">${snap.reason} (종목수: <b>${snap.stockCount}개</b>)</p>
                         </div>
@@ -1637,13 +1638,13 @@
 
             if (tab === 'pension') {
                 pBtn.className = "py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition";
-                iBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition";
+                iBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white transition";
                 pSec.classList.remove('hidden');
                 iSec.classList.add('hidden');
                 calculatePensionTaxCredit();
             } else {
                 iBtn.className = "py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition";
-                pBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition";
+                pBtn.className = "py-1.5 text-xs font-bold rounded-lg text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white transition";
                 iSec.classList.remove('hidden');
                 pSec.classList.add('hidden');
                 calculateIsaTaxSavings();
@@ -2259,7 +2260,7 @@
                 container.innerHTML = `
                     <div class="text-center py-10 opacity-70 bg-gray-800/40 rounded-2xl border border-dashed border-gray-700">
                         <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
-                        <p class="text-xs">조건에 해당하는 종목이 없습니다.</p>
+                        <p class="text-xs font-bold">조건에 해당하는 종목이 없습니다.</p>
                     </div>
                 `;
             }
@@ -2291,12 +2292,12 @@
                     } else if (exInfo.dDay <= 30) {
                         dDayBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">⏰ D-${exInfo.dDay}</span>`;
                     } else {
-                        dDayBadge = `<span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300">📅 D-${exInfo.dDay} (${exInfo.payoutMonth}월 지급)</span>`;
+                        dDayBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 D-${exInfo.dDay} (${exInfo.payoutMonth}월 지급)</span>`;
                     }
                 }
 
                 const memoHtml = stock.memo ? `
-                    <div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200">
+                    <div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200 font-medium">
                         <i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i>
                         <span class="truncate">${stock.memo}</span>
                     </div>
@@ -2315,7 +2316,7 @@
                 const actionButtons = stock.isMerged ? `
                     <span class="text-[10px] opacity-60 font-bold">합산 상태</span>
                 ` : `
-                    <button onclick="openModal(${stock.originalIndex})" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-1 text-xs">
+                    <button onclick="openModal(${stock.originalIndex})" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white p-1 text-xs">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                     <button onclick="deleteStock(${stock.originalIndex})" class="text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs">
@@ -2324,7 +2325,7 @@
                 `;
 
                 const card = document.createElement('div');
-                card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-white';
+                card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900 font-semibold' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-gray-100 font-semibold';
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -2342,7 +2343,7 @@
                                 <h3 class="font-bold text-sm text-gray-900 dark:text-white">${stock.name}</h3>
                                 <span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
+                            <p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
                         </div>
                         <div class="flex gap-1.5">
                             ${actionButtons}
@@ -2353,12 +2354,12 @@
 
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs">
                         <div>
-                            <span class="text-gray-600 dark:text-gray-300">현재가 / 평가액</span>
+                            <span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span>
                             <p class="font-bold text-gray-900 dark:text-white">${stock.currentPrice.toLocaleString()}${currSymbol}</p>
-                            <p class="text-[11px] text-gray-700 dark:text-gray-200">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
+                            <p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-600 dark:text-gray-300">평가 손익</span>
+                            <span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span>
                             <p class="font-bold ${profitColor}">${profitLossLocal >= 0 ? '+' : ''}${Math.round(profitLossLocal).toLocaleString()}${currSymbol}</p>
                             <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${profitBadge}">${profitRate >= 0 ? '+' : ''}${profitRate.toFixed(2)}%</span>
                         </div>
@@ -2366,18 +2367,18 @@
 
                     <div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs">
                         <div>
-                            <span class="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                            <span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
                                 <i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ${((1-taxRate)*100).toFixed(1)}%)
                             </span>
-                            <p class="font-bold text-gray-900 dark:text-white mt-0.5">
+                            <p class="font-black text-gray-900 dark:text-white mt-0.5">
                                 ${annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2})}${currSymbol}
-                                <span class="text-gray-700 dark:text-gray-300 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
+                                <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
                             </p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-600 dark:text-gray-300 text-[11px]">시가 / 투자배당률(YoC)</span>
-                            <p class="font-bold text-emerald-700 dark:text-emerald-300">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-normal">/ ${yocRate.toFixed(2)}%</span></p>
-                            <p class="text-[10px] text-gray-600 dark:text-gray-300">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
+                            <span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span>
+                            <p class="font-black text-emerald-700 dark:text-emerald-300">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ${yocRate.toFixed(2)}%</span></p>
+                            <p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
                         </div>
                     </div>
                 `;
@@ -2404,7 +2405,7 @@
 
             const profitEl = document.getElementById('totalProfitLoss');
             profitEl.innerText = `${totalStockProfitKRW >= 0 ? '+' : ''}${formatMoney(totalStockProfitKRW)}`;
-            profitEl.className = `font-bold mt-0.5 ${totalStockProfitKRW >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`;
+            profitEl.className = `font-black mt-0.5 ${totalStockProfitKRW >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`;
 
             const badgeEl = document.getElementById('totalProfitBadge');
             badgeEl.innerText = `${totalProfitRate >= 0 ? '+' : ''}${totalProfitRate.toFixed(2)}%`;
@@ -2467,12 +2468,12 @@
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' } } },
                         y: {
                             grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB',
-                                font: { size: 9 },
+                                color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB',
+                                font: { size: 9, weight: 'bold' },
                                 callback: val => {
                                     if (displayCurrency === 'USD') return `$${val}`;
                                     return val >= 10000 ? `${(val/10000).toFixed(0)}만` : val;
@@ -2506,16 +2507,16 @@
                 });
 
                 const card = document.createElement('div');
-                card.className = `p-2.5 rounded-xl border cursor-pointer transition ${monthGrossKRW > 0 ? 'bg-gray-50 dark:bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-100 dark:bg-gray-900/40 border-gray-300 dark:border-gray-800 opacity-60'}`;
+                card.className = `p-2.5 rounded-xl border cursor-pointer transition font-bold ${monthGrossKRW > 0 ? 'bg-gray-50 dark:bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-100 dark:bg-gray-900/40 border-gray-300 dark:border-gray-800 opacity-60'}`;
                 card.onclick = () => openMonthDetailModal(m);
                 card.innerHTML = `
                     <div class="flex justify-between items-center text-[11px] mb-1">
-                        <span class="font-bold text-gray-900 dark:text-gray-100">${m}월</span>
-                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">${stocksInMonth.length}개</span>
+                        <span class="font-extrabold text-gray-900 dark:text-gray-100">${m}월</span>
+                        <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold">${stocksInMonth.length}개</span>
                     </div>
                     <p class="font-black text-xs text-gray-900 dark:text-white truncate">${formatMoney(monthGrossKRW)}</p>
                     <div class="flex gap-1 flex-wrap mt-1.5 overflow-hidden max-h-8">
-                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-300">${t}</span>`).join('')}
+                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-300 font-bold">${t}</span>`).join('')}
                     </div>
                 `;
                 container.appendChild(card);
@@ -2552,7 +2553,7 @@
                     totalMonthNetKRW += payoutNetKRW;
 
                     const item = document.createElement('div');
-                    item.className = 'bg-gray-100 dark:bg-gray-900/70 p-3 rounded-xl border border-gray-300 dark:border-gray-700/60 flex justify-between items-center';
+                    item.className = 'bg-gray-100 dark:bg-gray-900/70 p-3 rounded-xl border border-gray-300 dark:border-gray-700/60 flex justify-between items-center font-semibold';
                     item.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -2563,13 +2564,13 @@
                                     ${stock.account || '일반계좌'}
                                 </span>
                                 <span class="font-bold text-gray-900 dark:text-gray-100 text-xs">${stock.name}</span>
-                                <span class="text-[10px] text-gray-600 dark:text-gray-300 font-mono">(${stock.ticker})</span>
+                                <span class="text-[10px] text-gray-700 dark:text-gray-300 font-mono font-bold">(${stock.ticker})</span>
                             </div>
-                            <p class="text-[11px] text-gray-700 dark:text-gray-300 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
+                            <p class="text-[11px] text-gray-800 dark:text-gray-300 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-xs">${formatMoney(payoutNetKRW)}</span>
-                            <p class="text-[10px] text-gray-600 dark:text-gray-300">세전: ${formatMoney(payoutGrossKRW)}</p>
+                            <span class="text-emerald-700 dark:text-emerald-400 font-black text-xs">${formatMoney(payoutNetKRW)}</span>
+                            <p class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">세전: ${formatMoney(payoutGrossKRW)}</p>
                         </div>
                     `;
                     list.appendChild(item);
@@ -2578,7 +2579,7 @@
 
             if (matchCount === 0) {
                 list.innerHTML = `
-                    <div class="text-center py-6 text-gray-500">
+                    <div class="text-center py-6 text-gray-500 font-bold">
                         <p>${month}월에는 지급 예정된 배당금이 없습니다.</p>
                     </div>
                 `;
@@ -2630,7 +2631,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2681,7 +2682,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2732,7 +2733,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2821,14 +2822,14 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10 }, boxWidth: 12 } } },
+                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9, weight: 'bold' } } },
                         y: {
                             grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
                                 color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
-                                font: { size: 9 },
+                                font: { size: 9, weight: 'bold' },
                                 callback: val => displayCurrency === 'USD' ? `$${val}` : (val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val))
                             }
                         }
@@ -2987,7 +2988,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.6.2',
+                version: '1.6.4',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
