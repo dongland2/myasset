@@ -21,6 +21,7 @@
         body {
             -webkit-tap-highlight-color: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         /* 불필요한 스크롤바 숨김 */
         ::-webkit-scrollbar {
@@ -28,18 +29,19 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen pb-24">
+<body id="appBody" class="bg-gray-900 text-gray-100 min-h-screen pb-24">
 
     <!-- 상단 2단 구조 네비게이션 헤더 -->
-    <header class="sticky top-0 z-30 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3.5 py-2.5 space-y-2">
+    <header class="sticky top-0 z-30 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3.5 py-2.5 space-y-2 transition-colors duration-300" id="appHeader">
         <!-- 1단: 타이틀, 버전 표시, 환율 및 클라우드 상태 뱃지 -->
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-1.5">
                 <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
+                <!-- 버전 표시 뱃지 (v1.6.0 FX Impact & 라이트모드 지원) -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.5
+                    v1.6.0
                 </span>
             </div>
 
@@ -55,6 +57,10 @@
         <!-- 2단: 기능 버튼 툴바 -->
         <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-gray-800/80">
             <div class="flex items-center gap-1 flex-wrap">
+                <!-- [신규 기능 2] 라이트/다크 모드 테마 토글 버튼 -->
+                <button onclick="toggleThemeMode()" id="themeToggleBtn" class="bg-gray-800 text-yellow-400 border border-gray-700 hover:bg-gray-700 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="화면 테마 변경 (다크/라이트)">
+                    <i class="fa-solid fa-moon text-[10px]" id="themeIcon"></i>
+                </button>
                 <!-- 통화 전환 토글 버튼 -->
                 <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="통화 전환 (원화/달러)">
                     <i class="fa-solid fa-right-left text-[9px]"></i> <span id="currencyToggleText">KRW</span>
@@ -160,7 +166,7 @@
         </section>
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
-        <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2">
+        <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2" id="dashboardAccountSelectBox">
             <label class="text-xs font-bold text-gray-300 flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-building-columns text-teal-400"></i> 조회 계좌 선택:
             </label>
@@ -170,7 +176,7 @@
         </div>
 
         <!-- 총 자산 및 대시보드 요약 카드 -->
-        <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3">
+        <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3" id="mainDashboardCard">
             <div class="flex justify-between items-start">
                 <div>
                     <span class="text-xs font-semibold text-gray-400" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
@@ -214,6 +220,26 @@
                 </div>
             </div>
 
+            <!-- [신규 기능 1] 환율 변동 효과 분석 (FX Impact) 카드 -->
+            <div class="bg-gray-900/70 p-3 rounded-xl border border-indigo-500/30 space-y-2 text-xs">
+                <div class="flex justify-between items-center">
+                    <span class="text-indigo-300 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-chart-line"></i> 환율 변동 영향 (FX 민감도)
+                    </span>
+                    <span class="text-[10px] text-gray-400" id="fxRateBenchmark">기준: 1,350원</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div class="bg-gray-800/80 p-2 rounded-lg border border-gray-700/50">
+                        <span class="text-gray-400">환율 +50원 상승 시</span>
+                        <p class="font-bold text-emerald-400 mt-0.5" id="fxImpactPlus50">+0원</p>
+                    </div>
+                    <div class="bg-gray-800/80 p-2 rounded-lg border border-gray-700/50">
+                        <span class="text-gray-400">환율 -50원 하락 시</span>
+                        <p class="font-bold text-rose-400 mt-0.5" id="fxImpactMinus50">0원</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- 자산 세부 통계 그리드 -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
                 <div>
@@ -236,7 +262,7 @@
         </section>
 
         <!-- 차트 및 캘린더 영역 -->
-        <section class="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg">
+        <section class="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg" id="chartSectionBox">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
                     <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
@@ -297,7 +323,7 @@
             </div>
 
             <!-- 필터 칩 & 종목 합치기 토글 & 계좌 필터 & 정렬 -->
-            <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50 space-y-2 text-xs">
+            <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50 space-y-2 text-xs" id="filterControlBox">
                 <div class="flex justify-between items-center gap-1">
                     <div class="flex gap-1 overflow-x-auto pb-0.5">
                         <button onclick="setFilter('ALL')" id="filterBtn_ALL" class="px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap">전체</button>
@@ -864,10 +890,12 @@
         let targetMonthlyExpense = 3000000;
         let detectedBackupData = null;
         let currentBestSnapId = null;
+        let currentThemeMode = 'dark'; // 'dark' 또는 'light'
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
         window.addEventListener('DOMContentLoaded', async () => {
+            initThemeMode();
             initDisplayCurrency();
             initFireSettings();
             initCloudSyncStatus();
@@ -876,6 +904,47 @@
             checkAndPromptDataRecovery();
             renderAll();
         });
+
+        // [신규 기능 2] 테마 모드 제어 (다크/라이트)
+        function initThemeMode() {
+            currentThemeMode = localStorage.getItem('my_theme_mode') || 'dark';
+            applyThemeModeStyles();
+        }
+
+        function toggleThemeMode() {
+            currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('my_theme_mode', currentThemeMode);
+            applyThemeModeStyles();
+            renderAll();
+        }
+
+        function applyThemeModeStyles() {
+            const body = document.getElementById('appBody');
+            const header = document.getElementById('appHeader');
+            const icon = document.getElementById('themeIcon');
+            const mainCard = document.getElementById('mainDashboardCard');
+            const chartBox = document.getElementById('chartSectionBox');
+            const filterBox = document.getElementById('filterControlBox');
+            const accountSelectBox = document.getElementById('dashboardAccountSelectBox');
+
+            if (currentThemeMode === 'light') {
+                body.className = "bg-gray-100 text-gray-900 min-h-screen pb-24 transition-colors duration-300";
+                header.className = "sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-3.5 py-2.5 space-y-2 transition-colors duration-300";
+                icon.className = "fa-solid fa-sun text-[10px]";
+                if (mainCard) mainCard.className = "bg-gradient-to-br from-white to-gray-50 p-5 rounded-2xl border border-gray-200 shadow-xl space-y-3 transition-colors duration-300";
+                if (chartBox) chartBox.className = "bg-white p-4 rounded-2xl border border-gray-200 shadow-lg transition-colors duration-300";
+                if (filterBox) filterBox.className = "bg-gray-50 p-2.5 rounded-xl border border-gray-200 space-y-2 text-xs transition-colors duration-300";
+                if (accountSelectBox) accountSelectBox.className = "bg-white p-2.5 rounded-xl border border-gray-200 flex items-center justify-between gap-2 transition-colors duration-300";
+            } else {
+                body.className = "bg-gray-900 text-gray-100 min-h-screen pb-24 transition-colors duration-300";
+                header.className = "sticky top-0 z-30 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3.5 py-2.5 space-y-2 transition-colors duration-300";
+                icon.className = "fa-solid fa-moon text-[10px]";
+                if (mainCard) mainCard.className = "bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3 transition-colors duration-300";
+                if (chartBox) chartBox.className = "bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg transition-colors duration-300";
+                if (filterBox) filterBox.className = "bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50 space-y-2 text-xs transition-colors duration-300";
+                if (accountSelectBox) accountSelectBox.className = "bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2 transition-colors duration-300";
+            }
+        }
 
         function initDisplayCurrency() {
             displayCurrency = localStorage.getItem('my_display_currency') || 'KRW';
@@ -940,22 +1009,22 @@
             allAccounts.forEach(acc => {
                 const c = getCashForAccount(acc);
                 const item = document.createElement('div');
-                item.className = 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
+                item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 space-y-2' : 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
                 item.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-teal-300 flex items-center gap-1">
+                        <span class="font-bold text-teal-600 dark:text-teal-300 flex items-center gap-1">
                             <i class="fa-solid fa-tag text-[10px]"></i> ${acc}
                         </span>
-                        <span class="text-[10px] text-gray-400">합산: <b class="text-gray-200" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400">합산: <b class="text-gray-800 dark:text-gray-200" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[10px] text-gray-400 mb-0.5">원화 예수금 (KRW)</label>
-                            <input type="number" id="cashInput_krw_${acc}" value="${c.krw}" placeholder="0" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
+                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">원화 예수금 (KRW)</label>
+                            <input type="number" id="cashInput_krw_${acc}" value="${c.krw}" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-gray-400 mb-0.5">달러 예수금 (USD)</label>
-                            <input type="number" step="any" id="cashInput_usd_${acc}" value="${c.usd}" placeholder="0" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
+                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">달러 예수금 (USD)</label>
+                            <input type="number" step="any" id="cashInput_usd_${acc}" value="${c.usd}" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
                         </div>
                     </div>
                 `;
@@ -1032,7 +1101,6 @@
             renderAll();
         }
 
-        // [개선: 사용자 닫기 기억 기능 추가]
         function checkAndPromptDataRecovery() {
             if (portfolio.length <= 2) {
                 const backupKeys = [
@@ -1211,7 +1279,6 @@
                 }
             } catch (err) {
                 console.error(err);
-                // 서버 통신 불가 시 로컬 고유 ID 생성 보완
                 cloudSyncKey = 'local_space_' + Math.random().toString(36).substring(2, 8);
                 localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                 document.getElementById('inputSyncKey').value = cloudSyncKey;
@@ -2081,6 +2148,14 @@
             totalUsdAssetUSD += cashUsdSum;
             totalKrwAssetKRW += cashKrwSum;
 
+            // [신규 기능 1] 환율 변동 영향 (FX Impact) 계산 반영
+            // 미국 자산(주식+현금)의 달러 총액 기준으로 환율 변화에 따른 평가액 증감 계산
+            const fxImpact50KRW = totalUsdAssetUSD * 50;
+            const fxImpactMinus50KRW = totalUsdAssetUSD * -50;
+            document.getElementById('fxRateBenchmark').innerText = `기준: ${Math.round(usdKrwRate).toLocaleString()}원`;
+            document.getElementById('fxImpactPlus50').innerText = formatMoney(fxImpact50KRW);
+            document.getElementById('fxImpactMinus50').innerText = formatMoney(fxImpactMinus50KRW);
+
             const taxBanner = document.getElementById('taxWarningBanner');
             const taxIcon = document.getElementById('taxWarningIcon');
             const taxTitle = document.getElementById('taxWarningTitle');
@@ -2246,7 +2321,7 @@
                 `;
 
                 const card = document.createElement('div');
-                card.className = 'bg-gray-800/90 border border-gray-700/70 p-4 rounded-xl shadow-md space-y-2.5';
+                card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-200 p-4 rounded-xl shadow-md space-y-2.5' : 'bg-gray-800/90 border border-gray-700/70 p-4 rounded-xl shadow-md space-y-2.5';
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -2261,10 +2336,10 @@
                                 </span>
                             </div>
                             <div class="flex items-center gap-1 mt-1">
-                                <h3 class="font-bold text-sm text-white">${stock.name}</h3>
-                                <span class="text-xs text-gray-400 font-mono">(${stock.ticker})</span>
+                                <h3 class="font-bold text-sm text-gray-900 dark:text-white">${stock.name}</h3>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-xs text-gray-400 mt-0.5">보유: <b class="text-gray-200">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">보유: <b class="text-gray-800 dark:text-gray-200">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
                         </div>
                         <div class="flex gap-1.5">
                             ${actionButtons}
@@ -2273,33 +2348,33 @@
 
                     ${memoHtml}
 
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-700/50 text-xs">
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700/50 text-xs">
                         <div>
-                            <span class="text-gray-400">현재가 / 평가액</span>
-                            <p class="font-bold text-gray-200">${stock.currentPrice.toLocaleString()}${currSymbol}</p>
-                            <p class="text-[11px] text-gray-400">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
+                            <span class="text-gray-500 dark:text-gray-400">현재가 / 평가액</span>
+                            <p class="font-bold text-gray-900 dark:text-gray-200">${stock.currentPrice.toLocaleString()}${currSymbol}</p>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-400">평가 손익</span>
+                            <span class="text-gray-500 dark:text-gray-400">평가 손익</span>
                             <p class="font-bold ${profitColor}">${profitLossLocal >= 0 ? '+' : ''}${Math.round(profitLossLocal).toLocaleString()}${currSymbol}</p>
                             <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${profitBadge}">${profitRate >= 0 ? '+' : ''}${profitRate.toFixed(2)}%</span>
                         </div>
                     </div>
 
-                    <div class="bg-gray-900/60 p-2.5 rounded-lg border border-gray-700/40 flex justify-between items-center text-xs">
+                    <div class="bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/40 flex justify-between items-center text-xs">
                         <div>
-                            <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                                 <i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ${((1-taxRate)*100).toFixed(1)}%)
                             </span>
-                            <p class="font-bold text-gray-200 mt-0.5">
+                            <p class="font-bold text-gray-900 dark:text-gray-200 mt-0.5">
                                 ${annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2})}${currSymbol}
-                                <span class="text-gray-400 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
+                                <span class="text-gray-500 dark:text-gray-400 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
                             </p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-400 text-[11px]">시가 / 투자배당률(YoC)</span>
-                            <p class="font-bold text-emerald-400">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-400 font-normal">/ ${yocRate.toFixed(2)}%</span></p>
-                            <p class="text-[10px] text-gray-400">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
+                            <span class="text-gray-500 dark:text-gray-400 text-[11px]">시가 / 투자배당률(YoC)</span>
+                            <p class="font-bold text-emerald-600 dark:text-emerald-400">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">/ ${yocRate.toFixed(2)}%</span></p>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
                         </div>
                     </div>
                 `;
@@ -2326,11 +2401,11 @@
 
             const profitEl = document.getElementById('totalProfitLoss');
             profitEl.innerText = `${totalStockProfitKRW >= 0 ? '+' : ''}${formatMoney(totalStockProfitKRW)}`;
-            profitEl.className = `font-bold mt-0.5 ${totalStockProfitKRW >= 0 ? 'text-rose-400' : 'text-blue-400'}`;
+            profitEl.className = `font-bold mt-0.5 ${totalStockProfitKRW >= 0 ? 'text-rose-500 dark:text-rose-400' : 'text-blue-500 dark:text-blue-400'}`;
 
             const badgeEl = document.getElementById('totalProfitBadge');
             badgeEl.innerText = `${totalProfitRate >= 0 ? '+' : ''}${totalProfitRate.toFixed(2)}%`;
-            badgeEl.className = `text-xs px-2 py-0.5 rounded-full font-bold ${totalProfitRate >= 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'}`;
+            badgeEl.className = `text-xs px-2 py-0.5 rounded-full font-bold ${totalProfitRate >= 0 ? 'bg-rose-500/20 text-rose-500 dark:text-rose-400' : 'bg-blue-500/20 text-blue-500 dark:text-blue-400'}`;
 
             document.getElementById('totalAnnualDividend').innerText = formatMoney(totalAnnualGrossKRW);
             document.getElementById('monthlyNetDividend').innerText = formatMoney(monthlyNetKRW);
@@ -2389,11 +2464,11 @@
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 10 } } },
                         y: {
-                            grid: { color: '#374151' },
+                            grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: '#9CA3AF',
+                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
                                 font: { size: 9 },
                                 callback: val => {
                                     if (displayCurrency === 'USD') return `$${val}`;
@@ -2428,16 +2503,16 @@
                 });
 
                 const card = document.createElement('div');
-                card.className = `p-2.5 rounded-xl border cursor-pointer transition ${monthGrossKRW > 0 ? 'bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-900/40 border-gray-800 opacity-60'}`;
+                card.className = `p-2.5 rounded-xl border cursor-pointer transition ${monthGrossKRW > 0 ? 'bg-gray-50 dark:bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-100 dark:bg-gray-900/40 border-gray-300 dark:border-gray-800 opacity-60'}`;
                 card.onclick = () => openMonthDetailModal(m);
                 card.innerHTML = `
                     <div class="flex justify-between items-center text-[11px] mb-1">
-                        <span class="font-bold text-gray-200">${m}월</span>
-                        <span class="text-[10px] text-emerald-400 font-bold">${stocksInMonth.length}개</span>
+                        <span class="font-bold text-gray-800 dark:text-gray-200">${m}월</span>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">${stocksInMonth.length}개</span>
                     </div>
-                    <p class="font-black text-xs text-white truncate">${formatMoney(monthGrossKRW)}</p>
+                    <p class="font-black text-xs text-gray-900 dark:text-white truncate">${formatMoney(monthGrossKRW)}</p>
                     <div class="flex gap-1 flex-wrap mt-1.5 overflow-hidden max-h-8">
-                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-800 text-gray-400">${t}</span>`).join('')}
+                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400">${t}</span>`).join('')}
                     </div>
                 `;
                 container.appendChild(card);
@@ -2474,7 +2549,7 @@
                     totalMonthNetKRW += payoutNetKRW;
 
                     const item = document.createElement('div');
-                    item.className = 'bg-gray-900/70 p-3 rounded-xl border border-gray-700/60 flex justify-between items-center';
+                    item.className = 'bg-gray-100 dark:bg-gray-900/70 p-3 rounded-xl border border-gray-300 dark:border-gray-700/60 flex justify-between items-center';
                     item.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -2484,14 +2559,14 @@
                                 <span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-900/60 text-teal-300">
                                     ${stock.account || '일반계좌'}
                                 </span>
-                                <span class="font-bold text-gray-200 text-xs">${stock.name}</span>
-                                <span class="text-[10px] text-gray-400 font-mono">(${stock.ticker})</span>
+                                <span class="font-bold text-gray-900 dark:text-gray-200 text-xs">${stock.name}</span>
+                                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-[11px] text-gray-400 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-emerald-400 font-bold text-xs">${formatMoney(payoutNetKRW)}</span>
-                            <p class="text-[10px] text-gray-400">세전: ${formatMoney(payoutGrossKRW)}</p>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-xs">${formatMoney(payoutNetKRW)}</span>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">세전: ${formatMoney(payoutGrossKRW)}</p>
                         </div>
                     `;
                     list.appendChild(item);
@@ -2545,14 +2620,14 @@
                         data: values,
                         backgroundColor: bgColors.slice(0, labels.length),
                         borderWidth: 2,
-                        borderColor: '#1F2937'
+                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2596,14 +2671,14 @@
                         data: values,
                         backgroundColor: bgColors.slice(0, labels.length),
                         borderWidth: 2,
-                        borderColor: '#1F2937'
+                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2647,14 +2722,14 @@
                         data: values,
                         backgroundColor: bgColors.slice(0, labels.length),
                         borderWidth: 2,
-                        borderColor: '#1F2937'
+                        borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2743,13 +2818,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 12 } } },
+                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 12 } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9 } } },
                         y: {
-                            grid: { color: '#374151' },
+                            grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: '#9CA3AF',
+                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
                                 font: { size: 9 },
                                 callback: val => displayCurrency === 'USD' ? `$${val}` : (val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val))
                             }
@@ -2909,7 +2984,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.5.5',
+                version: '1.6.0',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
