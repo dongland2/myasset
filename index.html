@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.4
+                    v1.9.5
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -598,6 +598,7 @@
 
         // 전역 상태 변수
         var portfolio = [];
+        var isSavingStock = false; // 저장 버튼 연속 클릭/중복 submit 방지
         var cashBalances = {};
         var selectedDashboardAccount = 'ALL';
         var usdKrwRate = parseFloat(localStorage.getItem('my_usd_krw_rate')) || 1350;
@@ -792,7 +793,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.4: 이 앱의 전용 Worker를 최초 1회 자동 등록한다.
+            // v1.9.5: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1212,6 +1213,66 @@
             }
         }
 
+        // =========================================================================
+        // 종목 + 계좌 중복 방지
+        // 같은 시장/종목코드/계좌는 포트폴리오에서 반드시 1개만 유지한다.
+        // =========================================================================
+        function normalizeStockIdentityPart(value) {
+            return String(value == null ? '' : value).trim().replace(/\s+/g, '').toUpperCase();
+        }
+
+        function getStockAccountKey(stock) {
+            if (!stock) return '';
+            var market = normalizeStockIdentityPart(stock.market || '');
+            var ticker = normalizeStockIdentityPart(stock.ticker || '').replace(/^A(?=\d{6}$)/, '');
+            var account = normalizeStockIdentityPart(stock.account || '일반계좌');
+
+            // 과거 데이터에 티커가 비어 있으면 종목명을 보조키로 사용한다.
+            if (!ticker) ticker = 'NAME:' + normalizeStockIdentityPart(stock.name || '');
+            return market + '|' + ticker + '|' + account;
+        }
+
+        function findSameStockAccountIndex(stock, excludeIndex) {
+            var key = getStockAccountKey(stock);
+            if (!key) return -1;
+            for (var i = 0; i < portfolio.length; i++) {
+                if (i === excludeIndex) continue;
+                if (getStockAccountKey(portfolio[i]) === key) return i;
+            }
+            return -1;
+        }
+
+        function removeExtraSameStockAccountRows(keepIndex) {
+            if (keepIndex < 0 || keepIndex >= portfolio.length) return keepIndex;
+            var key = getStockAccountKey(portfolio[keepIndex]);
+            for (var i = portfolio.length - 1; i >= 0; i--) {
+                if (i !== keepIndex && getStockAccountKey(portfolio[i]) === key) {
+                    portfolio.splice(i, 1);
+                    if (i < keepIndex) keepIndex--;
+                }
+            }
+            return keepIndex;
+        }
+
+        function deduplicatePortfolioByStockAccount(items) {
+            var result = [];
+            var keyToIndex = {};
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var key = getStockAccountKey(item);
+                if (!key) { result.push(item); continue; }
+
+                if (keyToIndex[key] === undefined) {
+                    keyToIndex[key] = result.length;
+                    result.push(item);
+                } else {
+                    // 과거 '저장 여러 번' 버그로 생긴 중복은 마지막 저장 항목을 기준으로 1개만 남긴다.
+                    result[keyToIndex[key]] = item;
+                }
+            }
+            return result;
+        }
+
         // 저장소 로드 (0원 방지)
         async function loadPortfolioData() {
             var savedCash = localStorage.getItem('my_cash_balances_v1');
@@ -1237,7 +1298,12 @@
                             s.dps = parseFloat(s.dps) || 0;
                             mapped.push(s); 
                         }
-                        portfolio = mapped;
+                        portfolio = deduplicatePortfolioByStockAccount(mapped);
+                        // 이전 버전의 연속 저장 버그로 생긴 중복 카드도 새로고침 시 자동 정리한다.
+                        if (portfolio.length !== mapped.length) {
+                            localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+                            console.info('중복 종목 정리:', (mapped.length - portfolio.length) + '개 제거');
+                        }
                         return;
                     }
                 } catch (e) {}
@@ -2190,30 +2256,78 @@
 
         function saveStock(e) {
             e.preventDefault();
-            var editIdx = parseInt(document.getElementById('editIndex').value);
-            var market = document.querySelector('input[name="marketType"]:checked').value;
-            var ticker = document.getElementById('inputTicker').value.trim();
-            var name = document.getElementById('inputName').value.trim();
-            var sector = document.getElementById('inputSector').value;
-            var account = document.getElementById('inputAccount').value.trim() || '일반계좌';
-            var memo = document.getElementById('inputMemo').value.trim();
-            var quantity = parseFloat(document.getElementById('inputQuantity').value) || 0;
-            var buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
-            var currentPrice = parseFloat(document.getElementById('inputCurrentPrice').value) || buyPrice || 0;
-            var dps = parseFloat(document.getElementById('inputDPS').value) || 0;
-            var divCycle = document.getElementById('inputDivCycle').value;
+            if (isSavingStock) return;
+            isSavingStock = true;
 
-            var payoutMonths = [];
-            document.querySelectorAll('input[name="payoutMonth"]:checked').forEach(function(cb) { payoutMonths.push(parseInt(cb.value)); });
+            var submitBtn = e.submitter || document.querySelector('#stockForm button[type="submit"]');
+            var originalSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중';
+            }
 
-            var stockData = { market: market, ticker: ticker, name: name, sector: sector, account: account, memo: memo, quantity: quantity, buyPrice: buyPrice, currentPrice: currentPrice, dps: dps, divCycle: divCycle, payoutMonths: payoutMonths };
+            try {
+                var editIdx = parseInt(document.getElementById('editIndex').value);
+                var market = document.querySelector('input[name="marketType"]:checked').value;
+                var ticker = document.getElementById('inputTicker').value.trim();
+                var name = document.getElementById('inputName').value.trim();
+                var sector = document.getElementById('inputSector').value;
+                var account = document.getElementById('inputAccount').value.trim() || '일반계좌';
+                var memo = document.getElementById('inputMemo').value.trim();
+                var quantity = parseFloat(document.getElementById('inputQuantity').value) || 0;
+                var buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
+                var currentPrice = parseFloat(document.getElementById('inputCurrentPrice').value) || buyPrice || 0;
+                var dps = parseFloat(document.getElementById('inputDPS').value) || 0;
+                var divCycle = document.getElementById('inputDivCycle').value;
 
-            if (editIdx >= 0) portfolio[editIdx] = stockData;
-            else portfolio.push(stockData);
+                var payoutMonths = [];
+                document.querySelectorAll('input[name="payoutMonth"]:checked').forEach(function(cb) { payoutMonths.push(parseInt(cb.value)); });
 
-            saveToStorage(true);
-            renderAll();
-            closeModal();
+                var stockData = { market: market, ticker: ticker, name: name, sector: sector, account: account, memo: memo, quantity: quantity, buyPrice: buyPrice, currentPrice: currentPrice, dps: dps, divCycle: divCycle, payoutMonths: payoutMonths };
+
+                if (editIdx >= 0) {
+                    // 수정 중 종목/계좌를 다른 기존 항목과 같게 만든 경우에도 중복 카드를 만들지 않는다.
+                    var conflictIdx = findSameStockAccountIndex(stockData, editIdx);
+                    if (conflictIdx >= 0) {
+                        portfolio[conflictIdx].quantity = quantity;
+                        portfolio.splice(editIdx, 1);
+                        if (editIdx < conflictIdx) conflictIdx--;
+                        removeExtraSameStockAccountRows(conflictIdx);
+                    } else {
+                        portfolio[editIdx] = stockData;
+                        removeExtraSameStockAccountRows(editIdx);
+                    }
+                } else {
+                    // 추가: 같은 종목 + 같은 계좌가 이미 있으면 '수량만' 변경한다.
+                    var duplicateIdx = findSameStockAccountIndex(stockData, -1);
+                    if (duplicateIdx >= 0) {
+                        portfolio[duplicateIdx].quantity = quantity;
+                        removeExtraSameStockAccountRows(duplicateIdx);
+                    } else {
+                        portfolio.push(stockData);
+                    }
+                }
+
+                // 렌더링 과정에서 예외가 생겨도 팝업은 반드시 즉시 닫혀야 한다.
+                closeModal();
+
+                saveToStorage(true);
+                try {
+                    renderAll();
+                } catch (renderErr) {
+                    console.error('저장 후 화면 갱신 오류:', renderErr);
+                    alert('저장은 완료되었지만 화면 갱신 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+                }
+            } catch (err) {
+                console.error('종목 저장 오류:', err);
+                alert('종목 저장 중 오류가 발생했습니다.');
+            } finally {
+                isSavingStock = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalSubmitHtml || '저장';
+                }
+            }
         }
 
         function deleteStock(idx) {
