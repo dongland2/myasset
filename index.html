@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.5
+                    v1.9.7
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -135,7 +135,7 @@
         </section>
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
-        <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
+        <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
             <label class="text-xs font-bold flex items-center gap-1.5 whitespace-nowrap text-gray-800 dark:text-gray-200"><i class="fa-solid fa-building-columns text-teal-500 dark:text-teal-400"></i> 조회 계좌:</label>
             <select id="dashboardAccountSelect" onchange="switchDashboardAccount(this.value)" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-teal-500/50 text-teal-700 dark:text-teal-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-teal-400 transition">
                 <option value="ALL">🏦 전체 계좌 통합</option>
@@ -219,7 +219,7 @@
         </section>
 
         <!-- 차트 영역 -->
-        <section class="p-4 rounded-2xl shadow-lg bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60">
+        <section id="chartSectionBox" class="p-4 rounded-2xl shadow-lg bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
                     <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40">월별 차트</button>
@@ -316,6 +316,7 @@
                 <div class="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl space-y-2.5">
                     <div class="flex justify-between"><span>세액공제 인정액</span><span class="font-bold text-sm" id="recognizedPensionTotal">0원 / 900만원</span></div>
                     <div class="flex justify-between"><span>예상 환급액</span><span class="font-black text-teal-600 dark:text-teal-300 text-base" id="expectedTaxRefund">0원</span></div>
+                    <div class="flex justify-between"><span>남은 공제 한도</span><span class="font-bold" id="remainingTaxCreditLimit">9,000,000원</span></div>
                 </div>
             </div>
             <div id="taxIsaSection" class="hidden space-y-3.5 text-xs">
@@ -325,6 +326,8 @@
                 </div>
                 <div class="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl space-y-3">
                     <div class="flex justify-between"><span>ISA 배당 소득</span><span class="font-bold text-emerald-600 dark:text-emerald-400" id="isaCurrentAnnualDividend">0원</span></div>
+                    <div class="flex justify-between"><span>비과세 한도 사용률</span><span class="font-bold" id="isaLimitExhaustRate">0.0%</span></div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2 overflow-hidden"><div id="isaLimitProgressBar" class="bg-teal-500 h-2 rounded-full" style="width:0%"></div></div>
                     <div class="flex justify-between"><span>절세 효과 (15.4%)</span><span class="font-black text-emerald-600 dark:text-emerald-400" id="isaTotalTaxSaved">0원</span></div>
                 </div>
             </div>
@@ -345,6 +348,7 @@
                     <div class="flex justify-between"><span>현재 월 세후 배당</span><span class="font-bold text-emerald-600 dark:text-emerald-400" id="fireModalCurrentNet">0원</span></div>
                     <div class="flex justify-between"><span>충당률</span><span class="font-black text-orange-600 dark:text-orange-400 text-base" id="fireModalRate">0.0%</span></div>
                     <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3"><div id="fireModalProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-3 rounded-full" style="width: 0%"></div></div>
+                    <div id="fireModalGapText" class="text-[11px] text-center text-gray-600 dark:text-gray-300 font-bold">월 0원 부족</div>
                 </div>
                 <button onclick="closeFireModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
             </div>
@@ -793,7 +797,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.5: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.9.7: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1119,22 +1123,21 @@
                 if (!isSilent) alert('갱신할 종목이 없습니다.');
                 return;
             }
-            if (!getMarketProxyBase()) {
-                initMarketServerStatus();
-                if (!isSilent) { alert('실시간 시세 서버가 설정되지 않았습니다.\n\n보유 종목 오른쪽의 [서버] 버튼에서 Cloudflare Worker URL을 한 번 저장해주세요.'); openMarketServerModal(); }
-                return;
-            }
 
             var icon = document.getElementById('refreshIcon');
             var statusEl = document.getElementById('marketServerStatusText');
             if (icon) icon.classList.add('fa-spin');
-            if (statusEl) { statusEl.innerText = '갱신중…'; statusEl.className = 'text-[9px] font-bold text-blue-600 dark:text-blue-300'; }
+            if (statusEl) {
+                statusEl.innerText = '갱신중…';
+                statusEl.className = 'text-[9px] font-bold text-blue-600 dark:text-blue-300';
+            }
+
             var updatedCount = 0;
             var failedCount = 0;
+            var networkError = null;
 
             try {
-                // 예전 저장 데이터 중 시장/티커가 잘못 저장된 국내 종목도 F5 때 자동 복구한다.
-                // 예: ticker가 '삼성전자'처럼 이름으로 남아 있어도 이름 검색 → 005930으로 정규화한다.
+                // 예전 저장 데이터에서 한국 종목 코드가 이름으로 남은 경우 자동 복구
                 for (var pi = 0; pi < portfolio.length; pi++) {
                     var ps = portfolio[pi];
                     var rawTicker = String(ps.ticker || '').replace(/^A/, '').trim();
@@ -1149,7 +1152,9 @@
                                 ps.ticker = recovered.ticker;
                                 if (recovered.name) ps.name = recovered.name;
                             }
-                        } catch (e) { console.warn('국내 종목 코드 복구 실패', ps.name || ps.ticker, e); }
+                        } catch (e) {
+                            console.warn('국내 종목 코드 복구 실패', ps.name || ps.ticker, e);
+                        }
                     } else {
                         ps.ticker = rawTicker;
                     }
@@ -1158,11 +1163,18 @@
                 var krCodes = [];
                 portfolio.forEach(function(stock) {
                     var code = String(stock.ticker || '').replace(/^A/, '');
-                    if (stock.market === 'KR' && /^\d{6}$/.test(code)) krCodes.push(code);
+                    if (stock.market === 'KR' && /^\d{6}$/.test(code) && krCodes.indexOf(code) < 0) krCodes.push(code);
                 });
 
                 var krMap = {};
-                if (krCodes.length) krMap = await fetchKoreanRealtimeBatch(krCodes);
+                if (krCodes.length) {
+                    try {
+                        krMap = await fetchKoreanRealtimeBatch(krCodes);
+                    } catch (e) {
+                        networkError = e;
+                        console.error('국내 시세 일괄 조회 실패', e);
+                    }
+                }
 
                 var tasks = portfolio.map(async function(stock) {
                     var code = String(stock.ticker || '').replace(/^A/, '');
@@ -1175,9 +1187,12 @@
                             stock.lastPriceUpdatedAt = q.tradedAt || new Date().toISOString();
                             stock.lastPriceSource = q.source || 'NAVER realtime';
                             updatedCount++;
-                        } else failedCount++;
+                        } else {
+                            failedCount++;
+                        }
                         return;
                     }
+
                     try {
                         var info = await resolveStockData(stock.ticker);
                         if (info && info.price > 0 && info.priceSource) {
@@ -1186,30 +1201,59 @@
                             stock.lastPriceUpdatedAt = new Date().toISOString();
                             stock.lastPriceSource = info.priceSource;
                             updatedCount++;
-                        } else failedCount++;
-                    } catch (e) { failedCount++; }
+                        } else {
+                            failedCount++;
+                        }
+                    } catch (e) {
+                        failedCount++;
+                        console.warn('미국 시세 조회 실패', stock.ticker, e);
+                    }
                 });
                 await Promise.all(tasks);
 
-                localStorage.setItem('my_last_market_refresh_at', new Date().toISOString());
-                saveToStorage(false);
-                renderAll();
+                // 가격 조회 성공분은 화면 렌더와 무관하게 먼저 저장한다.
+                if (updatedCount > 0) {
+                    localStorage.setItem('my_last_market_refresh_at', new Date().toISOString());
+                    saveToStorage(false);
+                }
+
                 marketProxyLastOk = updatedCount > 0;
                 if (statusEl) {
-                    statusEl.innerText = updatedCount + '개 갱신';
-                    statusEl.className = 'text-[9px] font-bold ' + (updatedCount > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300');
+                    if (updatedCount > 0) {
+                        statusEl.innerText = updatedCount + '개 갱신';
+                        statusEl.className = 'text-[9px] font-bold text-emerald-600 dark:text-emerald-300';
+                    } else {
+                        statusEl.innerText = '갱신 실패';
+                        statusEl.className = 'text-[9px] font-bold text-rose-600 dark:text-rose-300';
+                    }
                 }
             } catch (e) {
+                networkError = e;
                 console.error('market refresh failed', e);
                 marketProxyLastOk = false;
-                if (statusEl) { statusEl.innerText = '시세서버 오류'; statusEl.className = 'text-[9px] font-bold text-rose-600 dark:text-rose-300'; }
-                if (!isSilent) alert('실시간 시세 조회에 실패했습니다.\n[서버] 버튼에서 Worker 연결 테스트를 해주세요.');
+                if (statusEl) {
+                    statusEl.innerText = '시세서버 오류';
+                    statusEl.className = 'text-[9px] font-bold text-rose-600 dark:text-rose-300';
+                }
             } finally {
                 if (icon) icon.classList.remove('fa-spin');
             }
 
-            if (!isSilent && updatedCount > 0) {
-                alert('현재가 ' + updatedCount + '개를 실제 시세로 갱신했습니다.' + (failedCount ? '\n실패: ' + failedCount + '개' : ''));
+            // 화면 갱신은 네트워크 처리와 완전히 분리한다.
+            // 여기서 오류가 나도 "시세 조회 실패" 경고를 띄우지 않는다.
+            var renderErrors = renderAllSafely('market refresh');
+
+            if (!isSilent) {
+                if (updatedCount > 0) {
+                    var msg = '현재가 ' + updatedCount + '개를 실제 시세로 갱신했습니다.';
+                    if (failedCount) msg += '\n미갱신: ' + failedCount + '개';
+                    // 렌더 오류는 서버 오류가 아니므로 사용자에게 실패 팝업을 띄우지 않고 콘솔에만 기록한다.
+                    if (renderErrors.length) console.warn('시세는 정상 갱신되었으나 일부 화면 구성요소 렌더 오류:', renderErrors);
+                    alert(msg);
+                } else {
+                    var detail = networkError && networkError.message ? '\n' + networkError.message : '';
+                    alert('실시간 시세를 가져오지 못했습니다.\nWorker 연결 또는 종목 코드를 확인해주세요.' + detail);
+                }
             }
         }
 
@@ -1394,6 +1438,32 @@
             else if (activeChartTab === 'sector') renderSectorPieChart();
             else if (activeChartTab === 'account') renderAccountPieChart();
             else renderTimelineGrid();
+        }
+
+        // v1.9.7: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
+        function renderAllSafely(context) {
+            var errors = [];
+            function safeRun(name, fn) {
+                try { fn(); }
+                catch (e) {
+                    errors.push({ name: name, error: e });
+                    console.error('[render] ' + name + ' failed' + (context ? ' (' + context + ')' : ''), e);
+                }
+            }
+
+            safeRun('account dropdown', updateDashboardAccountDropdown);
+            safeRun('account filter', updateAccountFilterDropdown);
+            safeRun('summary/list', renderSummaryAndList);
+            safeRun('FIRE', updateFireCalculations);
+            safeRun('chart', function() {
+                if (activeChartTab === 'monthly') renderMonthlyDividendChart();
+                else if (activeChartTab === 'pie') renderAssetPieChart();
+                else if (activeChartTab === 'sector') renderSectorPieChart();
+                else if (activeChartTab === 'account') renderAccountPieChart();
+                else renderTimelineGrid();
+            });
+            return errors;
         }
 
         // 지급월 정보만 가지고 정확한 배당락일을 계산할 수는 없으므로,
@@ -2370,15 +2440,23 @@
             var gapKRW = Math.max(0, targetMonthlyExpense - netMonthlyKRW);
             var clampedWidth = Math.min(100, Math.max(0, fireRate));
 
-            document.getElementById('fireWidgetRate').innerText = fireRate.toFixed(1) + '%';
-            document.getElementById('fireWidgetProgressBar').style.width = clampedWidth + '%';
-            document.getElementById('fireWidgetNetMonthly').innerText = formatMoney(netMonthlyKRW);
-            document.getElementById('fireWidgetTargetExp').innerText = formatMoney(targetMonthlyExpense);
+            var fireWidgetRateEl = document.getElementById('fireWidgetRate');
+            var fireWidgetBarEl = document.getElementById('fireWidgetProgressBar');
+            var fireWidgetNetEl = document.getElementById('fireWidgetNetMonthly');
+            var fireWidgetTargetEl = document.getElementById('fireWidgetTargetExp');
+            var fireModalCurrentEl = document.getElementById('fireModalCurrentNet');
+            var fireModalRateEl = document.getElementById('fireModalRate');
+            var fireModalBarEl = document.getElementById('fireModalProgressBar');
+            var fireModalGapEl = document.getElementById('fireModalGapText');
 
-            document.getElementById('fireModalCurrentNet').innerText = formatMoney(netMonthlyKRW);
-            document.getElementById('fireModalRate').innerText = fireRate.toFixed(1) + '%';
-            document.getElementById('fireModalProgressBar').style.width = clampedWidth + '%';
-            document.getElementById('fireModalGapText').innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : '월 ' + formatMoney(gapKRW) + ' 부족';
+            if (fireWidgetRateEl) fireWidgetRateEl.innerText = fireRate.toFixed(1) + '%';
+            if (fireWidgetBarEl) fireWidgetBarEl.style.width = clampedWidth + '%';
+            if (fireWidgetNetEl) fireWidgetNetEl.innerText = formatMoney(netMonthlyKRW);
+            if (fireWidgetTargetEl) fireWidgetTargetEl.innerText = formatMoney(targetMonthlyExpense);
+            if (fireModalCurrentEl) fireModalCurrentEl.innerText = formatMoney(netMonthlyKRW);
+            if (fireModalRateEl) fireModalRateEl.innerText = fireRate.toFixed(1) + '%';
+            if (fireModalBarEl) fireModalBarEl.style.width = clampedWidth + '%';
+            if (fireModalGapEl) fireModalGapEl.innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : '월 ' + formatMoney(gapKRW) + ' 부족';
         }
 
         function openTaxSavingsModal() {
@@ -2420,7 +2498,7 @@
 
             document.getElementById('recognizedPensionTotal').innerText = Math.round(totalRecognized).toLocaleString() + '원 / 900만원';
             document.getElementById('expectedTaxRefund').innerText = '+' + Math.round(refund).toLocaleString() + '원';
-            document.getElementById('remainingTaxCreditLimit').innerText = Math.round(remainingLimit).toLocaleString() + '원';
+            var remainingLimitEl = document.getElementById('remainingTaxCreditLimit'); if (remainingLimitEl) remainingLimitEl.innerText = Math.round(remainingLimit).toLocaleString() + '원';
         }
 
         function autoFillPensionFromPortfolio() {
@@ -2459,8 +2537,8 @@
             var totalSaved = directSaved + excessSaved;
 
             document.getElementById('isaCurrentAnnualDividend').innerText = Math.round(isaAnnualDivKRW).toLocaleString() + '원';
-            document.getElementById('isaLimitExhaustRate').innerText = exhaustRate.toFixed(1) + '% (한도 ' + Math.round(limit/10000) + '만원)';
-            document.getElementById('isaLimitProgressBar').style.width = clampedProgress + '%';
+            var isaRateEl = document.getElementById('isaLimitExhaustRate'); if (isaRateEl) isaRateEl.innerText = exhaustRate.toFixed(1) + '% (한도 ' + Math.round(limit/10000) + '만원)';
+            var isaBarEl = document.getElementById('isaLimitProgressBar'); if (isaBarEl) isaBarEl.style.width = clampedProgress + '%';
             document.getElementById('isaTotalTaxSaved').innerText = '+' + Math.round(totalSaved).toLocaleString() + '원';
         }
 
