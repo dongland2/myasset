@@ -53,7 +53,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.10.2
+                    v1.10.2c
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -1063,7 +1063,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.10.2';
+        var CLOUD_SYNC_VERSION = '1.10.2c';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -1249,7 +1249,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.10.2: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.10.2c: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1973,7 +1973,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.10.2: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.10.2c: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2047,7 +2047,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.10.2: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.10.2c: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -3569,7 +3569,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.10.2부터 비활성화.
+            // v1.10.2c부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -3684,7 +3684,7 @@
         }
 
         // =========================================================================
-        // v1.10.2 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.10.2c 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
