@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>배당 자산 관리 포트폴리오</title>
 
-    <!-- iOS 사파리 홈 화면 추가(PWA) 지원 메타 태그 -->
+    <!-- iOS 사파리 PWA 지원 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="배당포트폴리오">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2454/2454282.png">
 
-    <!-- Tailwind CSS 및 FontAwesome, Chart.js CDN -->
+    <!-- Tailwind CSS CDN 및 다크모드 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
@@ -135,7 +135,7 @@
         </section>
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
-        <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm" id="dashboardAccountSelectBox">
+        <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
             <label class="text-xs font-bold flex items-center gap-1.5 whitespace-nowrap text-gray-800 dark:text-gray-200"><i class="fa-solid fa-building-columns text-teal-500 dark:text-teal-400"></i> 조회 계좌:</label>
             <select id="dashboardAccountSelect" onchange="switchDashboardAccount(this.value)" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-teal-500/50 text-teal-700 dark:text-teal-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-teal-400 transition">
                 <option value="ALL">🏦 전체 계좌 통합</option>
@@ -219,7 +219,7 @@
         </section>
 
         <!-- 차트 영역 -->
-        <section class="p-4 rounded-2xl shadow-lg bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60" id="chartSectionBox">
+        <section class="p-4 rounded-2xl shadow-lg bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
                     <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40">월별 차트</button>
@@ -503,6 +503,65 @@
 
     <!-- 스크립트 비즈니스 로직 -->
     <script>
+        // =========================================================================
+        // [1] 마스터 종목 사전 (온라인 지연/차단 시에도 0.001초 만에 100% 매칭)
+        // =========================================================================
+        var MASTER_STOCKS = {
+            // 국내 대표 배당주 & 대형주
+            "현대차": { ticker: "005380", name: "현대차", market: "KR", sector: "배당성장", price: 453000, dps: 12000, cycle: "quarterly", months: [4, 8, 11] },
+            "005380": { ticker: "005380", name: "현대차", market: "KR", sector: "배당성장", price: 453000, dps: 12000, cycle: "quarterly", months: [4, 8, 11] },
+            "현대자동차": { ticker: "005380", name: "현대차", market: "KR", sector: "배당성장", price: 453000, dps: 12000, cycle: "quarterly", months: [4, 8, 11] },
+            "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "005930": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "삼전": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "삼성전자우": { ticker: "005935", name: "삼성전자우", market: "KR", sector: "배당성장", price: 215000, dps: 1676, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "005935": { ticker: "005935", name: "삼성전자우", market: "KR", sector: "배당성장", price: 215000, dps: 1676, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "기아": { ticker: "000270", name: "기아", market: "KR", sector: "배당성장", price: 175000, dps: 6500, cycle: "annual", months: [4] },
+            "000270": { ticker: "000270", name: "기아", market: "KR", sector: "배당성장", price: 175000, dps: 6500, cycle: "annual", months: [4] },
+            "SK하이닉스": { ticker: "000660", name: "SK하이닉스", market: "KR", sector: "성장/기술주", price: 1645000, dps: 1500, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "000660": { ticker: "000660", name: "SK하이닉스", market: "KR", sector: "성장/기술주", price: 1645000, dps: 1500, cycle: "quarterly", months: [4, 5, 8, 11] },
+            "맥쿼리인프라": { ticker: "088980", name: "맥쿼리인프라", market: "KR", sector: "고배당/리츠", price: 11800, dps: 775, cycle: "semiannual", months: [2, 8] },
+            "088980": { ticker: "088980", name: "맥쿼리인프라", market: "KR", sector: "고배당/리츠", price: 11800, dps: 775, cycle: "semiannual", months: [2, 8] },
+            "KB금융": { ticker: "105560", name: "KB금융", market: "KR", sector: "고배당/리츠", price: 82000, dps: 3400, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "105560": { ticker: "105560", name: "KB금융", market: "KR", sector: "고배당/리츠", price: 82000, dps: 3400, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "신한지주": { ticker: "055550", name: "신한지주", market: "KR", sector: "고배당/리츠", price: 51000, dps: 2400, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "055550": { ticker: "055550", name: "신한지주", market: "KR", sector: "고배당/리츠", price: 51000, dps: 2400, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "KT&G": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
+            "033780": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
+
+            // 국내 대표 월배당 & 고배당 ETF
+            "466940": { ticker: "466940", name: "TIGER 은행고배당플러스TOP10", market: "KR", sector: "고배당/리츠", price: 26365, dps: 1040, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "TIGER은행고배당플러스TOP10": { ticker: "466940", name: "TIGER 은행고배당플러스TOP10", market: "KR", sector: "고배당/리츠", price: 26365, dps: 1040, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "TIGER은행고배당": { ticker: "466940", name: "TIGER 은행고배당플러스TOP10", market: "KR", sector: "고배당/리츠", price: 26365, dps: 1040, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "161510": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", price: 25575, dps: 840, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "PLUS고배당주": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", price: 25575, dps: 840, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "PLUS고배당": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", price: 25575, dps: 840, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "ARIRANG고배당주": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", price: 25575, dps: 840, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "446720": { ticker: "446720", name: "SOL 미국배당다우존스", market: "KR", sector: "배당성장", price: 10450, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "SOL미국배당다우존스": { ticker: "446720", name: "SOL 미국배당다우존스", market: "KR", sector: "배당성장", price: 10450, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "458730": { ticker: "458730", name: "TIGER 미국배당다우존스", market: "KR", sector: "배당성장", price: 10500, dps: 385, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "TIGER미국배당다우존스": { ticker: "458730", name: "TIGER 미국배당다우존스", market: "KR", sector: "배당성장", price: 10500, dps: 385, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "458760": { ticker: "458760", name: "ACE 미국배당다우존스", market: "KR", sector: "배당성장", price: 10520, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "ACE미국배당다우존스": { ticker: "458760", name: "ACE 미국배당다우존스", market: "KR", sector: "배당성장", price: 10520, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+
+            // 미국 대표 배당 ETF & 주요 주식
+            "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "O": { ticker: "O", name: "Realty Income Corp", market: "US", sector: "고배당/리츠", price: 55.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "리얼티인컴": { ticker: "O", name: "Realty Income Corp", market: "US", sector: "고배당/리츠", price: 55.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "JEPI": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", sector: "커버드콜", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "제피": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", sector: "커버드콜", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "JEPQ": { ticker: "JEPQ", name: "JPMorgan Nasdaq Equity Premium Income ETF", market: "US", sector: "커버드콜", price: 54.80, dps: 5.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
+            "AAPL": { ticker: "AAPL", name: "Apple Inc.", market: "US", sector: "성장/기술주", price: 230.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
+            "애플": { ticker: "AAPL", name: "Apple Inc.", market: "US", sector: "성장/기술주", price: 230.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
+            "MSFT": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", sector: "성장/기술주", price: 425.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "마이크로소프트": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", sector: "성장/기술주", price: 425.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "NVDA": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", sector: "성장/기술주", price: 128.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "엔비디아": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", sector: "성장/기술주", price: 128.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
+            "KO": { ticker: "KO", name: "Coca-Cola Co", market: "US", sector: "배당성장", price: 68.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
+            "코카콜라": { ticker: "KO", name: "Coca-Cola Co", market: "US", sector: "배당성장", price: 68.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] }
+        };
+
         // 전역 상태 변수
         var portfolio = [];
         var cashBalances = {};
@@ -526,21 +585,20 @@
         var currentThemeMode = 'dark';
         var CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
-        // 1. 앱 초기화 (F5 및 로드 시 무음 갱신 포함)
+        // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', function() {
             initThemeMode();
             initDisplayCurrency();
             initFireSettings();
             initCloudSyncStatus();
             
-            // 데이터 로딩 후 화면 즉시 렌더링 (0원 먹통 방지)
+            // 데이터 로드 후 즉시 렌더링 (0원 방지)
             loadPortfolioData().then(function() {
                 renderAll();
                 checkAndPromptDataRecovery();
 
                 fetchExchangeRate().then(function() {
-                    renderAll(); // 환율 반영 후 재렌더링
-                    // 백그라운드 갱신
+                    renderAll();
                     setTimeout(function() { refreshAllStockData(true); }, 800);
                 });
             });
@@ -615,14 +673,11 @@
         }
 
         // =========================================================================
-        // 안전한 Timeout Fetch (모든 브라우저 호환, 멈춤 무조건 차단)
+        // 안전한 Timeout 통신 엔진 (최대 1.5초 대기 후 실패 시 즉시 로컬 DB 활용)
         // =========================================================================
         function fetchWithTimeout(url, timeoutMs) {
             return new Promise(function(resolve, reject) {
-                var timer = setTimeout(function() {
-                    reject(new Error('Timeout'));
-                }, timeoutMs);
-                
+                var timer = setTimeout(function() { reject(new Error('Timeout')); }, timeoutMs);
                 fetch(url, { cache: 'no-store' })
                     .then(function(res) {
                         clearTimeout(timer);
@@ -656,7 +711,7 @@
         }
 
         async function fetchJsonViaFastRace(targetUrl, timeoutMs) {
-            if (timeoutMs === undefined) timeoutMs = 2500;
+            if (timeoutMs === undefined) timeoutMs = 1500;
             var cacheBusterUrl = targetUrl + (targetUrl.indexOf('?') !== -1 ? '&' : '?') + '_nc=' + Date.now();
             var encoded = encodeURIComponent(cacheBusterUrl);
 
@@ -682,7 +737,7 @@
         }
 
         // =========================================================================
-        // 지능형 종목 탐색 & 실시간 시세/DPS 추출 엔진
+        // [2] 하이브리드 종목 해석 엔진 (마스터 사전 1순위 + 실시간 시세 보정)
         // =========================================================================
         async function resolveStockData(rawInput) {
             var clean = rawInput.trim();
@@ -696,34 +751,24 @@
                 price: 0, dps: 0, cycle: 'quarterly', months: [3, 6, 9, 12]
             };
 
-            var KNOWN_MAP = {
-                '466940': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'TIGER은행고배당플러스TOP10': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'TIGER은행고배당': { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', market: 'KR', sector: '고배당/리츠', price: 12450, dps: 780, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                '161510': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'PLUS고배당주': { ticker: '161510', name: 'PLUS 고배당주', market: 'KR', sector: '고배당/리츠', price: 14350, dps: 760, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                '446720': { ticker: '446720', name: 'SOL 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10450, dps: 380, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                '458730': { ticker: '458730', name: 'TIGER 미국배당다우존스', market: 'KR', sector: '배당성장', price: 10500, dps: 385, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                '088980': { ticker: '088980', name: '맥쿼리인프라', market: 'KR', sector: '고배당/리츠', price: 11800, dps: 775, cycle: 'semiannual', months: [2, 8] },
-                '005930': { ticker: '005930', name: '삼성전자', market: 'KR', sector: '배당성장', price: 74500, dps: 1675, cycle: 'quarterly', months: [4, 5, 8, 11] },
-                '005380': { ticker: '005380', name: '현대차', market: 'KR', sector: '배당성장', price: 245000, dps: 12000, cycle: 'quarterly', months: [4, 8, 11] },
-                'SCHD': { ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', market: 'US', sector: '배당성장', price: 28.50, dps: 1.05, cycle: 'quarterly', months: [3, 6, 9, 12] },
-                'O': { ticker: 'O', name: 'Realty Income Corp', market: 'US', sector: '고배당/리츠', price: 55.20, dps: 3.16, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'JEPI': { ticker: 'JEPI', name: 'JPMorgan Equity Premium Income ETF', market: 'US', sector: '커버드콜', price: 58.50, dps: 4.25, cycle: 'monthly', months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                'AAPL': { ticker: 'AAPL', name: 'Apple Inc.', market: 'US', sector: '성장/기술주', price: 230.00, dps: 1.00, cycle: 'quarterly', months: [2, 5, 8, 11] }
-            };
-
-            if (KNOWN_MAP[upper] || KNOWN_MAP[clean]) {
-                var match = KNOWN_MAP[upper] || KNOWN_MAP[clean];
-                result.ticker = match.ticker; result.name = match.name; result.market = match.market;
-                result.sector = match.sector; result.price = match.price; result.dps = match.dps;
-                result.cycle = match.cycle; result.months = match.months;
+            // 1. 마스터 사전에서 즉시 매칭
+            if (MASTER_STOCKS[upper] || MASTER_STOCKS[clean]) {
+                var match = MASTER_STOCKS[upper] || MASTER_STOCKS[clean];
+                result.ticker = match.ticker;
+                result.name = match.name;
+                result.market = match.market;
+                result.sector = match.sector;
+                result.price = match.price;
+                result.dps = match.dps;
+                result.cycle = match.cycle;
+                result.months = match.months;
             }
 
-            if (!isSixDigit && /[가-힣]/.test(clean)) {
+            // 2. 사전에 없지만 6자리 숫자가 아닐 경우 네이버 검색 시도
+            if (!isSixDigit && result.price === 0 && /[가-힣]/.test(clean)) {
                 try {
                     var searchUrl = 'https://ac.finance.naver.com/ac?q=' + encodeURIComponent(clean) + '&q_enc=utf-8&st=111&r_format=json&r_enc=utf-8';
-                    var searchData = await fetchJsonViaFastRace(searchUrl, 2500);
+                    var searchData = await fetchJsonViaFastRace(searchUrl, 1500);
                     if (searchData && searchData.items && searchData.items[0] && searchData.items[0][0]) {
                         result.ticker = searchData.items[0][0][0];
                         result.name = searchData.items[0][0][1];
@@ -733,68 +778,45 @@
                 } catch(e) {}
             }
 
+            // 3. 온라인 실시간 가격 조회 (실패 시 마스터 사전의 단가를 그대로 유지)
             if (result.market === 'KR' || isSixDigit || /^[0-9]{6}$/.test(result.ticker)) {
                 var code = result.ticker;
                 try {
                     var integUrl = 'https://m.stock.naver.com/api/stock/' + code + '/integration';
-                    var integData = await fetchJsonViaFastRace(integUrl, 2500);
+                    var integData = await fetchJsonViaFastRace(integUrl, 1500);
                     if (integData) {
                         if (integData.stockName) result.name = integData.stockName;
                         if (Array.isArray(integData.totalInfos)) {
                             integData.totalInfos.forEach(function(info) {
                                 if (info.code === 'lastClosePrice' || info.key === '현재가') {
-                                    result.price = parseFloat(String(info.value).replace(/,/g, '')) || result.price;
+                                    var p = parseFloat(String(info.value).replace(/,/g, ''));
+                                    if (p > 0) result.price = p;
                                 }
                                 if (info.code === 'dividend' || info.key === '주당배당금') {
-                                    result.dps = parseFloat(String(info.value).replace(/,/g, '')) || result.dps;
+                                    var d = parseFloat(String(info.value).replace(/,/g, ''));
+                                    if (d > 0) result.dps = d;
                                 }
                             });
                         }
                     }
                 } catch(e) {}
-                
-                if (!result.price || result.price === 0) {
-                    try {
-                        var yUrlKR = 'https://query1.finance.yahoo.com/v8/finance/chart/' + code + '.KS?interval=1d&range=1d';
-                        var yDataKR = await fetchJsonViaFastRace(yUrlKR, 2500);
-                        if (yDataKR && yDataKR.chart && yDataKR.chart.result && yDataKR.chart.result[0]) {
-                            var metaKR = yDataKR.chart.result[0].meta;
-                            if (metaKR) result.price = metaKR.regularMarketPrice || metaKR.chartPreviousClose || result.price;
-                        }
-                    } catch(e) {}
-                }
-                
+
                 if (/고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(result.name) || /TIGER|KODEX|SOL|ACE|PLUS/i.test(result.name)) {
                     result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
-                } else {
-                    result.cycle = 'quarterly'; result.months = [4, 5, 8, 11];
                 }
             } else {
                 var symbol = result.ticker;
                 try {
                     var yUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d';
-                    var yData = await fetchJsonViaFastRace(yUrl, 2500);
+                    var yData = await fetchJsonViaFastRace(yUrl, 1500);
                     if (yData && yData.chart && yData.chart.result && yData.chart.result[0]) {
                         var meta = yData.chart.result[0].meta;
-                        if (meta) {
-                            result.price = meta.regularMarketPrice || meta.chartPreviousClose || result.price;
+                        if (meta && (meta.regularMarketPrice || meta.chartPreviousClose)) {
+                            result.price = meta.regularMarketPrice || meta.chartPreviousClose;
                             if (meta.shortName) result.name = meta.shortName;
                         }
                     }
                 } catch(e) {}
-
-                if (!result.dps || result.dps === 0) {
-                    try {
-                        var quoteUrl = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' + symbol + '?modules=summaryDetail';
-                        var quoteData = await fetchJsonViaFastRace(quoteUrl, 2500);
-                        if (quoteData && quoteData.quoteSummary && quoteData.quoteSummary.result && quoteData.quoteSummary.result[0]) {
-                            var summary = quoteData.quoteSummary.result[0].summaryDetail;
-                            if (summary && summary.dividendRate && summary.dividendRate.raw) {
-                                result.dps = summary.dividendRate.raw;
-                            }
-                        }
-                    } catch(e) {}
-                }
 
                 if (/O|JEPI|JEPQ|SVOL/i.test(result.ticker)) {
                     result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -804,7 +826,7 @@
             return result;
         }
 
-        // 종목 모달 내 단건 조회 기능
+        // 종목 조회 버튼 클릭 함수
         async function fetchLiveStockInfo() {
             var inputRaw = document.getElementById('inputTicker').value;
             if (!inputRaw || inputRaw.trim() === '') { alert('종목명 또는 코드를 입력해주세요.'); return; }
@@ -817,16 +839,10 @@
 
             try {
                 var resolved = await resolveStockData(inputRaw);
-                if (!resolved || resolved.price === 0) {
-                    alert('[' + (resolved ? resolved.name : inputRaw) + '] 실시간 시세를 찾을 수 없습니다.\n직접 정보를 기입해주세요.');
-                } else {
-                    var unit = resolved.market === 'US' ? '$' : '원';
-                    alert('[' + resolved.name + ' (' + resolved.ticker + ')]\n실시간 연동 완료!\n현재가: ' + resolved.price.toLocaleString() + unit + ' / DPS: ' + resolved.dps.toLocaleString() + unit);
-                }
-
+                
                 if (resolved) {
                     var radio = document.querySelector('input[name="marketType"][value="' + resolved.market + '"]');
-                    if(radio) radio.checked = true;
+                    if (radio) radio.checked = true;
                     handleMarketChange();
 
                     document.getElementById('inputTicker').value = resolved.ticker;
@@ -845,16 +861,25 @@
                         for(var i=0; i<(resolved.months || []).length; i++) { if(resolved.months[i] === val) includes = true; }
                         cb.checked = includes;
                     });
+
+                    var unit = resolved.market === 'US' ? '$' : '원';
+                    if (resolved.price > 0) {
+                        alert('[' + resolved.name + ' (' + resolved.ticker + ')]\n종목 정보 확인 완료!\n\n현재가: ' + resolved.price.toLocaleString() + unit + '\n연간 DPS: ' + resolved.dps.toLocaleString() + unit);
+                    } else {
+                        alert('[' + resolved.name + '] 종목명이 확인되었습니다. 단가를 입력해주세요.');
+                    }
+                } else {
+                    alert('종목 정보를 찾을 수 없습니다. 직접 입력해주세요.');
                 }
             } catch (err) {
-                alert('통신 오류가 발생했습니다. 직접 입력해주세요.');
+                alert('조회 중 오류가 발생했습니다.');
             } finally {
                 searchBtn.innerHTML = originalHtml;
                 searchBtn.disabled = false;
             }
         }
 
-        // 시세 일괄 갱신 (에러 무시 병렬 처리 & 롤백 스냅샷 방지)
+        // 시세 일괄 갱신
         async function refreshAllStockData(isSilent) {
             if (isSilent === undefined) isSilent = false;
             if (portfolio.length === 0) {
@@ -871,21 +896,16 @@
                     var liveInfo = await resolveStockData(stock.ticker);
                     if (liveInfo && liveInfo.price > 0) {
                         stock.currentPrice = liveInfo.price;
-                        if (liveInfo.name && (!stock.name || /^[0-9A-Z]+$/.test(stock.name))) {
-                            stock.name = liveInfo.name;
-                        }
-                        if (liveInfo.dps > 0 && stock.dps === 0) {
-                            stock.dps = liveInfo.dps;
-                        }
+                        if (liveInfo.name && (!stock.name || /^[0-9A-Z]+$/.test(stock.name))) stock.name = liveInfo.name;
+                        if (liveInfo.dps > 0 && stock.dps === 0) stock.dps = liveInfo.dps;
                         updatedCount++;
                     }
                 } catch (e) {}
             });
 
-            // 개별 실패 무시
             await Promise.all(updatePromises.map(function(p) { return p.catch(function(e){ return e; }); }));
 
-            saveToStorage(false); // 시세만 갱신 (히스토리 X)
+            saveToStorage(false); // 시세 갱신은 스냅샷 누적 X
             renderAll();
             if (icon) icon.classList.remove('fa-spin');
             
@@ -894,7 +914,7 @@
             }
         }
 
-        // 저장소 로딩 (0원 크래시 방지 위해 엄격한 숫자 파싱)
+        // 저장소 로드 (0원 방지)
         async function loadPortfolioData() {
             var savedCash = localStorage.getItem('my_cash_balances_v1');
             if (savedCash) { try { cashBalances = JSON.parse(savedCash) || {}; } catch(e) { cashBalances = {}; } }
@@ -910,7 +930,14 @@
                             s.account = s.account || '일반계좌';
                             s.quantity = parseFloat(s.quantity) || 0;
                             s.buyPrice = parseFloat(s.buyPrice) || 0;
-                            s.currentPrice = parseFloat(s.currentPrice) || 0;
+                            s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
+                            
+                            // 만약 가격이 0원이라면 마스터 사전에서 보정
+                            if (s.currentPrice === 0 && MASTER_STOCKS[s.ticker]) {
+                                s.currentPrice = MASTER_STOCKS[s.ticker].price;
+                            }
+                            if (s.buyPrice === 0) s.buyPrice = s.currentPrice;
+
                             s.dps = parseFloat(s.dps) || 0;
                             mapped.push(s); 
                         }
@@ -920,40 +947,16 @@
                 } catch (e) {}
             }
 
-            if (cloudSyncKey) {
-                try {
-                    var res = await fetch(CLOUD_API_BASE + '/' + encodeURIComponent(cloudSyncKey));
-                    if (res.ok) {
-                        var result = await res.json();
-                        if (result && result.data && Array.isArray(result.data.portfolio)) {
-                            var mapped = [];
-                            for(var i=0; i<result.data.portfolio.length; i++) { 
-                                var s = result.data.portfolio[i]; 
-                                s.account = s.account || '일반계좌';
-                                s.quantity = parseFloat(s.quantity) || 0;
-                                s.buyPrice = parseFloat(s.buyPrice) || 0;
-                                s.currentPrice = parseFloat(s.currentPrice) || 0;
-                                s.dps = parseFloat(s.dps) || 0;
-                                mapped.push(s); 
-                            }
-                            portfolio = mapped;
-                            if (result.data.cashBalances) cashBalances = result.data.cashBalances;
-                            return;
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // 기본 샘플 데이터 (처음 접속하는 유저용)
+            // 기본 샘플 데이터
             portfolio = [
-                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '미국 핵심 배당성장', quantity: 100, buyPrice: 28.00, currentPrice: 28.50, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 은행 고배당 월배당', quantity: 200, buyPrice: 12000, currentPrice: 12450, dps: 780, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
+                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '미국 핵심 배당성장', quantity: 100, buyPrice: 34.30, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
+                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 은행 고배당 월배당', quantity: 200, buyPrice: 26365, currentPrice: 26365, dps: 1040, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
             ];
             saveToStorage(false);
         }
 
         // =========================================================================
-        // 기타 UI, 필터, 렌더링, 모달 관리 함수들
+        // UI 렌더링 및 계산 로직
         // =========================================================================
         function saveToStorage(recordSnapshot) {
             if (recordSnapshot === undefined) recordSnapshot = true;
@@ -994,7 +997,7 @@
             var totalUsdAssetUSD = 0; var totalKrwAssetKRW = 0;
 
             var container = document.getElementById('stockListContainer');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '';
             document.getElementById('stockCount').innerText = portfolio.length;
 
@@ -1006,14 +1009,8 @@
                 var rate = isUS ? usdKrwRate : 1;
                 
                 var qty = parseFloat(stock.quantity) || 0;
-                var currentPrice = parseFloat(stock.currentPrice);
-                if (isNaN(currentPrice) || currentPrice === 0) {
-                    currentPrice = parseFloat(stock.buyPrice) || 0;
-                }
-                var buyPrice = parseFloat(stock.buyPrice);
-                if (isNaN(buyPrice) || buyPrice === 0) {
-                    buyPrice = currentPrice || 0;
-                }
+                var currentPrice = parseFloat(stock.currentPrice) || parseFloat(stock.buyPrice) || 0;
+                var buyPrice = parseFloat(stock.buyPrice) || currentPrice || 0;
                 var dps = parseFloat(stock.dps) || 0;
 
                 var currentValLocal = qty * currentPrice;
@@ -1044,7 +1041,7 @@
                 }
             } else {
                 var c2 = getCashForAccount(selectedDashboardAccount);
-                cashKrwSum += c2.krw; cashUsdSum += c2.usd;
+                cashKrwSum = c2.krw; cashUsdSum = c2.usd;
             }
             totalUsdAssetUSD += cashUsdSum;
             totalKrwAssetKRW += cashKrwSum;
@@ -1137,8 +1134,8 @@
             displayList.sort(function(a, b) {
                 var aRate = a.market === 'US' ? usdKrwRate : 1;
                 var bRate = b.market === 'US' ? usdKrwRate : 1;
-                var aQty = parseFloat(a.quantity) || 0; var aCp = parseFloat(a.currentPrice) || 0; var aBp = parseFloat(a.buyPrice) || 0; var aDps = parseFloat(a.dps) || 0;
-                var bQty = parseFloat(b.quantity) || 0; var bCp = parseFloat(b.currentPrice) || 0; var bBp = parseFloat(b.buyPrice) || 0; var bDps = parseFloat(b.dps) || 0;
+                var aQty = parseFloat(a.quantity) || 0; var aCp = parseFloat(a.currentPrice) || parseFloat(a.buyPrice) || 0; var aBp = parseFloat(a.buyPrice) || aCp; var aDps = parseFloat(a.dps) || 0;
+                var bQty = parseFloat(b.quantity) || 0; var bCp = parseFloat(b.currentPrice) || parseFloat(b.buyPrice) || 0; var bBp = parseFloat(b.buyPrice) || bCp; var bDps = parseFloat(b.dps) || 0;
 
                 var aVal = aQty * aCp * aRate; var bVal = bQty * bCp * bRate;
                 var aInvest = aQty * aBp * aRate; var bInvest = bQty * bBp * bRate;
@@ -1236,8 +1233,115 @@
         }
 
         // =========================================================================
-        // 각종 모달 및 부가기능
+        // 기타 모달 및 부가기능
         // =========================================================================
+        function getCashForAccount(accName) {
+            if (!cashBalances[accName]) return { krw: 0, usd: 0 };
+            return { krw: parseFloat(cashBalances[accName].krw) || 0, usd: parseFloat(cashBalances[accName].usd) || 0 };
+        }
+
+        function getTotalCashKRW(accName) {
+            if (accName === undefined) accName = 'ALL';
+            if (accName === 'ALL') {
+                var sum = 0;
+                for (var acc in cashBalances) {
+                    var c = getCashForAccount(acc);
+                    sum += c.krw + (c.usd * usdKrwRate);
+                }
+                return sum;
+            } else {
+                var c2 = getCashForAccount(accName);
+                return c2.krw + (c2.usd * usdKrwRate);
+            }
+        }
+
+        function openCashModal() {
+            var container = document.getElementById('cashAccountInputList');
+            container.innerHTML = '';
+            var allAccountsMap = { '일반계좌': true, 'ISA': true, '연금저축1': true, '연금저축2': true, '퇴직연금(IRP)': true };
+            portfolio.forEach(function(s) { allAccountsMap[s.account || '일반계좌'] = true; });
+            for (var k in cashBalances) { allAccountsMap[k] = true; }
+            var allAccounts = Object.keys(allAccountsMap);
+
+            allAccounts.forEach(function(acc) {
+                var c = getCashForAccount(acc);
+                var item = document.createElement('div');
+                item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 space-y-2' : 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
+                item.innerHTML = '<div class="flex justify-between items-center"><span class="font-bold text-teal-600 dark:text-teal-300 flex items-center gap-1"><i class="fa-solid fa-tag text-[10px]"></i> ' + acc + '</span><span class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">합산: <b class="text-gray-900 dark:text-white">' + formatMoney(c.krw + c.usd * usdKrwRate) + '</b></span></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">원화 예수금 (KRW)</label><input type="number" id="cashInput_krw_' + acc + '" value="' + c.krw + '" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-0.5">달러 예수금 (USD)</label><input type="number" step="any" id="cashInput_usd_' + acc + '" value="' + c.usd + '" placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-xs"></div></div>';
+                container.appendChild(item);
+            });
+            document.getElementById('cashModal').classList.remove('hidden');
+        }
+
+        function closeCashModal() { document.getElementById('cashModal').classList.add('hidden'); }
+
+        function saveCashBalancesFromModal() {
+            var allAccountsMap = { '일반계좌': true, 'ISA': true, '연금저축1': true, '연금저축2': true, '퇴직연금(IRP)': true };
+            portfolio.forEach(function(s) { allAccountsMap[s.account || '일반계좌'] = true; });
+            for (var k in cashBalances) { allAccountsMap[k] = true; }
+            var allAccounts = Object.keys(allAccountsMap);
+
+            createSnapshot('예수금 잔액 변경');
+            cashBalances = {};
+            allAccounts.forEach(function(acc) {
+                var krwEl = document.getElementById('cashInput_krw_' + acc);
+                var usdEl = document.getElementById('cashInput_usd_' + acc);
+                if (krwEl && usdEl) {
+                    var krwVal = parseFloat(krwEl.value) || 0;
+                    var usdVal = parseFloat(usdEl.value) || 0;
+                    if (krwVal > 0 || usdVal > 0) cashBalances[acc] = { krw: krwVal, usd: usdVal };
+                }
+            });
+            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+            saveToStorage(false);
+            renderAll();
+            closeCashModal();
+            alert('예수금 잔액이 성공적으로 저장 및 총자산에 반영되었습니다!');
+        }
+
+        function updateDashboardAccountDropdown() {
+            var selectEl = document.getElementById('dashboardAccountSelect');
+            if (!selectEl) return;
+            var allAccountsMap = {};
+            portfolio.forEach(function(s) { allAccountsMap[s.account || '일반계좌'] = true; });
+            for (var k in cashBalances) { allAccountsMap[k] = true; }
+            var accounts = Object.keys(allAccountsMap);
+
+            var prevVal = selectedDashboardAccount;
+            selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 통합</option>';
+            accounts.forEach(function(acc) {
+                var opt = document.createElement('option');
+                opt.value = acc; opt.innerText = '🏷️ ' + acc;
+                if (acc === prevVal) opt.selected = true;
+                selectEl.appendChild(opt);
+            });
+            if (!accounts.includes(prevVal) && prevVal !== 'ALL') {
+                selectedDashboardAccount = 'ALL'; selectEl.value = 'ALL';
+            }
+        }
+
+        function switchDashboardAccount(accName) {
+            selectedDashboardAccount = accName; currentAccountFilter = accName;
+            var filterEl = document.getElementById('accountFilterSelect');
+            if (filterEl) filterEl.value = accName;
+            renderAll();
+        }
+
+        function setFilter(filterType) {
+            currentFilter = filterType;
+            var types = ['ALL', 'US', 'KR', 'MONTHLY'];
+            for(var i=0; i<types.length; i++) {
+                var type = types[i];
+                var btn = document.getElementById('filterBtn_' + type);
+                if (btn) {
+                    btn.className = type === filterType 
+                        ? "px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap"
+                        : "px-2 py-1 rounded-md font-bold bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap";
+                }
+            }
+            renderSummaryAndList();
+        }
+
         function setAccountFilter(accountName) {
             currentAccountFilter = accountName;
             selectedDashboardAccount = accountName;
@@ -1266,43 +1370,386 @@
                 if (acc === prevVal) opt.selected = true;
                 selectEl.appendChild(opt);
             });
-            var hasPrev = false;
-            for(var j=0; j<accounts.length; j++) { if(accounts[j] === prevVal) hasPrev = true; }
-            if (!hasPrev && prevVal !== 'ALL') {
+            if (!accounts.includes(prevVal) && prevVal !== 'ALL') {
                 currentAccountFilter = 'ALL'; selectEl.value = 'ALL';
             }
         }
 
-        function updateDashboardAccountDropdown() {
-            var selectEl = document.getElementById('dashboardAccountSelect');
-            if (!selectEl) return;
-            
-            var allAccountsMap = {};
-            portfolio.forEach(function(s) { allAccountsMap[s.account || '일반계좌'] = true; });
-            for (var k in cashBalances) { allAccountsMap[k] = true; }
-            var accounts = Object.keys(allAccountsMap);
+        function switchChartTab(tab) {
+            activeChartTab = tab;
+            var mBtn = document.getElementById('tabMonthlyBtn');
+            var pBtn = document.getElementById('tabPieBtn');
+            var sBtn = document.getElementById('tabSectorBtn');
+            var aBtn = document.getElementById('tabAccountBtn');
+            var tBtn = document.getElementById('tabTimelineBtn');
 
-            var prevVal = selectedDashboardAccount;
-            selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 통합</option>';
-            accounts.forEach(function(acc) {
-                var opt = document.createElement('option');
-                opt.value = acc; opt.innerText = '🏷️ ' + acc;
-                if (acc === prevVal) opt.selected = true;
-                selectEl.appendChild(opt);
-            });
-            
-            var hasPrev = false;
-            for(var i=0; i<accounts.length; i++) { if(accounts[i] === prevVal) hasPrev = true; }
-            if (!hasPrev && prevVal !== 'ALL') {
-                selectedDashboardAccount = 'ALL'; selectEl.value = 'ALL';
+            var mWrap = document.getElementById('monthlyChartWrapper');
+            var pWrap = document.getElementById('pieChartWrapper');
+            var sWrap = document.getElementById('sectorChartWrapper');
+            var aWrap = document.getElementById('accountChartWrapper');
+            var tWrap = document.getElementById('timelineWrapper');
+            var tip = document.getElementById('monthlyChartTip');
+
+            var btns = [mBtn, pBtn, sBtn, aBtn, tBtn];
+            for(var i=0; i<btns.length; i++) {
+                if(btns[i]) btns[i].className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap";
+            }
+            var wraps = [mWrap, pWrap, sWrap, aWrap, tWrap];
+            for(var j=0; j<wraps.length; j++) {
+                if(wraps[j]) wraps[j].classList.add('hidden');
+            }
+
+            if (tab === 'monthly') {
+                if(mBtn) mBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
+                if(mWrap) mWrap.classList.remove('hidden'); if(tip) tip.classList.remove('hidden'); renderMonthlyDividendChart();
+            } else if (tab === 'pie') {
+                if(pBtn) pBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
+                if(pWrap) pWrap.classList.remove('hidden'); if(tip) tip.classList.add('hidden'); renderAssetPieChart();
+            } else if (tab === 'sector') {
+                if(sBtn) sBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
+                if(sWrap) sWrap.classList.remove('hidden'); if(tip) tip.classList.add('hidden'); renderSectorPieChart();
+            } else if (tab === 'account') {
+                if(aBtn) aBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
+                if(aWrap) aWrap.classList.remove('hidden'); if(tip) tip.classList.add('hidden'); renderAccountPieChart();
+            } else {
+                if(tBtn) tBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40 whitespace-nowrap";
+                if(tWrap) tWrap.classList.remove('hidden'); if(tip) tip.classList.remove('hidden'); renderTimelineGrid();
             }
         }
 
-        function switchDashboardAccount(accName) {
-            selectedDashboardAccount = accName; currentAccountFilter = accName;
-            var filterEl = document.getElementById('accountFilterSelect');
-            if (filterEl) filterEl.value = accName;
-            renderAll();
+        function renderMonthlyDividendChart() {
+            var monthlySums = new Array(12).fill(0);
+            portfolio.forEach(function(stock) {
+                var matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+
+                var rate = stock.market === 'US' ? usdKrwRate : 1;
+                var totalDivKRW = (parseFloat(stock.quantity)||0) * (parseFloat(stock.dps)||0) * rate;
+                var months = stock.payoutMonths || [];
+                if (months.length > 0) {
+                    var perPayout = totalDivKRW / months.length;
+                    months.forEach(function(m) {
+                        if (m >= 1 && m <= 12) monthlySums[m - 1] += perPayout;
+                    });
+                }
+            });
+
+            var ctx = document.getElementById('monthlyDividendChart').getContext('2d');
+            if (monthlyChart) monthlyChart.destroy();
+
+            var chartData = [];
+            for(var i=0; i<monthlySums.length; i++) {
+                chartData.push(displayCurrency === 'USD' ? +(monthlySums[i] / usdKrwRate).toFixed(2) : Math.round(monthlySums[i]));
+            }
+
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                    datasets: [{
+                        data: chartData, backgroundColor: 'rgba(16, 185, 129, 0.7)', hoverBackgroundColor: 'rgba(52, 211, 153, 0.9)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1, borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: function(evt, elements) {
+                        if (elements && elements.length > 0) { openMonthDetailModal(elements[0].index + 1); }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) { return (displayCurrency === 'USD' ? '$' : '') + ctx.parsed.y.toLocaleString() + (displayCurrency === 'KRW' ? '원' : '') + ' (터치하여 상세 보기)'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10, weight: 'bold' } } },
+                        y: {
+                            grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
+                            ticks: {
+                                color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 9, weight: 'bold' },
+                                callback: function(val) {
+                                    if (displayCurrency === 'USD') return '$' + val;
+                                    return val >= 10000 ? (val/10000).toFixed(0) + '만' : val;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTimelineGrid() {
+            var container = document.getElementById('timelineGridContainer');
+            if(!container) return;
+            container.innerHTML = '';
+
+            for (var m = 1; m <= 12; m++) {
+                var monthGrossKRW = 0;
+                var stocksInMonth = [];
+
+                portfolio.forEach(function(stock) {
+                    var matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                    if (!matchesDashboardAcc) return;
+
+                    var months = stock.payoutMonths || [];
+                    var hasMonth = false;
+                    for(var i=0; i<months.length; i++) { if(months[i] === m) hasMonth = true; }
+                    
+                    if (hasMonth) {
+                        var rate = stock.market === 'US' ? usdKrwRate : 1;
+                        var qty = parseFloat(stock.quantity) || 0;
+                        var dps = parseFloat(stock.dps) || 0;
+                        var payoutKRW = ((qty * dps) / months.length) * rate;
+                        monthGrossKRW += payoutKRW;
+                        stocksInMonth.push(stock.ticker);
+                    }
+                });
+
+                var card = document.createElement('div');
+                card.className = 'p-2.5 rounded-xl border cursor-pointer transition font-bold ' + (monthGrossKRW > 0 ? 'bg-gray-50 dark:bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-100 dark:bg-gray-900/40 border-gray-300 dark:border-gray-800 opacity-60');
+                card.setAttribute('data-month', m);
+                card.onclick = function() { openMonthDetailModal(parseInt(this.getAttribute('data-month'))); };
+                
+                var chips = '';
+                for(var i=0; i<stocksInMonth.length; i++) {
+                    chips += '<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-300 font-bold">' + stocksInMonth[i] + '</span>';
+                }
+                
+                card.innerHTML = '<div class="flex justify-between items-center text-[11px] mb-1"><span class="font-extrabold text-gray-900 dark:text-gray-100">' + m + '월</span><span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold">' + stocksInMonth.length + '개</span></div><p class="font-black text-xs text-gray-900 dark:text-white truncate">' + formatMoney(monthGrossKRW) + '</p><div class="flex gap-1 flex-wrap mt-1.5 overflow-hidden max-h-8">' + chips + '</div>';
+                container.appendChild(card);
+            }
+        }
+
+        function openMonthDetailModal(month) {
+            var modal = document.getElementById('monthDetailModal');
+            var title = document.getElementById('monthModalTitle');
+            var summary = document.getElementById('monthModalSummary');
+            var list = document.getElementById('monthDetailList');
+
+            title.innerHTML = '<i class="fa-solid fa-calendar-check text-emerald-500 dark:text-emerald-400"></i> ' + month + '월 배당 상세';
+            list.innerHTML = '';
+
+            var totalMonthGrossKRW = 0; var totalMonthNetKRW = 0; var matchCount = 0;
+
+            portfolio.forEach(function(stock) {
+                var months = stock.payoutMonths || [];
+                var hasMonth = false;
+                for(var i=0; i<months.length; i++) { if(months[i] === month) hasMonth = true; }
+                
+                if (hasMonth) {
+                    matchCount++;
+                    var isUS = stock.market === 'US';
+                    var rate = isUS ? usdKrwRate : 1;
+                    var currSymbol = isUS ? '$' : '원';
+                    var taxRate = isUS ? 0.15 : 0.154;
+
+                    var qty = parseFloat(stock.quantity) || 0;
+                    var dps = parseFloat(stock.dps) || 0;
+
+                    var payoutGrossLocal = (qty * dps) / months.length;
+                    var payoutGrossKRW = payoutGrossLocal * rate;
+                    var payoutNetKRW = payoutGrossKRW * (1 - taxRate);
+
+                    totalMonthGrossKRW += payoutGrossKRW; totalMonthNetKRW += payoutNetKRW;
+
+                    var item = document.createElement('div');
+                    item.className = 'bg-gray-100 dark:bg-gray-900/70 p-3 rounded-xl border border-gray-300 dark:border-gray-700/60 flex justify-between items-center font-semibold';
+                    item.innerHTML = '<div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[9px] font-bold px-1 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span><span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">' + (stock.account || '일반계좌') + '</span><span class="font-bold text-gray-900 dark:text-gray-100 text-xs">' + stock.name + '</span><span class="text-[10px] text-gray-700 dark:text-gray-300 font-mono font-bold">(' + stock.ticker + ')</span></div><p class="text-[11px] text-gray-800 dark:text-gray-300 mt-1">보유: ' + qty + '주 · 주당: ' + (dps/months.length).toFixed(2) + currSymbol + '</p></div><div class="text-right"><span class="text-emerald-700 dark:text-emerald-400 font-black text-xs">' + formatMoney(payoutNetKRW) + '</span><p class="text-[10px] text-gray-700 dark:text-gray-300 font-bold">세전: ' + formatMoney(payoutGrossKRW) + '</p></div>';
+                    list.appendChild(item);
+                }
+            });
+
+            if (matchCount === 0) list.innerHTML = '<div class="text-center py-6 text-gray-500 font-bold"><p>' + month + '월에는 지급 예정된 배당금이 없습니다.</p></div>';
+            summary.innerText = '총 세전: ' + formatMoney(totalMonthGrossKRW) + ' / 세후: ' + formatMoney(totalMonthNetKRW);
+            modal.classList.remove('hidden');
+        }
+
+        function closeMonthDetailModal() { document.getElementById('monthDetailModal').classList.add('hidden'); }
+
+        function renderAssetPieChart() {
+            var labels = []; var values = [];
+            var bgColors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#84CC16'];
+
+            portfolio.forEach(function(stock) {
+                var matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+                var rate = stock.market === 'US' ? usdKrwRate : 1;
+                labels.push(stock.name);
+                values.push(Math.round((parseFloat(stock.quantity)||0) * (parseFloat(stock.currentPrice)||parseFloat(stock.buyPrice)||0) * rate));
+            });
+
+            var cashKRW = getTotalCashKRW(selectedDashboardAccount);
+            if (cashKRW > 0) { labels.push('💵 현금/예수금'); values.push(Math.round(cashKRW)); }
+
+            var ctx = document.getElementById('assetPieChart').getContext('2d');
+            if (pieChart) pieChart.destroy();
+
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + formatMoney(ctx.parsed); } } }
+                    }
+                }
+            });
+        }
+
+        function renderSectorPieChart() {
+            var sectorMap = {};
+            var bgColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6'];
+
+            portfolio.forEach(function(stock) {
+                var matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+                var rate = stock.market === 'US' ? usdKrwRate : 1;
+                var val = Math.round((parseFloat(stock.quantity)||0) * (parseFloat(stock.currentPrice)||parseFloat(stock.buyPrice)||0) * rate);
+                var sector = stock.sector || '기타';
+                sectorMap[sector] = (sectorMap[sector] || 0) + val;
+            });
+
+            var cashKRW = getTotalCashKRW(selectedDashboardAccount);
+            if (cashKRW > 0) { sectorMap['현금성 자산'] = (sectorMap['현금성 자산'] || 0) + Math.round(cashKRW); }
+
+            var labels = Object.keys(sectorMap); var values = [];
+            for(var i=0; i<labels.length; i++) values.push(sectorMap[labels[i]]);
+
+            var ctx = document.getElementById('sectorPieChart').getContext('2d');
+            if (sectorChart) sectorChart.destroy();
+
+            sectorChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + formatMoney(ctx.parsed); } } }
+                    }
+                }
+            });
+        }
+
+        function renderAccountPieChart() {
+            var accountMap = {};
+            var bgColors = ['#14B8A6', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316'];
+
+            portfolio.forEach(function(stock) {
+                var rate = stock.market === 'US' ? usdKrwRate : 1;
+                var val = Math.round((parseFloat(stock.quantity)||0) * (parseFloat(stock.currentPrice)||parseFloat(stock.buyPrice)||0) * rate);
+                var acc = stock.account || '일반계좌';
+                accountMap[acc] = (accountMap[acc] || 0) + val;
+            });
+
+            for (var acc in cashBalances) {
+                var c = getCashForAccount(acc);
+                var cashTotal = Math.round(c.krw + (c.usd * usdKrwRate));
+                if (cashTotal > 0) accountMap[acc] = (accountMap[acc] || 0) + cashTotal;
+            }
+
+            var labels = Object.keys(accountMap); var values = [];
+            for(var i=0; i<labels.length; i++) values.push(accountMap[labels[i]]);
+
+            var ctx = document.getElementById('accountPieChart').getContext('2d');
+            if (accountChart) accountChart.destroy();
+
+            accountChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: currentThemeMode === 'light' ? '#FFFFFF' : '#1F2937' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + formatMoney(ctx.parsed); } } }
+                    }
+                }
+            });
+        }
+
+        function openDripModal() { document.getElementById('dripModal').classList.remove('hidden'); runDripSimulation(); }
+        function closeDripModal() { document.getElementById('dripModal').classList.add('hidden'); }
+
+        function runDripSimulation() {
+            var years = parseInt(document.getElementById('dripYears').value);
+            var priceGrowth = (parseFloat(document.getElementById('dripPriceGrowth').value) || 0) / 100;
+            var divGrowth = (parseFloat(document.getElementById('dripDivGrowth').value) || 0) / 100;
+
+            var currentTotalKRW = 0; var currentAnnualDivKRW = 0;
+
+            portfolio.forEach(function(stock) {
+                var rate = stock.market === 'US' ? usdKrwRate : 1;
+                var currentPrice = parseFloat(stock.currentPrice) || parseFloat(stock.buyPrice) || 0;
+                var qty = parseFloat(stock.quantity) || 0;
+                var dps = parseFloat(stock.dps) || 0;
+                currentTotalKRW += (qty * currentPrice) * rate;
+                currentAnnualDivKRW += (qty * dps) * rate;
+            });
+
+            if (currentTotalKRW === 0) currentTotalKRW = 10000000;
+            var initialYield = currentTotalKRW > 0 ? (currentAnnualDivKRW / currentTotalKRW) : 0.04;
+
+            var dripAsset = currentTotalKRW; var noDripAsset = currentTotalKRW;
+            var currentDivRate = initialYield;
+
+            var labels = ['현재'];
+            var dripData = [Math.round(dripAsset)]; var noDripData = [Math.round(noDripAsset)];
+
+            for (var y = 1; y <= years; y++) {
+                var yearlyDiv = dripAsset * currentDivRate * (1 - 0.154);
+                dripAsset = (dripAsset + yearlyDiv) * (1 + priceGrowth);
+                noDripAsset = noDripAsset * (1 + priceGrowth);
+                currentDivRate = currentDivRate * (1 + divGrowth);
+
+                labels.push(y + '년');
+                dripData.push(Math.round(dripAsset));
+                noDripData.push(Math.round(noDripAsset));
+            }
+
+            var finalMonthlyNet = (dripAsset * currentDivRate * (1 - 0.154)) / 12;
+
+            document.getElementById('dripFinalAsset').innerText = formatMoney(dripAsset);
+            document.getElementById('dripFinalMonthlyDiv').innerText = formatMoney(finalMonthlyNet) + ' / 월';
+
+            var ctx = document.getElementById('dripChart').getContext('2d');
+            if (dripChartInstance) dripChartInstance.destroy();
+
+            var mappedDripData = []; var mappedNoDripData = [];
+            for(var i=0; i<dripData.length; i++) {
+                mappedDripData.push(displayCurrency === 'USD' ? +(dripData[i]/usdKrwRate).toFixed(2) : dripData[i]);
+                mappedNoDripData.push(displayCurrency === 'USD' ? +(noDripData[i]/usdKrwRate).toFixed(2) : noDripData[i]);
+            }
+
+            dripChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '배당 재투자(DRIP)', data: mappedDripData, borderColor: '#6366F1', backgroundColor: 'rgba(99, 102, 241, 0.2)', fill: true, tension: 0.3 },
+                        { label: '단순 보유(재투자 X)', data: mappedNoDripData, borderColor: '#9CA3AF', borderDash: [4, 4], tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9, weight: 'bold' } } },
+                        y: {
+                            grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
+                            ticks: {
+                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9, weight: 'bold' },
+                                callback: function(val) {
+                                    if (displayCurrency === 'USD') return '$' + val;
+                                    return val >= 100000000 ? (val/100000000).toFixed(1) + '억' : (val >= 10000 ? (val/10000).toFixed(0) + '만' : val);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function openModal(editIdx) {
@@ -1373,7 +1820,7 @@
             var memo = document.getElementById('inputMemo').value.trim();
             var quantity = parseFloat(document.getElementById('inputQuantity').value) || 0;
             var buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
-            var currentPrice = parseFloat(document.getElementById('inputCurrentPrice').value) || 0;
+            var currentPrice = parseFloat(document.getElementById('inputCurrentPrice').value) || buyPrice || 0;
             var dps = parseFloat(document.getElementById('inputDPS').value) || 0;
             var divCycle = document.getElementById('inputDivCycle').value;
 
@@ -1391,51 +1838,11 @@
         }
 
         function deleteStock(idx) {
-            if (confirm("'" + portfolio[idx].name + "' 종목을 삭제하시겠습니까?")) {
+            if (confirm("해당 종목을 삭제하시겠습니까?")) {
                 portfolio.splice(idx, 1);
                 saveToStorage(true);
                 renderAll();
             }
-        }
-
-        function calculateNextExDividendDate(stock) {
-            var now = new Date();
-            var currentYear = now.getFullYear();
-            var months = stock.payoutMonths && stock.payoutMonths.length > 0 ? stock.payoutMonths : [3, 6, 9, 12];
-            var candidateDates = [];
-            [currentYear, currentYear + 1].forEach(function(yr) {
-                months.forEach(function(m) {
-                    var exMonth = m; var exYear = yr; var exDay = 15;
-                    if (stock.divCycle === 'monthly') { exMonth = m; exDay = 1; }
-                    else { exMonth = m - 1; if (exMonth === 0) { exMonth = 12; exYear = yr - 1; } exDay = 20; }
-                    var exDate = new Date(exYear, exMonth - 1, exDay);
-                    candidateDates.push({ date: exDate, payoutMonth: m });
-                });
-            });
-            var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            candidateDates = candidateDates.filter(function(c) { return c.date >= todayStart; });
-            candidateDates.sort(function(a, b) { return a.date - b.date; });
-            if (candidateDates.length > 0) {
-                var next = candidateDates[0];
-                var diffTime = next.date - todayStart;
-                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return { dDay: diffDays, targetDate: next.date, payoutMonth: next.payoutMonth };
-            }
-            return null;
-        }
-
-        function toggleMergedView() {
-            isMergedView = !isMergedView;
-            var btn = document.getElementById('mergedViewToggleBtn');
-            var text = document.getElementById('mergedToggleText');
-            if (isMergedView) {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/50 whitespace-nowrap";
-                text.innerText = "종목 합치기 ON";
-            } else {
-                btn.className = "px-2 py-1 rounded-md font-bold text-[11px] flex items-center gap-1 bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 whitespace-nowrap";
-                text.innerText = "종목 합치기 OFF";
-            }
-            renderSummaryAndList();
         }
 
         function initFireSettings() {
@@ -1726,7 +2133,7 @@
                                 s.account = s.account || '일반계좌'; 
                                 s.quantity = parseFloat(s.quantity) || 0;
                                 s.buyPrice = parseFloat(s.buyPrice) || 0;
-                                s.currentPrice = parseFloat(s.currentPrice) || 0;
+                                s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                                 s.dps = parseFloat(s.dps) || 0;
                                 mapped.push(s); 
                             }
@@ -1783,21 +2190,21 @@
                         s.account = s.account || '일반계좌'; 
                         s.quantity = parseFloat(s.quantity) || 0;
                         s.buyPrice = parseFloat(s.buyPrice) || 0;
-                        s.currentPrice = parseFloat(s.currentPrice) || 0;
+                        s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                         s.dps = parseFloat(s.dps) || 0;
                         mapped.push(s); 
                     }
                     portfolio = mapped;
                 } else if (parsed && Array.isArray(parsed.portfolio)) {
                     var mapped = [];
-                    for(var i=0; i<parsed.portfolio.length; i++) { 
-                        var s = parsed.portfolio[i]; 
-                        s.account = s.account || '일반계좌'; 
-                        s.quantity = parseFloat(s.quantity) || 0;
-                        s.buyPrice = parseFloat(s.buyPrice) || 0;
-                        s.currentPrice = parseFloat(s.currentPrice) || 0;
-                        s.dps = parseFloat(s.dps) || 0;
-                        mapped.push(s); 
+                    for(var j=0; j<parsed.portfolio.length; j++) { 
+                        var s2 = parsed.portfolio[j]; 
+                        s2.account = s2.account || '일반계좌'; 
+                        s2.quantity = parseFloat(s2.quantity) || 0;
+                        s2.buyPrice = parseFloat(s2.buyPrice) || 0;
+                        s2.currentPrice = parseFloat(s2.currentPrice) || s2.buyPrice || 0;
+                        s2.dps = parseFloat(s2.dps) || 0;
+                        mapped.push(s2); 
                     }
                     portfolio = mapped;
                     if (parsed.cashBalances) {
@@ -1844,7 +2251,7 @@
                     s.account = s.account || '일반계좌';
                     s.quantity = parseFloat(s.quantity) || 0;
                     s.buyPrice = parseFloat(s.buyPrice) || 0;
-                    s.currentPrice = parseFloat(s.currentPrice) || 0;
+                    s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                     s.dps = parseFloat(s.dps) || 0;
                     mapped.push(s);
                 }
@@ -1903,7 +2310,7 @@
                             s.account = s.account || '일반계좌'; 
                             s.quantity = parseFloat(s.quantity) || 0;
                             s.buyPrice = parseFloat(s.buyPrice) || 0;
-                            s.currentPrice = parseFloat(s.currentPrice) || 0;
+                            s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                             s.dps = parseFloat(s.dps) || 0;
                             mapped.push(s); 
                         }
@@ -1916,13 +2323,13 @@
                             s2.account = s2.account || '일반계좌'; 
                             s2.quantity = parseFloat(s2.quantity) || 0;
                             s2.buyPrice = parseFloat(s2.buyPrice) || 0;
-                            s2.currentPrice = parseFloat(s2.currentPrice) || 0;
+                            s2.currentPrice = parseFloat(s2.currentPrice) || s2.buyPrice || 0;
                             s2.dps = parseFloat(s2.dps) || 0;
                             mapped.push(s2); 
                         }
                         portfolio = mapped;
                         if (imported.cashBalances) { cashBalances = imported.cashBalances; localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances)); }
-                    } else { alert('올바른 백업 형식이 아닙니다.'); return; }
+                    } else { alert('형식이 아닙니다.'); return; }
                     saveToStorage(true); renderAll(); alert('복원했습니다.');
                 } catch (err) { alert('올바른 파일이 아닙니다.'); }
             };
