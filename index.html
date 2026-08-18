@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.9
+                    v1.9.10
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -665,7 +665,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.9.9';
+        var CLOUD_SYNC_VERSION = '1.9.10';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -765,6 +765,17 @@
             }
         }
 
+        // 종목 카드의 현지통화 금액 표시.
+        // 미국 종목은 센트 단위 손익이 사라지지 않도록 소수점 2자리를 유지한다.
+        function formatLocalAmount(amount, isUS) {
+            var n = parseFloat(amount);
+            if (!isFinite(n)) n = 0;
+            if (isUS) {
+                return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            return Math.round(n).toLocaleString('ko-KR');
+        }
+
         // =========================================================================
         // 안전한 Timeout 통신 엔진 (최대 1.5초 대기 후 실패 시 즉시 로컬 DB 활용)
         // =========================================================================
@@ -840,7 +851,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.9: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.9.10: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1516,7 +1527,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.9.9: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.9.10: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -1789,7 +1800,7 @@
 
                 var card = document.createElement('div');
                 card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900 font-semibold' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-gray-100 font-semibold';
-                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + Math.round(currentValLocal).toLocaleString() + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + Math.round(profitLossLocal).toLocaleString() + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>';
+                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + formatLocalAmount(currentValLocal, isUS) + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + formatLocalAmount(profitLossLocal, isUS) + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>';
                 container.appendChild(card);
             });
 
@@ -3024,7 +3035,7 @@
         }
 
         function exportData() {
-            var payload = { version: '1.9.8', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
+            var payload = { version: '1.9.10', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             var a = document.createElement('a');
             a.setAttribute("href", dataStr); a.setAttribute("download", 'dividend_portfolio_' + new Date().toISOString().slice(0,10) + '.json');
