@@ -38,8 +38,9 @@
                 <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
+                <!-- 버전 표시 뱃지 (v1.5.0 현금 슬롯 & 계좌별 대시보드 지원) -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.4.2
+                    v1.5.0
                 </span>
             </div>
 
@@ -59,6 +60,10 @@
                 <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="통화 전환 (원화/달러)">
                     <i class="fa-solid fa-right-left text-[9px]"></i> <span id="currencyToggleText">KRW</span>
                 </button>
+                <!-- [신규 기능: 현금/예수금 관리 모달 버튼] -->
+                <button onclick="openCashModal()" class="bg-emerald-600/90 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-emerald-600/30 active:scale-95 transition whitespace-nowrap" title="계좌별 현금/예수금 관리">
+                    <i class="fa-solid fa-money-bill-wave text-[10px]"></i> 예수금
+                </button>
                 <!-- 은퇴 FIRE 계산기 -->
                 <button onclick="openFireModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-orange-600/30 active:scale-95 transition whitespace-nowrap" title="은퇴 FIRE 계산기">
                     <i class="fa-solid fa-fire-flame-curved text-[10px]"></i> FIRE
@@ -68,7 +73,7 @@
                     <i class="fa-solid fa-hand-holding-dollar text-[10px]"></i> 절세/공제
                 </button>
                 <!-- 스냅샷 롤백 -->
-                <button onclick="openSnapshotModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 active:scale-95 transition whitespace-nowrap" title="스냅샷 롤백 및 데이터 복원">
+                <button onclick="openSnapshotModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 active:scale-95 transition whitespace-nowrap" title="스냅샷 롤백">
                     <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> 롤백
                 </button>
                 <!-- 웹 클라우드 동기화 -->
@@ -105,7 +110,7 @@
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- 긴급 데이터 복구 알림 배너 (복구 가능한 과거 데이터가 감지될 때 자동 표시) -->
+        <!-- 긴급 데이터 복구 알림 배너 -->
         <div id="emergencyRecoverBanner" class="hidden p-3.5 rounded-xl border border-amber-500/60 bg-amber-500/15 text-amber-200 text-xs shadow-lg space-y-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -155,13 +160,37 @@
             </div>
         </section>
 
-        <!-- 총 자산 및 대시보드 요약 카드 -->
+        <!-- [신규 기능 2: 계좌별 독립 대시보드 탭 네비게이션 바] -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="accountDashboardTabBar">
+            <!-- 계좌 탭들이 동적으로 생성됩니다 -->
+        </div>
+
+        <!-- 총 자산 및 대시보드 요약 카드 (계좌별 독립 반영) -->
         <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3">
             <div class="flex justify-between items-start">
-                <span class="text-xs font-semibold text-gray-400" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
+                <div>
+                    <span class="text-xs font-semibold text-gray-400" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
+                    <p class="text-[11px] text-teal-400 font-bold mt-0.5" id="dashboardActiveAccountName">🏦 전체 계좌 통합</p>
+                </div>
                 <span id="totalProfitBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-gray-700 text-gray-300">+0.0%</span>
             </div>
             <div class="text-2xl font-black tracking-tight text-white" id="totalAssetValue">0원</div>
+
+            <!-- [신규 기능 1: 현금성 자산(예수금) 서브 대시보드 슬롯] -->
+            <div class="bg-gray-900/80 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                        <i class="fa-solid fa-wallet text-xs"></i>
+                    </span>
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-semibold">대기 예수금 / 현금 잔액</p>
+                        <p class="font-bold text-gray-200 mt-0.5" id="dashboardCashSummary">0원</p>
+                    </div>
+                </div>
+                <button onclick="openCashModal()" class="bg-gray-800 hover:bg-gray-700 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-500/30 transition">
+                    <i class="fa-solid fa-pen-to-square"></i> 현금 관리
+                </button>
+            </div>
 
             <!-- 달러 자산 & 원화 자산 분리 표시 그리드 -->
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-700/50">
@@ -177,18 +206,18 @@
                         <i class="fa-solid fa-won-sign"></i> 한국 원화 자산
                     </p>
                     <p class="font-bold text-rose-300 text-sm mt-0.5" id="totalKrwAssetValue">0원</p>
-                    <p class="text-[10px] text-gray-400 mt-0.5" id="totalKrwAssetSubValue">국내 주식 총액</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5" id="totalKrwAssetSubValue">국내 자산 총액</p>
                 </div>
             </div>
 
             <!-- 자산 세부 통계 그리드 -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
                 <div>
-                    <p class="text-gray-400">총 매수 금액</p>
+                    <p class="text-gray-400">총 매수 금액 (주식)</p>
                     <p class="font-bold text-gray-200 mt-0.5" id="totalInvested">0원</p>
                 </div>
                 <div>
-                    <p class="text-gray-400">총 평가 손익</p>
+                    <p class="text-gray-400">주식 평가 손익</p>
                     <p class="font-bold mt-0.5" id="totalProfitLoss">0원</p>
                 </div>
                 <div>
@@ -239,7 +268,7 @@
                 <canvas id="sectorPieChart"></canvas>
             </div>
 
-            <!-- 계좌별 비중 도넛 차트 -->
+            <!-- 계좌별 비중 도넛 차트 (현금 포함 비중 반영) -->
             <div id="accountChartWrapper" class="relative h-48 w-full hidden">
                 <canvas id="accountPieChart"></canvas>
             </div>
@@ -303,6 +332,38 @@
             <div id="stockListContainer" class="space-y-3"></div>
         </section>
     </main>
+
+    <!-- [신규 모달: 계좌별 현금성 자산(예수금) 관리 모달] -->
+    <div id="cashModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-money-bill-wave text-emerald-400"></i> 계좌별 현금 / 대기 예수금 관리
+                </h3>
+                <button onclick="closeCashModal()" class="text-gray-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-300 leading-relaxed">
+                각 계좌에 남아있는 **원화 예수금**과 **달러 환전 잔액**을 입력하면 총 평가 자산에 자동 합산되어 실제 매수 여력을 함께 관리할 수 있습니다.
+            </p>
+
+            <!-- 계좌별 현금 입력 폼 리스트 컨테이너 -->
+            <div id="cashAccountInputList" class="space-y-3 text-xs">
+                <!-- 자바스크립트로 동적 생성 -->
+            </div>
+
+            <div class="pt-2 flex gap-2">
+                <button type="button" onclick="closeCashModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2.5 rounded-lg font-bold text-xs">
+                    취소
+                </button>
+                <button type="button" onclick="saveCashBalancesFromModal()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg font-bold text-xs shadow-lg shadow-emerald-500/20">
+                    예수금 저장 및 반영
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- [모달: 절세 & 세액공제 허브] -->
     <div id="taxSavingsModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
@@ -787,6 +848,8 @@
 
         // 전역 상태 변수
         let portfolio = [];
+        let cashBalances = {}; // [신규] 계좌별 현금 잔액 { [accountName]: { krw: number, usd: number } }
+        let selectedDashboardAccount = 'ALL'; // [신규] 독립 대시보드 선택 계좌 ('ALL' 또는 특정 계좌명)
         let usdKrwRate = 1350;
         let monthlyChart = null;
         let pieChart = null;
@@ -843,9 +906,137 @@
             }
         }
 
-        // [신규] 긴급 데이터 복구 감지 루틴
+        // [신규 기능 1: 계좌별 현금(예수금) 헬퍼]
+        function getCashForAccount(accName) {
+            if (!cashBalances[accName]) {
+                return { krw: 0, usd: 0 };
+            }
+            return {
+                krw: parseFloat(cashBalances[accName].krw) || 0,
+                usd: parseFloat(cashBalances[accName].usd) || 0
+            };
+        }
+
+        function getTotalCashKRW(accName = 'ALL') {
+            if (accName === 'ALL') {
+                let sum = 0;
+                for (const acc in cashBalances) {
+                    const c = getCashForAccount(acc);
+                    sum += c.krw + (c.usd * usdKrwRate);
+                }
+                return sum;
+            } else {
+                const c = getCashForAccount(accName);
+                return c.krw + (c.usd * usdKrwRate);
+            }
+        }
+
+        function openCashModal() {
+            const container = document.getElementById('cashAccountInputList');
+            container.innerHTML = '';
+
+            // 전체 계좌 목록 추출 (종목 계좌 + 현금 계좌)
+            const allAccounts = Array.from(new Set([
+                '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
+                ...portfolio.map(s => s.account || '일반계좌'),
+                ...Object.keys(cashBalances)
+            ])).filter(Boolean);
+
+            allAccounts.forEach(acc => {
+                const c = getCashForAccount(acc);
+                const item = document.createElement('div');
+                item.className = 'bg-gray-900/90 p-3 rounded-xl border border-gray-700/70 space-y-2';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-teal-300 flex items-center gap-1">
+                            <i class="fa-solid fa-tag text-[10px]"></i> ${acc}
+                        </span>
+                        <span class="text-[10px] text-gray-400">합산: <b class="text-gray-200" id="cashPreview_${acc}">${formatMoney(c.krw + c.usd * usdKrwRate)}</b></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-0.5">원화 예수금 (KRW)</label>
+                            <input type="number" id="cashInput_krw_${acc}" value="${c.krw}" placeholder="0" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-0.5">달러 예수금 (USD)</label>
+                            <input type="number" step="any" id="cashInput_usd_${acc}" value="${c.usd}" placeholder="0" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-white font-bold focus:outline-none focus:border-emerald-500 text-xs">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+
+            document.getElementById('cashModal').classList.remove('hidden');
+        }
+
+        function closeCashModal() {
+            document.getElementById('cashModal').classList.add('hidden');
+        }
+
+        function saveCashBalancesFromModal() {
+            const allAccounts = Array.from(new Set([
+                '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
+                ...portfolio.map(s => s.account || '일반계좌'),
+                ...Object.keys(cashBalances)
+            ])).filter(Boolean);
+
+            createSnapshot('예수금 잔액 변경');
+            cashBalances = {};
+
+            allAccounts.forEach(acc => {
+                const krwEl = document.getElementById(`cashInput_krw_${acc}`);
+                const usdEl = document.getElementById(`cashInput_usd_${acc}`);
+                if (krwEl && usdEl) {
+                    const krwVal = parseFloat(krwEl.value) || 0;
+                    const usdVal = parseFloat(usdEl.value) || 0;
+                    if (krwVal > 0 || usdVal > 0) {
+                        cashBalances[acc] = { krw: krwVal, usd: usdVal };
+                    }
+                }
+            });
+
+            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+            saveToStorage(false);
+            renderAll();
+            closeCashModal();
+            alert('계좌별 현금/예수금 잔액이 성공적으로 저장 및 총자산에 반영되었습니다!');
+        }
+
+        // [신규 기능 2: 계좌별 독립 대시보드 탭 전환]
+        function renderAccountDashboardTabs() {
+            const bar = document.getElementById('accountDashboardTabBar');
+            bar.innerHTML = '';
+
+            const accounts = ['ALL', ...Array.from(new Set([
+                ...portfolio.map(s => s.account || '일반계좌'),
+                ...Object.keys(cashBalances)
+            ])).filter(Boolean)];
+
+            accounts.forEach(acc => {
+                const isSelected = (acc === selectedDashboardAccount);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1 ${isSelected ? 'bg-teal-500 text-gray-950 shadow-md shadow-teal-500/30' : 'bg-gray-800/80 text-gray-400 hover:text-gray-200 border border-gray-700/60'}`;
+                
+                const label = (acc === 'ALL') ? '🏦 전체 통합' : `🏷️ ${acc}`;
+                btn.innerHTML = label;
+                btn.onclick = () => switchDashboardAccount(acc);
+                bar.appendChild(btn);
+            });
+        }
+
+        function switchDashboardAccount(accName) {
+            selectedDashboardAccount = accName;
+            // 하단 종목 리스트 필터와도 자동 동기화
+            currentAccountFilter = accName;
+            const selectEl = document.getElementById('accountFilterSelect');
+            if (selectEl) selectEl.value = accName;
+            renderAll();
+        }
+
+        // 긴급 데이터 복구 루틴
         function checkAndPromptDataRecovery() {
-            // 현재 포트폴리오가 기본 2개 샘플이거나 비어있는 경우, 과거 백업 탐색
             if (portfolio.length <= 2) {
                 const backupKeys = [
                     'my_portfolio_snapshots_v1',
@@ -860,7 +1051,6 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (key === 'my_portfolio_snapshots_v1' && Array.isArray(parsed) && parsed.length > 0) {
-                                // 스냅샷 중 가장 종목수가 많거나 최신 스냅샷 발견
                                 const bestSnap = parsed.reduce((prev, curr) => (curr.data && curr.data.length > (prev?.data?.length || 0)) ? curr : prev, null);
                                 if (bestSnap && bestSnap.data && bestSnap.data.length > portfolio.length) {
                                     detectedBackupData = bestSnap.data;
@@ -992,7 +1182,8 @@
                     name: "dividend_portfolio_data",
                     data: {
                         updatedAt: new Date().toISOString(),
-                        portfolio: portfolio
+                        portfolio: portfolio,
+                        cashBalances: cashBalances
                     }
                 };
 
@@ -1041,7 +1232,8 @@
                     name: "dividend_portfolio_data",
                     data: {
                         updatedAt: new Date().toISOString(),
-                        portfolio: portfolio
+                        portfolio: portfolio,
+                        cashBalances: cashBalances
                     }
                 };
 
@@ -1055,7 +1247,7 @@
                     cloudSyncKey = key;
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     initCloudSyncStatus();
-                    alert('현재 포트폴리오가 클라우드 서버에 안전하게 업로드되었습니다!');
+                    alert('현재 포트폴리오 및 예수금이 클라우드 서버에 안전하게 업로드되었습니다!');
                     closeCloudModal();
                 } else {
                     alert('입력된 클라우드 ID를 찾을 수 없습니다. [새 공간 생성]을 눌러 새로 발급받아주세요.');
@@ -1085,15 +1277,21 @@
                 const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`);
                 if (res.ok) {
                     const result = await res.json();
-                    if (result && result.data && Array.isArray(result.data.portfolio)) {
+                    if (result && result.data) {
                         createSnapshot('클라우드 복원 전 자동 백업');
-                        portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                        if (Array.isArray(result.data.portfolio)) {
+                            portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                        }
+                        if (result.data.cashBalances) {
+                            cashBalances = result.data.cashBalances;
+                            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                        }
                         cloudSyncKey = key;
                         localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                         localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
                         initCloudSyncStatus();
                         renderAll();
-                        alert(`클라우드에서 총 ${portfolio.length}개의 종목 데이터를 완벽하게 복원했습니다!`);
+                        alert(`클라우드에서 총 ${portfolio.length}개의 종목 및 예수금 데이터를 완벽하게 복원했습니다!`);
                         closeCloudModal();
                     } else {
                         alert('저장된 포트폴리오 형식이 올바르지 않습니다.');
@@ -1117,7 +1315,8 @@
                     name: "dividend_portfolio_data",
                     data: {
                         updatedAt: new Date().toISOString(),
-                        portfolio: portfolio
+                        portfolio: portfolio,
+                        cashBalances: cashBalances
                     }
                 };
                 await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(cloudSyncKey)}`, {
@@ -1140,7 +1339,8 @@
                     dateStr: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                     reason: reason,
                     stockCount: portfolio.length,
-                    data: JSON.parse(JSON.stringify(portfolio))
+                    data: JSON.parse(JSON.stringify(portfolio)),
+                    cashData: JSON.parse(JSON.stringify(cashBalances))
                 };
                 snapshots.unshift(newSnap);
                 if (snapshots.length > 5) snapshots = snapshots.slice(0, 5);
@@ -1163,7 +1363,7 @@
                 listContainer.innerHTML = `
                     <div class="text-center py-8 text-gray-500 bg-gray-900/50 rounded-xl border border-gray-700">
                         <i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i>
-                        <p>저장된 이전 스냅샷이 없습니다.<br>종목을 수정하거나 추가하면 자동 기록됩니다.</p>
+                        <p>저장된 이전 스냅샷이 없습니다.<br>종목이나 예수금을 수정하면 자동 기록됩니다.</p>
                     </div>
                 `;
             } else {
@@ -1200,6 +1400,10 @@
                 if (confirm(`${target.dateStr} 시점의 데이터로 복원하시겠습니까?`)) {
                     createSnapshot('롤백 실행 직전 현재 상태 백업');
                     portfolio = JSON.parse(JSON.stringify(target.data)).map(s => ({ ...s, account: s.account || '일반계좌' }));
+                    if (target.cashData) {
+                        cashBalances = JSON.parse(JSON.stringify(target.cashData));
+                        localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                    }
                     saveToStorage(false);
                     renderAll();
                     alert('선택한 시점의 포트폴리오로 성공적으로 롤백되었습니다!');
@@ -1214,9 +1418,13 @@
                 alert('복사할 종목 데이터가 없습니다.');
                 return;
             }
-            const exportText = JSON.stringify(portfolio);
+            const exportPayload = {
+                portfolio: portfolio,
+                cashBalances: cashBalances
+            };
+            const exportText = JSON.stringify(exportPayload);
             navigator.clipboard.writeText(exportText).then(() => {
-                alert('현재 포트폴리오 데이터가 클립보드에 복사되었습니다!\n메모장이나 카카오톡에 붙여넣어 보관하세요.');
+                alert('현재 포트폴리오와 예수금 데이터가 클립보드에 복사되었습니다!\n메모장이나 카카오톡에 붙여넣어 보관하세요.');
             }).catch(() => {
                 prompt('아래 텍스트를 전체 복사하세요:', exportText);
             });
@@ -1238,16 +1446,25 @@
             if (!text) return;
             try {
                 const parsed = JSON.parse(text.trim());
+                createSnapshot('클립보드 붙여넣기 전 백업');
+
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    createSnapshot('클립보드 붙여넣기 전 백업');
                     portfolio = parsed.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                    saveToStorage();
-                    renderAll();
-                    alert(`총 ${portfolio.length}개의 종목 데이터를 성공적으로 복원했습니다!`);
-                    closeCloudModal();
+                } else if (parsed && Array.isArray(parsed.portfolio)) {
+                    portfolio = parsed.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                    if (parsed.cashBalances) {
+                        cashBalances = parsed.cashBalances;
+                        localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                    }
                 } else {
                     alert('올바른 데이터 형식이 아닙니다.');
+                    return;
                 }
+
+                saveToStorage();
+                renderAll();
+                alert(`총 ${portfolio.length}개의 종목 및 예수금 데이터를 성공적으로 복원했습니다!`);
+                closeCloudModal();
             } catch (e) {
                 alert('데이터 해석에 실패했습니다.');
             }
@@ -1402,6 +1619,12 @@
 
         // 5. 통합 데이터 로드
         async function loadPortfolioData() {
+            // 현금 잔액 로드
+            const savedCash = localStorage.getItem('my_cash_balances_v1');
+            if (savedCash) {
+                try { cashBalances = JSON.parse(savedCash) || {}; } catch(e) { cashBalances = {}; }
+            }
+
             const saved = localStorage.getItem('my_dividend_portfolio_v9');
             if (saved) {
                 try {
@@ -1418,8 +1641,14 @@
                     const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(cloudSyncKey)}`);
                     if (res.ok) {
                         const result = await res.json();
-                        if (result && result.data && Array.isArray(result.data.portfolio) && result.data.portfolio.length > 0) {
-                            portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                        if (result && result.data) {
+                            if (Array.isArray(result.data.portfolio) && result.data.portfolio.length > 0) {
+                                portfolio = result.data.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                            }
+                            if (result.data.cashBalances) {
+                                cashBalances = result.data.cashBalances;
+                                localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                            }
                             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
                             return;
                         }
@@ -1439,6 +1668,7 @@
                 createSnapshot('데이터 변경');
             }
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
+            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
             pushToCloudQuietly();
         }
 
@@ -1460,9 +1690,7 @@
         async function tryFetchLiveOnline(symbol) {
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
             
-            // 3개의 독립 프록시 엔드포인트 순차/대체 시도
             const proxyEngines = [
-                // 1순위: corsproxy.io (가장 빠르고 안정적)
                 async () => {
                     const c = new AbortController();
                     const t = setTimeout(() => c.abort(), 3500);
@@ -1474,7 +1702,6 @@
                     }
                     return null;
                 },
-                // 2순위: allorigins.win (raw)
                 async () => {
                     const c = new AbortController();
                     const t = setTimeout(() => c.abort(), 3500);
@@ -1486,7 +1713,6 @@
                     }
                     return null;
                 },
-                // 3순위: codetabs proxy
                 async () => {
                     const c = new AbortController();
                     const t = setTimeout(() => c.abort(), 3500);
@@ -1525,7 +1751,6 @@
                 let resolved = null;
                 const upperRaw = inputRaw.toUpperCase();
 
-                // 1단계: 내장 DB 매칭
                 for (const key in BUILTIN_STOCKS) {
                     if (key.toUpperCase() === upperRaw || BUILTIN_STOCKS[key].ticker.toUpperCase() === upperRaw) {
                         resolved = { ...BUILTIN_STOCKS[key] };
@@ -1533,7 +1758,6 @@
                     }
                 }
 
-                // 2단계: 한국/미국 심볼 결정
                 let querySymbol = upperRaw;
                 if (/^[0-9]{6}$/.test(inputRaw)) {
                     querySymbol = `${inputRaw}.KS`;
@@ -1541,9 +1765,7 @@
                     querySymbol = `${resolved.ticker}.KS`;
                 }
 
-                // 3단계: 멀티 프록시 실시간 시세 조회
                 let onlineResult = await tryFetchLiveOnline(querySymbol);
-                // 코스피(.KS) 실패 시 코스닥(.KQ) 추가 시도
                 if (!onlineResult && querySymbol.endsWith('.KS')) {
                     onlineResult = await tryFetchLiveOnline(querySymbol.replace('.KS', '.KQ'));
                 }
@@ -1569,7 +1791,6 @@
                     }
                 }
 
-                // 4단계: 신규 종목 기본값 fallback
                 if (!resolved) {
                     const isKR = /^[0-9]{6}$/.test(inputRaw) || document.querySelector('input[name="marketType"]:checked').value === 'KR';
                     resolved = {
@@ -1585,7 +1806,6 @@
                     };
                 }
 
-                // 5단계: 모달 입력 폼에 결과 바인딩
                 document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
                 handleMarketChange();
 
@@ -1620,7 +1840,6 @@
             }
         }
 
-        // [병렬 초고속 시세 일괄 갱신 엔진]
         async function refreshAllStockData() {
             if (portfolio.length === 0) {
                 alert('갱신할 종목이 없습니다.');
@@ -1651,7 +1870,6 @@
                     }
                 }
 
-                // 온라인 조회 실패 시 내장 DB 가격 유지
                 for (const key in BUILTIN_STOCKS) {
                     if (BUILTIN_STOCKS[key].ticker === stock.ticker) {
                         if (stock.currentPrice === 0) stock.currentPrice = BUILTIN_STOCKS[key].price;
@@ -1686,7 +1904,8 @@
 
         function setAccountFilter(accountName) {
             currentAccountFilter = accountName;
-            renderSummaryAndList();
+            selectedDashboardAccount = accountName;
+            renderAll();
         }
 
         function setSort(sortType) {
@@ -1696,7 +1915,10 @@
 
         function updateAccountFilterDropdown() {
             const selectEl = document.getElementById('accountFilterSelect');
-            const accounts = Array.from(new Set(portfolio.map(s => s.account || '일반계좌'))).filter(Boolean);
+            const accounts = Array.from(new Set([
+                ...portfolio.map(s => s.account || '일반계좌'),
+                ...Object.keys(cashBalances)
+            ])).filter(Boolean);
             
             const prevVal = currentAccountFilter;
             selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 보기</option>';
@@ -1717,6 +1939,7 @@
 
         // 8. 화면 렌더링 총괄
         function renderAll() {
+            renderAccountDashboardTabs();
             updateAccountFilterDropdown();
             renderSummaryAndList();
             updateFireCalculations();
@@ -1780,8 +2003,9 @@
         }
 
         function renderSummaryAndList() {
+            // 전체 자산 통계 변수
             let totalInvestedKRW = 0;
-            let totalCurrentKRW = 0;
+            let totalStockCurrentKRW = 0;
             let totalAnnualGrossKRW = 0;
             let totalAnnualNetKRW = 0;
             let totalUsdAssetUSD = 0;
@@ -1791,7 +2015,11 @@
             container.innerHTML = '';
             document.getElementById('stockCount').innerText = portfolio.length;
 
+            // [계좌별 독립 대시보드 계산 분기]
             portfolio.forEach(stock => {
+                const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+
                 const isUS = stock.market === 'US';
                 const rate = isUS ? usdKrwRate : 1;
                 const currentValLocal = stock.quantity * stock.currentPrice;
@@ -1807,9 +2035,30 @@
                 }
 
                 totalInvestedKRW += investedLocal * rate;
-                totalCurrentKRW += currentValLocal * rate;
+                totalStockCurrentKRW += currentValLocal * rate;
                 totalAnnualGrossKRW += annualDivLocal * rate;
             });
+
+            // [현금 합산]: 선택된 계좌의 예수금 계산
+            const targetCashKRW = getTotalCashKRW(selectedDashboardAccount);
+            const totalAccountValueKRW = totalStockCurrentKRW + targetCashKRW;
+
+            // 계좌별 달러/원화 현금 추가 집계
+            let cashUsdSum = 0;
+            let cashKrwSum = 0;
+            if (selectedDashboardAccount === 'ALL') {
+                for (const acc in cashBalances) {
+                    const c = getCashForAccount(acc);
+                    cashKrwSum += c.krw;
+                    cashUsdSum += c.usd;
+                }
+            } else {
+                const c = getCashForAccount(selectedDashboardAccount);
+                cashKrwSum = c.krw;
+                cashUsdSum = c.usd;
+            }
+            totalUsdAssetUSD += cashUsdSum;
+            totalKrwAssetKRW += cashKrwSum;
 
             // 금융소득종합과세 경고 배너
             const taxBanner = document.getElementById('taxWarningBanner');
@@ -1817,13 +2066,13 @@
             const taxTitle = document.getElementById('taxWarningTitle');
             const taxDesc = document.getElementById('taxWarningDesc');
 
-            if (totalAnnualGrossKRW >= 20000000) {
+            if (totalAnnualGrossKRW >= 20000000 && selectedDashboardAccount === 'ALL') {
                 taxBanner.className = "p-3 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between shadow-md";
                 taxIcon.innerText = "🚨";
                 taxTitle.innerText = "금융소득종합과세 대상 (연 2,000만 원 초과)";
                 taxDesc.innerText = `현재 연 세전 배당금: ${formatMoney(totalAnnualGrossKRW)} (초과액: ${formatMoney(totalAnnualGrossKRW - 20000000)})`;
                 taxBanner.classList.remove('hidden');
-            } else if (totalAnnualGrossKRW >= 18000000) {
+            } else if (totalAnnualGrossKRW >= 18000000 && selectedDashboardAccount === 'ALL') {
                 taxBanner.className = "p-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between shadow-md";
                 taxIcon.innerText = "⚠️";
                 taxTitle.innerText = "금융소득종합과세 주의 (연 2,000만 원 한도 근접)";
@@ -1938,7 +2187,6 @@
                 const profitColor = profitLossLocal >= 0 ? 'text-rose-400' : 'text-blue-400';
                 const profitBadge = profitLossLocal >= 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400';
 
-                // 배당락일 D-Day 계산
                 const exInfo = calculateNextExDividendDate(stock);
                 let dDayBadge = '';
                 if (exInfo) {
@@ -1953,7 +2201,6 @@
                     }
                 }
 
-                // 메모장 표시
                 const memoHtml = stock.memo ? `
                     <div class="bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-300">
                         <i class="fa-regular fa-note-sticky text-amber-400 text-[10px]"></i>
@@ -1961,7 +2208,6 @@
                     </div>
                 ` : '';
 
-                // 계좌 라벨 생성
                 const accountBadge = stock.isMerged ? `
                     <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-300 border border-indigo-500/30">
                         <i class="fa-solid fa-code-merge text-[9px]"></i> ${stock.account} (${stock.accounts.length}개 계좌 합산)
@@ -2044,24 +2290,29 @@
                 container.appendChild(card);
             });
 
-            // 대시보드 통계 반영
-            const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
-            const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
+            // [대시보드 요약 통계 반영: 주식 손익 + 현금 포함 총자산]
+            const totalStockProfitKRW = totalStockCurrentKRW - totalInvestedKRW;
+            const totalProfitRate = totalInvestedKRW > 0 ? (totalStockProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = totalAnnualNetKRW / 12;
 
-            document.getElementById('totalAssetTitle').innerText = `총 평가 자산 (${displayCurrency === 'USD' ? 'USD 환산' : 'KRW 통합'})`;
-            document.getElementById('totalAssetValue').innerText = formatMoney(totalCurrentKRW);
+            const accTitle = (selectedDashboardAccount === 'ALL') ? '전체 계좌 통합' : `${selectedDashboardAccount} 계좌`;
+            document.getElementById('dashboardActiveAccountName').innerText = `🏦 ${accTitle}`;
+            document.getElementById('totalAssetTitle').innerText = `총 평가 자산 (주식+현금 ${displayCurrency === 'USD' ? 'USD' : 'KRW'})`;
+            document.getElementById('totalAssetValue').innerText = formatMoney(totalAccountValueKRW);
+
+            // 현금 잔액 요약 표시
+            document.getElementById('dashboardCashSummary').innerText = `${formatMoney(targetCashKRW)} (원화 ${Math.round(cashKrwSum).toLocaleString()}원 + $${cashUsdSum.toLocaleString()})`;
 
             document.getElementById('totalUsdAssetValue').innerText = `$${totalUsdAssetUSD.toLocaleString('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             document.getElementById('totalUsdAssetSubValue').innerText = `(${formatMoney(totalUsdAssetUSD * usdKrwRate)})`;
             document.getElementById('totalKrwAssetValue').innerText = `${Math.round(totalKrwAssetKRW).toLocaleString()}원`;
-            document.getElementById('totalKrwAssetSubValue').innerText = displayCurrency === 'USD' ? `($${(totalKrwAssetKRW / usdKrwRate).toFixed(2)})` : '국내 주식 총액';
+            document.getElementById('totalKrwAssetSubValue').innerText = displayCurrency === 'USD' ? `($${(totalKrwAssetKRW / usdKrwRate).toFixed(2)})` : '국내 자산 총액';
 
             document.getElementById('totalInvested').innerText = formatMoney(totalInvestedKRW);
 
             const profitEl = document.getElementById('totalProfitLoss');
-            profitEl.innerText = `${totalProfitKRW >= 0 ? '+' : ''}${formatMoney(totalProfitKRW)}`;
-            profitEl.className = `font-bold mt-0.5 ${totalProfitKRW >= 0 ? 'text-rose-400' : 'text-blue-400'}`;
+            profitEl.innerText = `${totalStockProfitKRW >= 0 ? '+' : ''}${formatMoney(totalStockProfitKRW)}`;
+            profitEl.className = `font-bold mt-0.5 ${totalStockProfitKRW >= 0 ? 'text-rose-400' : 'text-blue-400'}`;
 
             const badgeEl = document.getElementById('totalProfitBadge');
             badgeEl.innerText = `${totalProfitRate >= 0 ? '+' : ''}${totalProfitRate.toFixed(2)}%`;
@@ -2075,6 +2326,9 @@
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
+                const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
                 const totalDivKRW = stock.quantity * stock.dps * rate;
                 const months = stock.payoutMonths || [];
@@ -2149,6 +2403,9 @@
                 const stocksInMonth = [];
 
                 portfolio.forEach(stock => {
+                    const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                    if (!matchesDashboardAcc) return;
+
                     const months = stock.payoutMonths || [];
                     if (months.includes(m)) {
                         const rate = stock.market === 'US' ? usdKrwRate : 1;
@@ -2253,10 +2510,20 @@
             const bgColors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#84CC16'];
 
             portfolio.forEach(stock => {
+                const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
                 labels.push(stock.name);
                 values.push(Math.round(stock.quantity * stock.currentPrice * rate));
             });
+
+            // 선택된 계좌의 현금 잔액도 비중에 추가
+            const cashKRW = getTotalCashKRW(selectedDashboardAccount);
+            if (cashKRW > 0) {
+                labels.push('💵 현금 / 예수금');
+                values.push(Math.round(cashKRW));
+            }
 
             const ctx = document.getElementById('assetPieChart').getContext('2d');
             if (pieChart) pieChart.destroy();
@@ -2293,11 +2560,19 @@
             const bgColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6'];
 
             portfolio.forEach(stock => {
+                const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
+                if (!matchesDashboardAcc) return;
+
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
                 const val = Math.round(stock.quantity * stock.currentPrice * rate);
                 const sector = stock.sector || '기타';
                 sectorMap[sector] = (sectorMap[sector] || 0) + val;
             });
+
+            const cashKRW = getTotalCashKRW(selectedDashboardAccount);
+            if (cashKRW > 0) {
+                sectorMap['현금성 자산'] = (sectorMap['현금성 자산'] || 0) + Math.round(cashKRW);
+            }
 
             const labels = Object.keys(sectorMap);
             const values = Object.values(sectorMap);
@@ -2331,7 +2606,7 @@
             });
         }
 
-        // 계좌별 비중 도넛 차트
+        // [계좌별 비중 도넛 차트: 주식 평가액 + 예수금 잔액 합산 반영]
         function renderAccountPieChart() {
             const accountMap = {};
             const bgColors = ['#14B8A6', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316'];
@@ -2342,6 +2617,15 @@
                 const acc = stock.account || '일반계좌';
                 accountMap[acc] = (accountMap[acc] || 0) + val;
             });
+
+            // 각 계좌별 현금도 해당 계좌 자산에 합산
+            for (const acc in cashBalances) {
+                const c = getCashForAccount(acc);
+                const cashTotal = Math.round(c.krw + (c.usd * usdKrwRate));
+                if (cashTotal > 0) {
+                    accountMap[acc] = (accountMap[acc] || 0) + cashTotal;
+                }
+            }
 
             const labels = Object.keys(accountMap);
             const values = Object.values(accountMap);
@@ -2496,7 +2780,7 @@
                 });
             } else {
                 document.getElementById('modalTitle').innerText = '종목 추가';
-                document.getElementById('inputAccount').value = '일반계좌';
+                document.getElementById('inputAccount').value = (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌';
                 handleCycleChange();
             }
 
@@ -2574,13 +2858,15 @@
 
         // 14. 파일 내보내기 및 가져오기 (JSON 및 CSV)
         function exportCSV() {
-            if (portfolio.length === 0) {
-                alert('내보낼 종목 데이터가 없습니다.');
+            if (portfolio.length === 0 && Object.keys(cashBalances).length === 0) {
+                alert('내보낼 데이터가 없습니다.');
                 return;
             }
 
-            const headers = ['시장(Market)', '티커(Ticker)', '종목명(Name)', '계좌(Account)', '섹터(Sector)', '투자메모(Memo)', '보유수량(Quantity)', '매수가(BuyPrice)', '현재가(CurrentPrice)', '주당배당금(DPS)', '배당주기(Cycle)', '배당지급월(Months)'];
+            const headers = ['구분(Type)', '시장(Market)', '티커(Ticker)', '종목명(Name)', '계좌(Account)', '섹터(Sector)', '투자메모(Memo)', '보유수량/잔액(Qty/Cash)', '매수가(BuyPrice)', '현재가(CurrentPrice)', '주당배당금(DPS)', '배당주기(Cycle)', '배당지급월(Months)'];
+            
             const rows = portfolio.map(s => [
+                'STOCK',
                 s.market,
                 s.ticker,
                 `"${(s.name || '').replace(/"/g, '""')}"`,
@@ -2594,6 +2880,17 @@
                 s.divCycle,
                 `"${(s.payoutMonths || []).join(',')}"`
             ]);
+
+            // 현금 잔액 행 추가
+            for (const acc in cashBalances) {
+                const c = getCashForAccount(acc);
+                if (c.krw > 0) {
+                    rows.push(['CASH_KRW', 'KR', 'KRW_CASH', '원화 예수금', `"${acc}"`, '현금성자산', '원화 잔액', c.krw, 1, 1, 0, 'none', '""']);
+                }
+                if (c.usd > 0) {
+                    rows.push(['CASH_USD', 'US', 'USD_CASH', '달러 예수금', `"${acc}"`, '현금성자산', '달러 환전 잔액', c.usd, 1, 1, 0, 'none', '""']);
+                }
+            }
 
             const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2609,7 +2906,13 @@
         }
 
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio, null, 2));
+            const payload = {
+                version: '1.5.0',
+                updatedAt: new Date().toISOString(),
+                portfolio: portfolio,
+                cashBalances: cashBalances
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const a = document.createElement('a');
             a.setAttribute("href", dataStr);
             a.setAttribute("download", `dividend_portfolio_${new Date().toISOString().slice(0,10)}.json`);
@@ -2625,13 +2928,24 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
+                    createSnapshot('JSON 파일 복원 전 백업');
+
                     if (Array.isArray(imported)) {
-                        createSnapshot('JSON 파일 복원 전 백업');
                         portfolio = imported.map(s => ({ ...s, account: s.account || '일반계좌' }));
-                        saveToStorage();
-                        renderAll();
-                        alert('포트폴리오 데이터를 성공적으로 복원했습니다.');
+                    } else if (imported && Array.isArray(imported.portfolio)) {
+                        portfolio = imported.portfolio.map(s => ({ ...s, account: s.account || '일반계좌' }));
+                        if (imported.cashBalances) {
+                            cashBalances = imported.cashBalances;
+                            localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
+                        }
+                    } else {
+                        alert('올바른 백업 JSON 파일 형식이 아닙니다.');
+                        return;
                     }
+
+                    saveToStorage();
+                    renderAll();
+                    alert('포트폴리오 및 예수금 데이터를 성공적으로 복원했습니다.');
                 } catch (err) {
                     alert('올바른 백업 JSON 파일이 아닙니다.');
                 }
