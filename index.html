@@ -53,7 +53,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.11.1
+                    v1.11.2
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -140,7 +140,7 @@
             </div>
         </div>
 
-        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.1에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.2에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -282,7 +282,7 @@
             <div id="calendarWrapper" class="hidden space-y-2">
                 <div class="flex justify-between items-center">
                     <button onclick="changeDividendCalendarMonth(-1)" class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 font-bold"><i class="fa-solid fa-chevron-left"></i></button>
-                    <div class="text-center"><p id="dividendCalendarTitle" class="text-sm font-black"></p><p class="text-[9px] opacity-70">🟠 배당락일 · 🟢 실 지급 · 🔵 지급 예정</p></div>
+                    <div class="text-center"><p id="dividendCalendarTitle" class="text-sm font-black"></p><p class="text-[9px] opacity-70">🟠 배당락일 · 🟢 실 수령/지급 · 🟣 공시 지급 · 🔵 지급 예정</p></div>
                     <button onclick="changeDividendCalendarMonth(1)" class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 font-bold"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-gray-500"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
@@ -437,6 +437,22 @@
             </div>
             <div id="monthDetailList" class="space-y-2.5 text-xs"></div>
             <button onclick="closeMonthDetailModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
+        </div>
+    </div>
+
+    <!-- [모달: 배당 캘린더 날짜 상세] -->
+    <div id="calendarDayModal" class="fixed inset-0 z-[87] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden" onclick="if(event.target===this) closeDividendCalendarDayModal()">
+        <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-4 max-h-[88vh] overflow-y-auto">
+            <div class="flex justify-between items-start border-b border-gray-300 dark:border-gray-700 pb-3 gap-3">
+                <div class="min-w-0">
+                    <h3 id="calendarDayModalTitle" class="text-base font-bold flex items-center gap-1.5"><i class="fa-solid fa-calendar-day text-violet-500"></i> 배당 일정 상세</h3>
+                    <p id="calendarDayModalSummary" class="text-[10px] font-semibold opacity-75 mt-1"></p>
+                </div>
+                <button onclick="closeDividendCalendarDayModal()" class="text-gray-500 text-lg shrink-0"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="calendarDayModalList" class="space-y-2.5 text-xs"></div>
+            <p class="text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">※ ‘공시 지급’은 거래소 공시의 지급예정일을 뜻하며 실제 계좌 입금 확인과는 구분됩니다. ‘실 수령’은 직접 기록한 입금 내역입니다.</p>
+            <button onclick="closeDividendCalendarDayModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
         </div>
     </div>
 
@@ -610,7 +626,7 @@
     <!-- [모달: ETF 분배금 이력] -->
     <div id="distributionHistoryModal" class="fixed inset-0 z-[86] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-3 max-h-[88vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3"><div><h3 id="distributionHistoryTitle" class="text-base font-bold"><i class="fa-solid fa-clock-rotate-left text-violet-500"></i> 분배금 이력</h3><p id="distributionHistoryMeta" class="text-[10px] opacity-70 mt-0.5"></p></div><button onclick="closeDistributionHistoryModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3"><div><h3 id="distributionHistoryTitle" class="text-base font-bold"><i class="fa-solid fa-clock-rotate-left text-violet-500"></i> 배당/분배금 이력</h3><p id="distributionHistoryMeta" class="text-[10px] opacity-70 mt-0.5"></p></div><button onclick="closeDistributionHistoryModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button></div>
             <div id="distributionHistoryList" class="space-y-2 text-xs"></div>
             <button onclick="closeDistributionHistoryModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
         </div>
@@ -768,14 +784,55 @@
                 year: 2026,
                 dates: ["2026-03-30", "2026-06-29", "2026-09-28", "2026-12-15"],
                 exDates: ["2026-03-25", "2026-06-24"],
+                cycle: "quarterly",
+                months: [3,6,9,12],
                 source: "Schwab 2026 distribution schedule"
             },
             "035250": {
                 year: 2026,
                 dates: ["2026-04-24"],
+                cycle: "annual",
+                months: [4],
                 source: "강원랜드 2026 현금배당 결정"
+            },
+            // NC(036570): KRX KIND '현금ㆍ현물 배당 결정' 공시에서 확인한 지급예정일.
+            // 과거 날짜도 '실제 입금 확인'으로 오인하지 않고 disclosed(공시 지급)로 표시한다.
+            "036570": {
+                year: 2026,
+                dates: ["2024-04-26", "2025-04-25", "2026-04-24"],
+                cycle: "annual",
+                months: [4],
+                source: "KRX KIND 현금ㆍ현물 배당 결정",
+                history: [
+                    { recordDate:"2026-03-31", paymentDate:"2026-04-24", amount:1150, status:"disclosed", source:"KRX KIND 현금ㆍ현물 배당 결정", sourceUrl:"https://kind.krx.co.kr/common/disclsviewer.do?acptNo=20260210000727&docno=&method=searchInitInfo" },
+                    { recordDate:"2025-03-24", paymentDate:"2025-04-25", amount:1460, status:"disclosed", source:"KRX KIND 현금ㆍ현물 배당 결정", sourceUrl:"https://kind.krx.co.kr/common/disclsviewer.do?acptno=20250211001490&docno=&method=search&viewerhost=" },
+                    { recordDate:"2023-12-31", paymentDate:"2024-04-26", amount:3130, status:"disclosed", source:"KRX KIND 현금ㆍ현물 배당 결정", sourceUrl:"https://kind.krx.co.kr/common/disclsviewer.do?acptno=20240207001418&langTpCd=0&method=search&orgid=G&rcpno=20240207001418&tran=Y" }
+                ]
             }
         };
+
+        function uniqueIsoDates(values) {
+            var out = [];
+            (Array.isArray(values) ? values : []).forEach(function(v) {
+                v = String(v || '').trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(v) && out.indexOf(v) < 0) out.push(v);
+            });
+            return out.sort();
+        }
+
+        function mergeDistributionHistory(base, extra) {
+            var map = {};
+            (Array.isArray(base) ? base : []).concat(Array.isArray(extra) ? extra : []).forEach(function(rec) {
+                if (!rec) return;
+                var r = Object.assign({}, rec);
+                var key = String(r.recordDate || '') + '|' + String(r.paymentDate || '') + '|' + String(r.amount || 0);
+                if (!map[key]) map[key] = r;
+                else map[key] = Object.assign({}, map[key], r);
+            });
+            return Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b) {
+                return String(b.paymentDate || b.recordDate || '').localeCompare(String(a.paymentDate || a.recordDate || ''));
+            });
+        }
 
         function getKnownPayoutDateSchedule(ticker) {
             var key = String(ticker || '').toUpperCase().trim();
@@ -785,6 +842,9 @@
                 year: schedule.year,
                 dates: schedule.dates.slice(),
                 exDates: Array.isArray(schedule.exDates) ? schedule.exDates.slice() : [],
+                cycle: schedule.cycle || '',
+                months: Array.isArray(schedule.months) ? schedule.months.slice() : [],
+                history: Array.isArray(schedule.history) ? schedule.history.map(function(x){ return Object.assign({},x); }) : [],
                 source: schedule.source || ''
             };
         }
@@ -809,7 +869,6 @@
 
             var master = MASTER_STOCKS[String(ticker || '').toUpperCase().trim()];
             if (master && master.cycle === cycle && Array.isArray(master.months) && master.months.length) {
-                // 내장 종목은 알려진 실제 지급월을 우선한다. (예: SCHD 3/6/9/12)
                 if (cycle === 'monthly' || cleaned.length === 0 || cleaned.length === 12 || cleaned.length !== master.months.length) {
                     return master.months.slice();
                 }
@@ -824,20 +883,29 @@
 
         function normalizeStockPayoutSchedule(stock) {
             if (!stock) return false;
-            var cycle = stock.divCycle || stock.cycle || 'quarterly';
             var ticker = stock.ticker || '';
-            var before = JSON.stringify(stock.payoutMonths || stock.months || []);
-            var normalized = normalizePayoutMonths(cycle, stock.payoutMonths || stock.months || [], ticker);
+            var known = getKnownPayoutDateSchedule(ticker);
+            var beforeState = JSON.stringify({cycle:stock.divCycle||stock.cycle||'', months:stock.payoutMonths||stock.months||[], dates:stock.payoutDates||[], ex:stock.exDividendDates||[], history:stock.distributionHistory||[]});
+
+            // 공식 일정이 있으면 저장 데이터의 오래된/잘못된 기본 주기보다 공식 주기를 우선한다.
+            if (known && known.cycle) {
+                if (stock.divCycle !== undefined || stock.payoutMonths !== undefined) stock.divCycle = known.cycle;
+                else stock.cycle = known.cycle;
+            }
+            var cycle = stock.divCycle || stock.cycle || 'quarterly';
+            var monthSeed = (known && known.months && known.months.length) ? known.months : (stock.payoutMonths || stock.months || []);
+            var normalized = normalizePayoutMonths(cycle, monthSeed, ticker);
             if (stock.divCycle !== undefined || stock.payoutMonths !== undefined) stock.payoutMonths = normalized;
             else stock.months = normalized;
 
-            var known = getKnownPayoutDateSchedule(ticker);
-            if (known && (!Array.isArray(stock.payoutDates) || stock.payoutDates.length === 0)) {
-                stock.payoutDates = known.dates.slice();
-                stock.exDividendDates = known.exDates ? known.exDates.slice() : (stock.exDividendDates || []);
-                stock.payoutDateSource = known.source;
+            if (known) {
+                stock.payoutDates = uniqueIsoDates((stock.payoutDates || []).concat(known.dates || []));
+                stock.exDividendDates = uniqueIsoDates((stock.exDividendDates || []).concat(known.exDates || []));
+                if (known.history && known.history.length) stock.distributionHistory = mergeDistributionHistory(stock.distributionHistory || [], known.history);
+                if (known.source) stock.payoutDateSource = known.source;
             }
-            return before !== JSON.stringify(normalized);
+            var afterState = JSON.stringify({cycle:stock.divCycle||stock.cycle||'', months:stock.payoutMonths||stock.months||[], dates:stock.payoutDates||[], ex:stock.exDividendDates||[], history:stock.distributionHistory||[]});
+            return beforeState !== afterState;
         }
 
         function formatPayoutDateKo(iso) {
@@ -1029,7 +1097,7 @@
         function updatePayoutMonthTooltipsFromForm() {
             var ticker = document.getElementById('inputTicker') ? document.getElementById('inputTicker').value.trim() : '';
             var known = getKnownPayoutDateSchedule(ticker);
-            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [] };
+            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '' };
             if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                 tipStock.payoutDates = currentFormDistributionData.payoutDates || tipStock.payoutDates;
                 tipStock.distributionHistory = currentFormDistributionData.history || [];
@@ -1114,6 +1182,53 @@
             }
         }
 
+        async function fetchKoreanStockDividendInfo(code, name, forceRefresh) {
+            code = normalizeKoreanTicker(code);
+            if (!isKoreanTicker(code)) return null;
+            try {
+                var data = await marketProxyFetch('/krdiv?code=' + encodeURIComponent(code) + '&name=' + encodeURIComponent(name || '') + (forceRefresh ? '&refresh=1' : ''), forceRefresh ? 18000 : 12000);
+                if (!data || !data.ok) return null;
+                return {
+                    cycle: data.cycle || '',
+                    months: Array.isArray(data.months) ? data.months.slice() : [],
+                    payoutDates: Array.isArray(data.payoutDates) ? data.payoutDates.slice() : [],
+                    recordDates: Array.isArray(data.recordDates) ? data.recordDates.slice() : [],
+                    history: Array.isArray(data.history) ? data.history.map(function(x){ return Object.assign({},x); }) : [],
+                    exDividendDates: Array.isArray(data.exDividendDates) ? data.exDividendDates.slice() : [],
+                    source: data.source || '',
+                    sourceUrl: data.sourceUrl || '',
+                    updatedAt: data.updatedAt || new Date().toISOString()
+                };
+            } catch (e) {
+                console.warn('국내 일반주식 배당일 조회 실패:', code, e);
+                return null;
+            }
+        }
+
+        function applyKoreanStockDividendInfo(target, info) {
+            if (!target || !info) return false;
+            var before = JSON.stringify({cycle:target.divCycle||target.cycle||'',months:target.payoutMonths||target.months||[],dates:target.payoutDates||[],history:target.distributionHistory||[],ex:target.exDividendDates||[]});
+            if (info.cycle && Array.isArray(info.months) && info.months.length) {
+                if (target.divCycle !== undefined || target.payoutMonths !== undefined) {
+                    target.divCycle = info.cycle;
+                    target.payoutMonths = normalizePayoutMonths(info.cycle, info.months, target.ticker);
+                } else {
+                    target.cycle = info.cycle;
+                    target.months = normalizePayoutMonths(info.cycle, info.months, target.ticker);
+                }
+            }
+            target.payoutDates = uniqueIsoDates((target.payoutDates || []).concat(info.payoutDates || []));
+            target.recordDates = uniqueIsoDates((target.recordDates || []).concat(info.recordDates || []));
+            target.exDividendDates = uniqueIsoDates((target.exDividendDates || []).concat(info.exDividendDates || []));
+            target.distributionHistory = mergeDistributionHistory(target.distributionHistory || [], info.history || []);
+            if (info.source) target.payoutDateSource = info.source;
+            if (info.sourceUrl) target.dividendSourceUrl = info.sourceUrl;
+            target.lastDividendUpdatedAt = info.updatedAt || new Date().toISOString();
+            normalizeStockPayoutSchedule(target);
+            var after = JSON.stringify({cycle:target.divCycle||target.cycle||'',months:target.payoutMonths||target.months||[],dates:target.payoutDates||[],history:target.distributionHistory||[],ex:target.exDividendDates||[]});
+            return before !== after;
+        }
+
         var portfolio = [];
         var isSavingStock = false; // 저장 버튼 연속 클릭/중복 submit 방지
         var cashBalances = {};
@@ -1144,7 +1259,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.11.1';
+        var CLOUD_SYNC_VERSION = '1.11.2';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -1412,7 +1527,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.11.1: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.11.2: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1832,6 +1947,18 @@
                     } catch (e) { console.warn('ETF 분배금 보강 실패', code, e); }
                 }
 
+                // 일반 국내주식은 ETF 전용 68659 경로가 아니라 일반주식 배당 보강 API를 사용한다.
+                // 정확한 지급일은 KRX KIND 공시로 확인된 경우만 채우고, Yahoo는 배당락 이력 보조용으로만 쓴다.
+                if (!looksLikeKoreanEtf(result.name, code)) {
+                    try {
+                        var krDiv = await fetchKoreanStockDividendInfo(code, result.name);
+                        if (krDiv) {
+                            applyKoreanStockDividendInfo(result, krDiv);
+                            result.distributionUpdatedAt = krDiv.updatedAt || new Date().toISOString();
+                        }
+                    } catch (e) { console.warn('국내 일반주식 배당일 보강 실패', code, e); }
+                }
+
                 // 브랜드명만으로 모든 ETF를 월배당으로 오인하지 않는다.
                 if (/고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(result.name) && !result.dividendSource) {
                     result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -1892,6 +2019,7 @@
                         ticker: String(resolved.ticker || '').toUpperCase(),
                         payoutDates: Array.isArray(resolved.payoutDates) ? resolved.payoutDates.slice() : [],
                         recordDates: Array.isArray(resolved.recordDates) ? resolved.recordDates.slice() : [],
+                        exDividendDates: Array.isArray(resolved.exDividendDates) ? resolved.exDividendDates.slice() : [],
                         history: Array.isArray(resolved.distributionHistory) ? resolved.distributionHistory.map(function(x) { return Object.assign({}, x); }) : [],
                         source: resolved.payoutDateSource || resolved.dividendSource || '',
                         sourceUrl: resolved.dividendSourceUrl || '',
@@ -1900,12 +2028,15 @@
                         updatedAt: resolved.distributionUpdatedAt || new Date().toISOString()
                     };
                     var knownPayout = getKnownPayoutDateSchedule(resolved.ticker);
-                    if (knownPayout && (!Array.isArray(resolved.payoutDates) || resolved.payoutDates.length === 0)) {
-                        resolved.payoutDates = knownPayout.dates.slice();
-                        resolved.exDividendDates = knownPayout.exDates ? knownPayout.exDates.slice() : [];
-                        resolved.payoutDateSource = knownPayout.source;
-                        currentFormDistributionData.payoutDates = resolved.payoutDates.slice();
-                        currentFormDistributionData.source = resolved.payoutDateSource;
+                    if (knownPayout) {
+                        normalizeStockPayoutSchedule(resolved);
+                        if (knownPayout.cycle) resolved.cycle = knownPayout.cycle;
+                        if (knownPayout.months && knownPayout.months.length) resolved.months = knownPayout.months.slice();
+                        currentFormDistributionData.payoutDates = Array.isArray(resolved.payoutDates) ? resolved.payoutDates.slice() : [];
+                        currentFormDistributionData.recordDates = Array.isArray(resolved.recordDates) ? resolved.recordDates.slice() : [];
+                        currentFormDistributionData.exDividendDates = Array.isArray(resolved.exDividendDates) ? resolved.exDividendDates.slice() : [];
+                        currentFormDistributionData.history = Array.isArray(resolved.distributionHistory) ? resolved.distributionHistory.map(function(x){ return Object.assign({},x); }) : [];
+                        currentFormDistributionData.source = resolved.payoutDateSource || knownPayout.source || currentFormDistributionData.source;
                     }
 
                     var checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
@@ -2036,6 +2167,12 @@
                                     if (beforeDiv !== JSON.stringify({dps:stock.dps, dates:stock.payoutDates||[], history:stock.distributionHistory||[]})) dividendUpdatedCount++;
                                 }
                             } catch (e) { console.warn('ETF 분배금/지급일 자동 갱신 실패', code, e); }
+                        } else {
+                            // 일반 국내주식도 F5 때 배당 지급일/배당락 이력을 갱신한다.
+                            try {
+                                var krDivInfo = await fetchKoreanStockDividendInfo(code, stock.name);
+                                if (krDivInfo && applyKoreanStockDividendInfo(stock, krDivInfo)) dividendUpdatedCount++;
+                            } catch (e) { console.warn('국내 일반주식 배당일 자동 갱신 실패', code, e); }
                         }
                         return;
                     }
@@ -2224,7 +2361,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.11.1: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.11.2: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2299,7 +2436,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.11.1: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.11.2: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -2593,7 +2730,7 @@
 
                 var memoHtml = stock.memo ? '<div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200 font-medium"><i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i><span class="truncate">' + stock.memo + '</span></div>' : '';
                 var accountBadge = stock.isMerged ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30"><i class="fa-solid fa-code-merge text-[9px]"></i> ' + stock.account + ' (' + stock.accounts.length + '개 계좌 합산)</span>' : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-500/30"><i class="fa-solid fa-tag text-[9px]"></i> ' + (stock.account || '일반계좌') + '</span>';
-                var historyBtn = (!stock.isMerged && ((Array.isArray(stock.distributionHistory) && stock.distributionHistory.length) || (Array.isArray(stock.payoutDates) && stock.payoutDates.length))) ? '<button onclick="openDistributionHistoryModal(' + stock.originalIndex + ')" class="text-violet-600 dark:text-violet-300 hover:text-violet-800 dark:hover:text-violet-100 p-1 text-xs" title="분배금 이력"><i class="fa-solid fa-clock-rotate-left"></i></button>' : '';
+                var historyBtn = (!stock.isMerged && ((Array.isArray(stock.distributionHistory) && stock.distributionHistory.length) || (Array.isArray(stock.payoutDates) && stock.payoutDates.length))) ? '<button onclick="openDistributionHistoryModal(' + stock.originalIndex + ')" class="text-violet-600 dark:text-violet-300 hover:text-violet-800 dark:hover:text-violet-100 p-1 text-xs" title="배당/분배금 이력"><i class="fa-solid fa-clock-rotate-left"></i></button>' : '';
                 var actionButtons = stock.isMerged ? '<span class="text-[10px] opacity-60 font-bold">합산 상태</span>' : historyBtn + '<button onclick="openModal(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteStock(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>';
                 var dividendMetaText = getDividendMetadataText(stock);
                 var dividendMetaHtml = dividendMetaText ? '<div class="mt-1.5 pt-1.5 border-t border-gray-300 dark:border-gray-700/60 text-[9px] text-gray-500 dark:text-gray-400 font-semibold leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i>' + escapeHtml(dividendMetaText) + '</div>' : '';
@@ -3216,6 +3353,7 @@
                     ticker: String(item.ticker || '').toUpperCase(),
                     payoutDates: Array.isArray(item.payoutDates) ? item.payoutDates.slice() : [],
                     recordDates: Array.isArray(item.recordDates) ? item.recordDates.slice() : [],
+                    exDividendDates: Array.isArray(item.exDividendDates) ? item.exDividendDates.slice() : [],
                     history: Array.isArray(item.distributionHistory) ? item.distributionHistory.map(function(x){ return Object.assign({}, x); }) : [],
                     source: item.payoutDateSource || item.dividendSource || '',
                     sourceUrl: item.dividendSourceUrl || '',
@@ -3250,7 +3388,7 @@
             var checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
             checkboxes.forEach(function(cb) { cb.checked = months.indexOf(parseInt(cb.value,10)) >= 0; });
             var known = getKnownPayoutDateSchedule(ticker);
-            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [] };
+            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '' };
             if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                 tipStock.payoutDates = currentFormDistributionData.payoutDates || tipStock.payoutDates;
                 tipStock.distributionHistory = currentFormDistributionData.history || [];
@@ -3293,6 +3431,7 @@
                 if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                     stockData.payoutDates = Array.isArray(currentFormDistributionData.payoutDates) ? currentFormDistributionData.payoutDates.slice() : [];
                     stockData.recordDates = Array.isArray(currentFormDistributionData.recordDates) ? currentFormDistributionData.recordDates.slice() : [];
+                    stockData.exDividendDates = Array.isArray(currentFormDistributionData.exDividendDates) ? currentFormDistributionData.exDividendDates.slice() : [];
                     stockData.distributionHistory = Array.isArray(currentFormDistributionData.history) ? currentFormDistributionData.history.map(function(x){ return Object.assign({}, x); }) : [];
                     stockData.payoutDateSource = currentFormDistributionData.source || stockData.dividendSource || '';
                     stockData.dividendSourceUrl = currentFormDistributionData.sourceUrl || '';
@@ -3301,10 +3440,8 @@
                     stockData.lastDividendUpdatedAt = currentFormDistributionData.updatedAt || new Date().toISOString();
                 }
                 var knownPayoutSchedule = getKnownPayoutDateSchedule(ticker);
-                if (knownPayoutSchedule && (!Array.isArray(stockData.payoutDates) || stockData.payoutDates.length === 0)) {
-                    stockData.payoutDates = knownPayoutSchedule.dates.slice();
-                    stockData.exDividendDates = knownPayoutSchedule.exDates ? knownPayoutSchedule.exDates.slice() : [];
-                    stockData.payoutDateSource = knownPayoutSchedule.source;
+                if (knownPayoutSchedule) {
+                    normalizeStockPayoutSchedule(stockData);
                 }
 
                 createSnapshot(editIdx >= 0 ? '종목 수정 전' : '종목 추가 전');
@@ -3889,7 +4026,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.11.1부터 비활성화.
+            // v1.11.2부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -3988,7 +4125,7 @@
         }
 
         // =========================================================================
-        // v1.11.1 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.11.2 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4097,6 +4234,122 @@
             return { exact:exact, unscheduled:unscheduled };
         }
 
+        var dividendCalendarTooltipEl = null;
+
+        function ensureDividendCalendarTooltip() {
+            if (dividendCalendarTooltipEl && document.body.contains(dividendCalendarTooltipEl)) return dividendCalendarTooltipEl;
+            var el = document.createElement('div');
+            el.id = 'dividendCalendarTooltip';
+            el.style.position = 'fixed';
+            el.style.zIndex = '99999';
+            el.style.maxWidth = '340px';
+            el.style.padding = '9px 11px';
+            el.style.borderRadius = '10px';
+            el.style.background = 'rgba(15,23,42,.97)';
+            el.style.color = '#fff';
+            el.style.fontSize = '11px';
+            el.style.fontWeight = '700';
+            el.style.lineHeight = '1.5';
+            el.style.whiteSpace = 'normal';
+            el.style.boxShadow = '0 12px 30px rgba(0,0,0,.4)';
+            el.style.pointerEvents = 'none';
+            el.style.display = 'none';
+            document.body.appendChild(el);
+            dividendCalendarTooltipEl = el;
+            return el;
+        }
+
+        function calendarEventPresentation(e) {
+            if (e.type === 'ex') return { cls:'bg-orange-500/15 text-orange-700 dark:text-orange-300', tag:'배당락', icon:'🟠' };
+            if (e.type === 'receipt') return { cls:'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', tag:'실 수령', icon:'🟢' };
+            if (e.type === 'scheduled') return { cls:'bg-blue-500/15 text-blue-700 dark:text-blue-300', tag:'지급 예정', icon:'🔵' };
+            if (e.record && String(e.record.status || '').toLowerCase() === 'actual') return { cls:'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', tag:'실 지급', icon:'🟢' };
+            return { cls:'bg-violet-500/15 text-violet-700 dark:text-violet-300', tag:'공시 지급', icon:'🟣' };
+        }
+
+        function calendarEventDetailText(e) {
+            var p = calendarEventPresentation(e);
+            var parts = [(e.stock.name || e.stock.ticker || '배당') + (e.stock.ticker ? ' (' + e.stock.ticker + ')' : ''), p.tag, e.date];
+            if (e.stock.account) parts.push(e.stock.account);
+            if (e.record && e.record.recordDate) parts.push('배당기준일 ' + e.record.recordDate);
+            if (e.record && Number(e.record.amount) > 0) parts.push('주당 ' + Number(e.record.amount).toLocaleString() + '원');
+            if (e.receipt) parts.push('실수령 ' + (e.receipt.currency === 'USD' ? ('$' + Number(e.receipt.amount).toLocaleString('en-US',{maximumFractionDigits:2})) : (Number(e.receipt.amount).toLocaleString('ko-KR') + '원')));
+            var src = (e.record && e.record.source) || e.stock.payoutDateSource || '';
+            if (src) parts.push('출처 ' + src);
+            return parts.join(' · ');
+        }
+
+        function showDividendCalendarTooltip(el, evt) {
+            if (!el || !el.dataset || !el.dataset.calendarDetail) return;
+            var tip = ensureDividendCalendarTooltip();
+            try { tip.textContent = decodeURIComponent(el.dataset.calendarDetail); }
+            catch (_) { tip.textContent = el.dataset.calendarDetail; }
+            tip.style.display = 'block';
+            moveDividendCalendarTooltip(evt, el);
+        }
+
+        function moveDividendCalendarTooltip(evt, fallbackEl) {
+            var tip = ensureDividendCalendarTooltip();
+            if (tip.style.display === 'none') return;
+            var x = evt && Number.isFinite(evt.clientX) ? evt.clientX : null;
+            var y = evt && Number.isFinite(evt.clientY) ? evt.clientY : null;
+            if (x === null && fallbackEl) {
+                var r = fallbackEl.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top;
+            }
+            if (x === null) return;
+            var left = x + 14, top = y + 16;
+            if (left + tip.offsetWidth > window.innerWidth - 8) left = x - tip.offsetWidth - 14;
+            if (top + tip.offsetHeight > window.innerHeight - 8) top = y - tip.offsetHeight - 14;
+            tip.style.left = Math.max(8, left) + 'px';
+            tip.style.top = Math.max(8, top) + 'px';
+        }
+
+        function hideDividendCalendarTooltip() {
+            if (dividendCalendarTooltipEl) dividendCalendarTooltipEl.style.display = 'none';
+        }
+
+        function openDividendCalendarDayModal(year, month, day) {
+            hideDividendCalendarTooltip();
+            var modal = document.getElementById('calendarDayModal');
+            var title = document.getElementById('calendarDayModalTitle');
+            var summary = document.getElementById('calendarDayModalSummary');
+            var list = document.getElementById('calendarDayModalList');
+            if (!modal || !list) return;
+            var data = collectDividendCalendarEvents(year, month);
+            var rows = data.exact.filter(function(e){ return e.day === day; });
+            if (title) title.innerHTML = '<i class="fa-solid fa-calendar-day text-violet-500"></i> ' + year + '년 ' + month + '월 ' + day + '일';
+            if (summary) summary.innerText = rows.length + '건의 배당 일정 · 종목명/상태/출처를 모두 표시합니다.';
+            if (!rows.length) {
+                list.innerHTML = '<div class="text-center py-8 text-gray-500 font-bold">등록된 배당 일정이 없습니다.</div>';
+            } else {
+                rows.sort(function(a,b){
+                    var order={receipt:0,pay:1,scheduled:2,ex:3};
+                    return (order[a.type]===undefined?9:order[a.type])-(order[b.type]===undefined?9:order[b.type]);
+                });
+                list.innerHTML = rows.map(function(e) {
+                    var p = calendarEventPresentation(e);
+                    var rec = e.record || {};
+                    var stockName = escapeHtml(e.stock.name || e.stock.ticker || '배당');
+                    var ticker = escapeHtml(e.stock.ticker || '');
+                    var account = escapeHtml(e.stock.account || '일반계좌');
+                    var source = escapeHtml(rec.source || e.stock.payoutDateSource || e.stock.dividendSource || '출처 미기록');
+                    var recordLine = rec.recordDate ? '<div class="flex justify-between gap-3"><span class="opacity-60">배당기준일</span><b>' + escapeHtml(rec.recordDate) + '</b></div>' : '';
+                    var amountLine = Number(rec.amount)>0 ? '<div class="flex justify-between gap-3"><span class="opacity-60">주당 배당/분배금</span><b>' + Number(rec.amount).toLocaleString() + '원</b></div>' : '';
+                    var receiptLine = e.receipt ? '<div class="flex justify-between gap-3"><span class="opacity-60">실제 수령액</span><b class="text-emerald-600 dark:text-emerald-300">' + (e.receipt.currency==='USD' ? ('$'+Number(e.receipt.amount).toLocaleString('en-US',{maximumFractionDigits:2})) : (Number(e.receipt.amount).toLocaleString('ko-KR')+'원')) + '</b></div>' : '';
+                    var note = (p.tag === '공시 지급') ? '<p class="mt-2 text-[9px] text-violet-600 dark:text-violet-300">거래소 공시에 기재된 지급예정일입니다. 실제 입금 확인과는 구분합니다.</p>' : '';
+                    return '<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/70 p-3">' +
+                        '<div class="flex justify-between items-start gap-2"><div class="min-w-0"><p class="font-black text-sm break-words">'+stockName+'</p><p class="text-[10px] opacity-60 mt-0.5">'+ticker+' · '+account+'</p></div><span class="shrink-0 rounded-full px-2 py-1 text-[10px] font-black '+p.cls+'">'+p.icon+' '+p.tag+'</span></div>' +
+                        '<div class="mt-2.5 space-y-1 text-[11px]"><div class="flex justify-between gap-3"><span class="opacity-60">일자</span><b>'+escapeHtml(e.date)+'</b></div>'+recordLine+amountLine+receiptLine+'<div class="flex justify-between gap-3"><span class="opacity-60">출처</span><b class="text-right break-words">'+source+'</b></div></div>'+note+'</div>';
+                }).join('');
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeDividendCalendarDayModal() {
+            var modal = document.getElementById('calendarDayModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         function renderDividendCalendar() {
             var grid = document.getElementById('dividendCalendarGrid');
             if (!grid) return;
@@ -4117,27 +4370,21 @@
 
             for (var day=1; day<=days; day++) {
                 var cell = document.createElement('div');
-                cell.className = 'min-h-[68px] p-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 overflow-hidden';
-                var inner = '<p class="text-[9px] font-black mb-1">' + day + '</p>';
-                events.exact.filter(function(e){ return e.day === day; }).forEach(function(e) {
-                    var cls, tag, icon;
-                    if (e.type === 'ex') {
-                        cls = 'bg-orange-500/15 text-orange-700 dark:text-orange-300'; tag = '배당락'; icon = '🟠';
-                    } else if (e.type === 'receipt') {
-                        cls = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'; tag = '실 수령'; icon = '🟢';
-                    } else if (e.type === 'scheduled') {
-                        cls = 'bg-blue-500/15 text-blue-700 dark:text-blue-300'; tag = '지급 예정'; icon = '🔵';
-                    } else if (e.record && String(e.record.status || '').toLowerCase() === 'actual') {
-                        cls = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'; tag = '실 지급'; icon = '🟢';
-                    } else {
-                        cls = 'bg-violet-500/15 text-violet-700 dark:text-violet-300'; tag = '공시 지급'; icon = '🟣';
-                    }
-                    var detail = e.stock.name + ' · ' + tag + ' · ' + e.date;
-                    if (e.record && e.record.recordDate) detail += ' · 지급기준일 ' + e.record.recordDate;
-                    if (e.record && Number(e.record.amount) > 0) detail += ' · 주당 ' + Number(e.record.amount).toLocaleString() + '원';
-                    if (e.record && e.record.source) detail += ' · ' + e.record.source;
-                    if (e.receipt) detail += ' · 실수령 ' + (e.receipt.currency === 'USD' ? ('$' + Number(e.receipt.amount).toLocaleString('en-US',{maximumFractionDigits:2})) : (Number(e.receipt.amount).toLocaleString('ko-KR') + '원'));
-                    inner += '<div title="' + escapeHtml(detail) + '" class="' + cls + ' rounded px-1 py-0.5 mb-0.5 text-[8px] font-bold truncate">' + icon + ' ' + escapeHtml(e.stock.ticker) + '</div>';
+                var dayEvents = events.exact.filter(function(e){ return e.day === day; });
+                cell.className = 'min-h-[68px] p-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 overflow-hidden' + (dayEvents.length ? ' cursor-pointer hover:ring-1 hover:ring-violet-400/70 active:scale-[0.99]' : '');
+                if (dayEvents.length) {
+                    cell.setAttribute('role','button');
+                    cell.setAttribute('tabindex','0');
+                    cell.setAttribute('aria-label', y+'년 '+m+'월 '+day+'일 배당 일정 '+dayEvents.length+'건');
+                    cell.setAttribute('onclick','openDividendCalendarDayModal('+y+','+m+','+day+')');
+                    cell.setAttribute('onkeydown',"if(event.key==='Enter'||event.key===' '){event.preventDefault();openDividendCalendarDayModal("+y+","+m+","+day+")}");
+                }
+                var inner = '<div class="flex items-center justify-between mb-1"><p class="text-[9px] font-black">' + day + '</p>' + (dayEvents.length > 1 ? '<span class="text-[8px] font-black opacity-55">'+dayEvents.length+'건</span>' : '') + '</div>';
+                dayEvents.forEach(function(e) {
+                    var p = calendarEventPresentation(e);
+                    var detail = calendarEventDetailText(e);
+                    var label = String(e.stock.name || e.stock.ticker || '배당');
+                    inner += '<button type="button" onclick="event.stopPropagation();openDividendCalendarDayModal('+y+','+m+','+day+')" data-calendar-detail="' + encodeURIComponent(detail) + '" onmouseenter="showDividendCalendarTooltip(this,event)" onmousemove="moveDividendCalendarTooltip(event,this)" onmouseleave="hideDividendCalendarTooltip()" class="w-full text-left ' + p.cls + ' rounded px-1 py-0.5 mb-0.5 text-[8px] font-bold truncate leading-tight">' + p.icon + ' ' + escapeHtml(label) + '</button>';
                 });
                 cell.innerHTML = inner;
                 grid.appendChild(cell);
@@ -4146,8 +4393,9 @@
             var u = document.getElementById('dividendCalendarUnscheduled');
             if (u) {
                 if (events.unscheduled.length) {
-                    u.innerHTML = '<p class="text-[9px] font-bold text-amber-600 dark:text-amber-300">날짜 미확정 · ' + m + '월 지급 예정</p>' + events.unscheduled.map(function(s) {
-                        return '<span class="inline-block mr-1 mb-1 px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-[9px] font-bold">' + escapeHtml(s.name) + ' (' + escapeHtml(s.ticker) + ')</span>';
+                    u.innerHTML = '<p class="text-[9px] font-bold text-amber-600 dark:text-amber-300">정확한 지급일 미확정 · ' + m + '월 예상</p>' + events.unscheduled.map(function(s) {
+                        var tip = escapeHtml((s.name||s.ticker) + ' (' + (s.ticker||'') + ') · 지급월 정보는 있으나 정확한 일자는 확인되지 않았습니다.');
+                        return '<span title="'+tip+'" class="inline-block mr-1 mb-1 px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-[9px] font-bold max-w-full truncate align-bottom">' + escapeHtml(s.name) + ' (' + escapeHtml(s.ticker) + ')</span>';
                     }).join('');
                 } else {
                     u.innerHTML = '';
@@ -4156,7 +4404,7 @@
         }
 
         // =========================================================================
-        // v1.11.1: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.11.2: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -4537,7 +4785,7 @@
         }
 
         function copyDiagnosticRawData(){
-            var payload={version:'1.11.1',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
+            var payload={version:'1.11.2',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
             var text=JSON.stringify(payload,null,2);
             if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('진단 원본 JSON을 클립보드에 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);});else prompt('아래 JSON을 복사하세요:',text);
         }
