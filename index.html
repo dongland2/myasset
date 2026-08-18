@@ -38,11 +38,11 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.2
+                    v1.9.3
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
-                <p class="text-[10px] text-gray-600 dark:text-gray-300 font-semibold" id="headerExchangeRate">환율: 조회중...</p>
+                <p class="text-[10px] text-gray-600 dark:text-gray-300 font-semibold" id="headerExchangeRate">환율: 1$ = 1,350원 · 임시</p>
                 <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1 whitespace-nowrap">
                     <i class="fa-solid fa-cloud text-[9px]"></i> <span id="cloudStatusText">로컬 전용</span>
                 </span>
@@ -243,9 +243,15 @@
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                     <i class="fa-solid fa-list-check text-blue-600 dark:text-blue-400"></i> 보유 종목 현황 (<span id="stockCount">0</span>)
                 </h2>
-                <button onclick="refreshAllStockData(false)" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
-                    <i class="fa-solid fa-rotate" id="refreshIcon"></i> 시세 일괄 갱신
-                </button>
+                <div class="flex items-center gap-2">
+                    <span id="marketServerStatusText" class="text-[9px] font-bold text-amber-600 dark:text-amber-300">시세서버 확인</span>
+                    <button onclick="openMarketServerModal()" class="text-xs text-gray-600 dark:text-gray-300 hover:text-blue-500 flex items-center gap-1 font-bold" title="시세 서버 설정">
+                        <i class="fa-solid fa-gear"></i> 서버
+                    </button>
+                    <button onclick="refreshAllStockData(false)" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
+                        <i class="fa-solid fa-rotate" id="refreshIcon"></i> 시세 갱신
+                    </button>
+                </div>
             </div>
 
             <div class="p-2.5 rounded-xl border space-y-2 text-xs bg-gray-50 dark:bg-gray-800/60 border-gray-300 dark:border-gray-700/50" id="filterControlBox">
@@ -431,6 +437,30 @@
         </div>
     </div>
 
+    <!-- [모달: 실시간 시세 서버 설정] -->
+    <div id="marketServerModal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
+                <div>
+                    <h3 class="text-base font-bold flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish text-blue-500"></i> 실시간 시세 서버</h3>
+                    <p class="text-[10px] opacity-70 mt-1">GitHub Pages의 CORS 차단을 피하기 위한 내 Cloudflare Worker 주소</p>
+                </div>
+                <button onclick="closeMarketServerModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-2 text-xs">
+                <label class="block font-bold">Worker URL</label>
+                <input type="url" id="inputMarketProxyBase" placeholder="https://asset-stock-proxy.내계정.workers.dev" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-mono text-[11px] focus:outline-none focus:border-blue-500">
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">끝의 / 는 없어도 됩니다. 한 번 저장하면 이 기기에 기억됩니다.</p>
+                <div id="marketServerTestResult" class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[11px] font-bold">아직 연결 테스트하지 않았습니다.</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="testMarketServer()" class="bg-blue-600 text-white py-2.5 rounded-lg font-bold text-xs">연결 테스트</button>
+                <button onclick="saveMarketServer()" class="bg-emerald-600 text-white py-2.5 rounded-lg font-bold text-xs">저장</button>
+                <button onclick="closeMarketServerModal()" class="bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold text-xs">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- [모달 8: 종목 추가/수정] -->
     <div id="stockModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -588,6 +618,8 @@
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
         var CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
+        var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
+        var marketProxyLastOk = false;
 
         // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', function() {
@@ -595,6 +627,7 @@
             initDisplayCurrency();
             initFireSettings();
             initCloudSyncStatus();
+            initMarketServerStatus();
 
             // 환율은 네트워크 응답을 기다리지 않고 마지막 성공값/기본값을 즉시 표시한다.
             // 따라서 외부 서버가 느리거나 차단돼도 "조회중..." 상태에 고정되지 않는다.
@@ -755,6 +788,72 @@
             return customPromiseAny(requests).catch(function() { return null; });
         }
 
+        function getMarketProxyBase() {
+            return String(localStorage.getItem(MARKET_PROXY_STORAGE_KEY) || '').trim().replace(/\/+$/, '');
+        }
+
+        function initMarketServerStatus() {
+            var el = document.getElementById('marketServerStatusText');
+            if (!el) return;
+            if (getMarketProxyBase()) {
+                el.innerText = '시세서버 설정됨';
+                el.className = 'text-[9px] font-bold text-blue-600 dark:text-blue-300';
+            } else {
+                el.innerText = '시세서버 미설정';
+                el.className = 'text-[9px] font-bold text-amber-600 dark:text-amber-300';
+            }
+        }
+
+        function openMarketServerModal() {
+            document.getElementById('inputMarketProxyBase').value = getMarketProxyBase();
+            document.getElementById('marketServerTestResult').innerText = getMarketProxyBase() ? '저장된 서버가 있습니다. 연결 테스트를 눌러 확인하세요.' : '아래 Worker URL을 입력하세요.';
+            document.getElementById('marketServerModal').classList.remove('hidden');
+        }
+
+        function closeMarketServerModal() { document.getElementById('marketServerModal').classList.add('hidden'); }
+
+        async function marketProxyFetch(path, timeoutMs) {
+            var base = getMarketProxyBase();
+            if (!base) throw new Error('MARKET_PROXY_NOT_CONFIGURED');
+            var sep = path.indexOf('?') >= 0 ? '&' : '?';
+            return fetchWithTimeout(base + path + sep + '_nc=' + Date.now(), timeoutMs || 9000);
+        }
+
+        async function testMarketServer() {
+            var input = String(document.getElementById('inputMarketProxyBase').value || '').trim().replace(/\/+$/, '');
+            var out = document.getElementById('marketServerTestResult');
+            if (!/^https:\/\//i.test(input)) { out.innerText = '❌ https:// 로 시작하는 Worker URL을 입력하세요.'; return; }
+            out.innerText = '연결 확인 중...';
+            try {
+                var data = await fetchWithTimeout(input + '/quote?codes=005930&_nc=' + Date.now(), 9000);
+                var list = data && Array.isArray(data.datas) ? data.datas : [];
+                var q = list[0] || null;
+                var price = q ? parseFloat(String(q.closePriceRaw || q.closePrice || '').replace(/,/g,'')) : 0;
+                if (!(price > 0)) throw new Error('Invalid quote');
+                out.innerText = '✅ 정상 연결 · 삼성전자 ' + Math.round(price).toLocaleString() + '원';
+            } catch (e) {
+                out.innerText = '❌ 연결 실패 · Worker 배포/URL을 확인하세요.';
+            }
+        }
+
+        async function saveMarketServer() {
+            var input = String(document.getElementById('inputMarketProxyBase').value || '').trim().replace(/\/+$/, '');
+            if (!/^https:\/\//i.test(input)) { alert('https:// 로 시작하는 Worker URL을 입력해주세요.'); return; }
+            localStorage.setItem(MARKET_PROXY_STORAGE_KEY, input);
+            initMarketServerStatus();
+            closeMarketServerModal();
+            await fetchExchangeRate();
+            await refreshAllStockData(false);
+        }
+
+        async function fetchMarketInfo(code) {
+            return marketProxyFetch('/info?code=' + encodeURIComponent(code), 9000);
+        }
+
+        async function fetchUsQuoteFromProxy(symbol) {
+            return marketProxyFetch('/usquote?symbol=' + encodeURIComponent(symbol), 9000);
+        }
+
         function normalizeStockName(v) {
             return String(v || '').toUpperCase().replace(/[\s·ㆍ()\-_\.]/g, '');
         }
@@ -800,30 +899,17 @@
         }
 
         async function searchKoreanStockByName(name) {
-            var endpoints = [
-                'https://m.stock.naver.com/front-api/search/autoComplete?query=' + encodeURIComponent(name) + '&target=stock,index,marketindicator,coin,ipo',
-                // 2026 현재 레거시 호스트는 ac.finance.naver.com이 아니라 ac.stock.naver.com
-                'https://ac.stock.naver.com/ac?q=' + encodeURIComponent(name) + '&target=stock,index,marketindicator,coin,ipo&st=111&r_format=json&r_enc=utf-8'
-            ];
+            var data = await marketProxyFetch('/search?q=' + encodeURIComponent(name), 9000);
+            var items = [];
+            if (Array.isArray(data)) items = data;
+            else if (data && Array.isArray(data.items)) items = data.items;
+            else if (data && data.result && Array.isArray(data.result.items)) items = data.result.items;
 
-            for (var i = 0; i < endpoints.length; i++) {
-                try {
-                    var data = await fetchJsonViaFastRace(endpoints[i], 6500);
-                    var items = parseLegacyNaverItems(data);
-                    var item = pickBestKoreanSearchItem(items, name);
-                    if (item) {
-                        var code = String(item.code || item.itemCode || item.symbol || '').replace(/^A/, '');
-                        if (/^[0-9A-Z]{6}$/.test(code)) {
-                            return {
-                                ticker: code,
-                                name: item.name || item.itemName || name,
-                                typeName: item.typeName || item.market || ''
-                            };
-                        }
-                    }
-                } catch (e) {}
-            }
-            return null;
+            var item = pickBestKoreanSearchItem(items, name);
+            if (!item) return null;
+            var code = String(item.code || item.itemCode || item.symbol || '').replace(/^A/, '');
+            if (!/^\d{6}$/.test(code)) return null;
+            return { ticker: code, name: item.name || item.itemName || name, typeName: item.typeName || item.market || '' };
         }
 
         async function fetchKoreanRealtimeBatch(codes) {
@@ -831,25 +917,24 @@
             var seen = {};
             (codes || []).forEach(function(code) {
                 code = String(code || '').replace(/^A/, '').trim();
-                if (/^[0-9A-Z]{6}$/.test(code) && !seen[code]) { seen[code] = true; cleanCodes.push(code); }
+                if (/^\d{6}$/.test(code) && !seen[code]) { seen[code] = true; cleanCodes.push(code); }
             });
             if (cleanCodes.length === 0) return {};
 
-            var url = 'https://polling.finance.naver.com/api/realtime/domestic/stock/' + cleanCodes.join(',');
-            var data = await fetchJsonViaFastRace(url, 6500);
+            var data = await marketProxyFetch('/quote?codes=' + encodeURIComponent(cleanCodes.join(',')), 9000);
             var map = {};
             if (data && Array.isArray(data.datas)) {
                 data.datas.forEach(function(q) {
-                    var code = String(q.itemCode || q.stockCode || q.code || q.reutersCode || '').replace(/^A/, '');
-                    // 일부 응답에는 코드가 빠질 수 있으므로 단일 요청일 때 보정
+                    var code = String(q.itemCode || q.stockCode || q.code || q.symbolCode || '').replace(/^A/, '');
                     if (!code && cleanCodes.length === 1) code = cleanCodes[0];
-                    var price = parseFloat(String(q.closePrice || q.currentPrice || '').replace(/,/g, ''));
+                    var price = parseFloat(String(q.closePriceRaw || q.closePrice || q.currentPrice || '').replace(/,/g, ''));
                     if (code && price > 0) {
                         map[code] = {
                             price: price,
                             name: q.stockName || '',
                             marketStatus: q.marketStatus || '',
-                            tradedAt: q.localTradedAt || ''
+                            tradedAt: q.localTradedAt || data.time || '',
+                            source: 'NAVER realtime'
                         };
                     }
                 });
@@ -867,10 +952,8 @@
             if (!clean) return null;
 
             var upper = clean.toUpperCase().replace(/\s+/g, '');
-            var isSixDigit = /^[0-9A-Z]{6}$/.test(clean) && /[0-9]/.test(clean);
+            var isSixDigit = /^\d{6}$/.test(clean);
             var containsKorean = /[가-힣]/.test(clean);
-            var matchedMaster = false;
-
             var result = {
                 ticker: upper, name: clean, market: isSixDigit ? 'KR' : 'US',
                 sector: '기타', account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
@@ -878,56 +961,51 @@
                 priceIsLive: false, priceSource: ''
             };
 
-            // 1) 로컬 사전은 네트워크 장애 시 사용할 폴백 데이터
-            if (MASTER_STOCKS[upper] || MASTER_STOCKS[clean]) {
-                var match = MASTER_STOCKS[upper] || MASTER_STOCKS[clean];
-                matchedMaster = true;
+            // 내장 사전은 이름/배당주기 참고용만 사용하고 현재가에는 절대 사용하지 않는다.
+            var match = MASTER_STOCKS[upper] || MASTER_STOCKS[clean];
+            if (match) {
                 result.ticker = match.ticker;
                 result.name = match.name;
                 result.market = match.market;
                 result.sector = match.sector;
-                result.price = match.price;
-                result.dps = match.dps;
-                result.cycle = match.cycle;
-                result.months = match.months;
-                result.priceSource = '내장 폴백';
-                isSixDigit = result.market === 'KR' && /^[0-9A-Z]{6}$/.test(result.ticker);
+                result.dps = match.dps || 0;
+                result.cycle = match.cycle || result.cycle;
+                result.months = match.months || result.months;
+                isSixDigit = result.market === 'KR' && /^\d{6}$/.test(result.ticker);
             }
 
-            // 2) 사전에 없는 한글 종목명도 온라인 검색으로 코드 해석
-            if (containsKorean && !isSixDigit && result.market !== 'US') {
-                // 이 분기는 초기 market 추론상 거의 오지 않으므로 아래 공통 분기에서 다시 처리한다.
-            }
-            if (containsKorean && !isSixDigit && !matchedMaster) {
-                var found = await searchKoreanStockByName(clean);
-                if (!found) return null;
-                result.ticker = found.ticker;
-                result.name = found.name;
-                result.market = 'KR';
-                isSixDigit = true;
+            // 한글 이름은 무조건 Worker -> 네이버 자동완성으로 실제 종목코드를 찾는다.
+            if (containsKorean) {
+                try {
+                    var found = await searchKoreanStockByName(clean);
+                    if (found) {
+                        result.ticker = found.ticker;
+                        result.name = found.name;
+                        result.market = 'KR';
+                        isSixDigit = true;
+                    } else if (!match) return null;
+                } catch (e) {
+                    if (!match) throw e;
+                }
             }
 
-            // 3) 국내 종목 현재가 + 배당정보
             if (result.market === 'KR' || isSixDigit) {
                 var code = String(result.ticker).replace(/^A/, '');
                 result.ticker = code;
                 result.market = 'KR';
 
-                // realtime은 실제 현재/최종 체결가. integration의 lastClosePrice(전일종가)로 덮어쓰지 않는다.
-                try {
-                    var liveMap = await fetchKoreanRealtimeBatch([code]);
-                    if (liveMap[code] && liveMap[code].price > 0) {
-                        result.price = liveMap[code].price;
-                        if (liveMap[code].name) result.name = liveMap[code].name;
-                        result.priceIsLive = true;
-                        result.priceSource = 'NAVER realtime';
-                    }
-                } catch (e) {}
+                // 실시간/최근 체결가: Naver realtime만 현재가로 인정한다.
+                var liveMap = await fetchKoreanRealtimeBatch([code]);
+                if (liveMap[code] && liveMap[code].price > 0) {
+                    result.price = liveMap[code].price;
+                    if (liveMap[code].name) result.name = liveMap[code].name;
+                    result.priceIsLive = true;
+                    result.priceSource = 'NAVER realtime';
+                }
 
-                // integration에서는 종목명/DPS를 보강한다. 가격은 realtime 실패 때만 전일종가 폴백으로 사용.
+                // 종목명/DPS 보강. lastClosePrice는 전일종가이므로 현재가를 덮어쓰지 않는다.
                 try {
-                    var integUrl = 'https://m.stock.naver.com/api/stock/' + code + '/integration';
-                    var integData = await fetchJsonViaFastRace(integUrl, 6500);
+                    var integData = await fetchMarketInfo(code);
                     if (integData) {
                         if (integData.stockName) result.name = integData.stockName;
                         if (Array.isArray(integData.totalInfos)) {
@@ -936,65 +1014,32 @@
                                     var d = parseFloat(String(info.value).replace(/,/g, ''));
                                     if (d >= 0) result.dps = d;
                                 }
-                                if (!result.priceIsLive && (info.code === 'lastClosePrice' || info.key === '전일종가')) {
-                                    var p = parseFloat(String(info.value).replace(/,/g, ''));
-                                    if (p > 0) { result.price = p; result.priceSource = 'NAVER 전일종가'; }
-                                }
                             });
                         }
                     }
                 } catch (e) {}
 
-                // 최종 가격 폴백: Yahoo 한국 심볼 (.KS / .KQ)
-                if (!(result.price > 0) && /^[0-9]{6}$/.test(code)) {
-                    var suffixes = ['.KS', '.KQ'];
-                    for (var si = 0; si < suffixes.length && !(result.price > 0); si++) {
-                        try {
-                            var kyUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + code + suffixes[si] + '?interval=1d&range=1d';
-                            var kyData = await fetchJsonViaFastRace(kyUrl, 5000);
-                            if (kyData && kyData.chart && kyData.chart.result && kyData.chart.result[0]) {
-                                var kmeta = kyData.chart.result[0].meta || {};
-                                var kp = kmeta.regularMarketPrice || kmeta.chartPreviousClose;
-                                if (kp > 0) {
-                                    result.price = kp;
-                                    result.priceIsLive = !!kmeta.regularMarketPrice;
-                                    result.priceSource = 'Yahoo';
-                                }
-                                if (kmeta.shortName && (!result.name || result.name === code)) result.name = kmeta.shortName;
-                            }
-                        } catch(e) {}
-                    }
-                }
-
                 if (/고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(result.name) || /TIGER|KODEX|SOL|ACE|PLUS/i.test(result.name)) {
-                    result.cycle = 'monthly';
-                    result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
+                    result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
                 }
-            } else {
-                // 4) 미국 종목: 티커 입력 시 Yahoo 현재가 조회
-                var symbol = result.ticker;
-                try {
-                    var yUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d';
-                    var yData = await fetchJsonViaFastRace(yUrl, 5000);
-                    if (yData && yData.chart && yData.chart.result && yData.chart.result[0]) {
-                        var meta = yData.chart.result[0].meta || {};
-                        if (meta.regularMarketPrice || meta.chartPreviousClose) {
-                            result.price = meta.regularMarketPrice || meta.chartPreviousClose;
-                            result.priceIsLive = !!meta.regularMarketPrice;
-                            result.priceSource = 'Yahoo';
-                            if (meta.shortName) result.name = meta.shortName;
-                        }
-                    }
-                } catch(e) {}
-
-                if (/^(O|JEPI|JEPQ|SVOL)$/i.test(result.ticker)) {
-                    result.cycle = 'monthly';
-                    result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
-                }
+                return result;
             }
 
-            // 사전에도 없고 네트워크에서도 가격/정식명을 전혀 확인하지 못한 미국 문자열은 실패 처리
-            if (!matchedMaster && result.market === 'US' && !(result.price > 0) && containsKorean) return null;
+            // 미국주식도 같은 Worker를 통해 Yahoo를 호출한다.
+            var yData = await fetchUsQuoteFromProxy(result.ticker);
+            if (yData && yData.chart && yData.chart.result && yData.chart.result[0]) {
+                var meta = yData.chart.result[0].meta || {};
+                var price = parseFloat(meta.regularMarketPrice || meta.chartPreviousClose || 0);
+                if (price > 0) {
+                    result.price = price;
+                    result.priceIsLive = !!meta.regularMarketPrice;
+                    result.priceSource = 'Yahoo';
+                }
+                if (meta.shortName) result.name = meta.shortName;
+            }
+            if (/^(O|JEPI|JEPQ|SVOL)$/i.test(result.ticker)) {
+                result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
+            }
             return result;
         }
 
@@ -1044,7 +1089,7 @@
                     alert('종목 정보를 찾을 수 없습니다. 직접 입력해주세요.');
                 }
             } catch (err) {
-                alert('조회 중 오류가 발생했습니다.');
+                if (String(err && err.message) === 'MARKET_PROXY_NOT_CONFIGURED') { alert('실시간 시세 서버가 설정되지 않았습니다.\n[서버] 버튼에서 Cloudflare Worker URL을 먼저 저장해주세요.'); closeModal(); openMarketServerModal(); } else { alert('조회 중 오류가 발생했습니다: ' + (err && err.message ? err.message : '시세 서버 연결 실패')); }
             } finally {
                 searchBtn.innerHTML = originalHtml;
                 searchBtn.disabled = false;
@@ -1058,58 +1103,73 @@
                 if (!isSilent) alert('갱신할 종목이 없습니다.');
                 return;
             }
+            if (!getMarketProxyBase()) {
+                initMarketServerStatus();
+                if (!isSilent) { alert('실시간 시세 서버가 설정되지 않았습니다.\n\n보유 종목 오른쪽의 [서버] 버튼에서 Cloudflare Worker URL을 한 번 저장해주세요.'); openMarketServerModal(); }
+                return;
+            }
 
             var icon = document.getElementById('refreshIcon');
+            var statusEl = document.getElementById('marketServerStatusText');
             if (icon) icon.classList.add('fa-spin');
+            if (statusEl) { statusEl.innerText = '갱신중…'; statusEl.className = 'text-[9px] font-bold text-blue-600 dark:text-blue-300'; }
             var updatedCount = 0;
+            var failedCount = 0;
 
             try {
-                // 국내 종목은 네이버 realtime의 다중 코드 조회를 이용해 F5 시 한 번에 빠르게 갱신
                 var krCodes = [];
                 portfolio.forEach(function(stock) {
-                    if (stock.market === 'KR' && /^[0-9A-Z]{6}$/.test(String(stock.ticker || ''))) krCodes.push(stock.ticker);
+                    if (stock.market === 'KR' && /^\d{6}$/.test(String(stock.ticker || ''))) krCodes.push(stock.ticker);
                 });
 
                 var krMap = {};
-                try { krMap = await fetchKoreanRealtimeBatch(krCodes); } catch (e) {}
+                if (krCodes.length) krMap = await fetchKoreanRealtimeBatch(krCodes);
 
-                var remaining = [];
-                portfolio.forEach(function(stock) {
+                var tasks = portfolio.map(async function(stock) {
                     var code = String(stock.ticker || '').replace(/^A/, '');
-                    if (stock.market === 'KR' && krMap[code] && krMap[code].price > 0) {
-                        stock.currentPrice = krMap[code].price;
-                        if (krMap[code].name) stock.name = krMap[code].name;
-                        stock.lastPriceUpdatedAt = krMap[code].tradedAt || new Date().toISOString();
-                        updatedCount++;
-                    } else {
-                        remaining.push(stock);
-                    }
-                });
-
-                // 미국 종목 또는 국내 batch에서 빠진 종목만 개별 폴백
-                var updatePromises = remaining.map(async function(stock) {
-                    try {
-                        var liveInfo = await resolveStockData(stock.ticker);
-                        if (liveInfo && liveInfo.price > 0 && (liveInfo.priceIsLive || liveInfo.priceSource === 'NAVER 전일종가' || liveInfo.priceSource === 'Yahoo')) {
-                            stock.currentPrice = liveInfo.price;
-                            if (liveInfo.name && (!stock.name || /^[0-9A-Z.]+$/.test(stock.name))) stock.name = liveInfo.name;
-                            if (liveInfo.dps > 0 && (!stock.dps || stock.dps === 0)) stock.dps = liveInfo.dps;
-                            stock.lastPriceUpdatedAt = new Date().toISOString();
+                    if (stock.market === 'KR') {
+                        var q = krMap[code];
+                        if (q && q.price > 0) {
+                            stock.currentPrice = q.price;
+                            if (q.name) stock.name = q.name;
+                            stock.lastPriceUpdatedAt = q.tradedAt || new Date().toISOString();
+                            stock.lastPriceSource = q.source || 'NAVER realtime';
                             updatedCount++;
-                        }
-                    } catch (e) {}
+                        } else failedCount++;
+                        return;
+                    }
+                    try {
+                        var info = await resolveStockData(stock.ticker);
+                        if (info && info.price > 0 && info.priceSource) {
+                            stock.currentPrice = info.price;
+                            if (info.name) stock.name = info.name;
+                            stock.lastPriceUpdatedAt = new Date().toISOString();
+                            stock.lastPriceSource = info.priceSource;
+                            updatedCount++;
+                        } else failedCount++;
+                    } catch (e) { failedCount++; }
                 });
-                await Promise.all(updatePromises.map(function(p) { return p.catch(function(){ return null; }); }));
+                await Promise.all(tasks);
 
                 localStorage.setItem('my_last_market_refresh_at', new Date().toISOString());
-                saveToStorage(false); // 시세 갱신은 스냅샷 누적 X
+                saveToStorage(false);
                 renderAll();
+                marketProxyLastOk = updatedCount > 0;
+                if (statusEl) {
+                    statusEl.innerText = updatedCount + '개 갱신';
+                    statusEl.className = 'text-[9px] font-bold ' + (updatedCount > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300');
+                }
+            } catch (e) {
+                console.error('market refresh failed', e);
+                marketProxyLastOk = false;
+                if (statusEl) { statusEl.innerText = '시세서버 오류'; statusEl.className = 'text-[9px] font-bold text-rose-600 dark:text-rose-300'; }
+                if (!isSilent) alert('실시간 시세 조회에 실패했습니다.\n[서버] 버튼에서 Worker 연결 테스트를 해주세요.');
             } finally {
                 if (icon) icon.classList.remove('fa-spin');
             }
 
-            if (!isSilent) {
-                alert('총 ' + updatedCount + '개 종목의 현재가를 갱신했습니다.');
+            if (!isSilent && updatedCount > 0) {
+                alert('현재가 ' + updatedCount + '개를 실제 시세로 갱신했습니다.' + (failedCount ? '\n실패: ' + failedCount + '개' : ''));
             }
         }
 
@@ -1131,11 +1191,9 @@
                             s.buyPrice = parseFloat(s.buyPrice) || 0;
                             s.currentPrice = parseFloat(s.currentPrice) || s.buyPrice || 0;
                             
-                            // 만약 가격이 0원이라면 마스터 사전에서 보정
-                            if (s.currentPrice === 0 && MASTER_STOCKS[s.ticker]) {
-                                s.currentPrice = MASTER_STOCKS[s.ticker].price;
-                            }
-                            if (s.buyPrice === 0) s.buyPrice = s.currentPrice;
+                            // 현재가는 저장값을 유지하되 내장 사전의 고정 가격으로 덮어쓰지 않는다.
+                            // Worker 실시간 갱신 성공 시에만 새 현재가로 교체한다.
+                            if (s.buyPrice === 0 && s.currentPrice > 0) s.buyPrice = s.currentPrice;
 
                             s.dps = parseFloat(s.dps) || 0;
                             mapped.push(s); 
@@ -1189,52 +1247,22 @@
             var rate = 0;
             var source = '';
 
-            // 1차: jsDelivr 정적 CDN. GitHub Pages와 궁합이 좋고 API 키가 필요 없다.
-            try {
-                var cdn = await fetchJsonDirect('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', 3500);
-                if (cdn && cdn.usd && parseFloat(cdn.usd.krw) > 0) {
-                    rate = parseFloat(cdn.usd.krw);
-                    source = 'CDN';
-                }
-            } catch (e) {}
-
-            // 2차: 같은 프로젝트의 Cloudflare Pages 미러
-            if (!(rate > 0)) {
+            // Worker가 설정되어 있으면 시세와 같은 서버를 사용한다. CORS 문제를 한 곳에서 해결한다.
+            if (getMarketProxyBase()) {
                 try {
-                    var mirror = await fetchJsonDirect('https://latest.currency-api.pages.dev/v1/currencies/usd.json', 3500);
-                    if (mirror && mirror.usd && parseFloat(mirror.usd.krw) > 0) {
-                        rate = parseFloat(mirror.usd.krw);
-                        source = 'FX';
-                    }
+                    var fx = await marketProxyFetch('/fx', 9000);
+                    rate = parseFloat(fx && (fx.rate || (fx.rates && fx.rates.KRW))) || 0;
+                    source = (fx && fx.source) || 'FX';
                 } catch (e) {}
             }
 
-            // 3차: ExchangeRate-API open access
+            // Worker 미설정/장애 시 브라우저에서 직접 한 번 시도한다.
             if (!(rate > 0)) {
                 try {
-                    var data1 = await fetchJsonDirect('https://open.er-api.com/v6/latest/USD', 3500);
-                    if (data1 && data1.rates && parseFloat(data1.rates.KRW) > 0) {
-                        rate = parseFloat(data1.rates.KRW);
+                    var direct = await fetchJsonDirect('https://open.er-api.com/v6/latest/USD', 4500);
+                    if (direct && direct.rates && parseFloat(direct.rates.KRW) > 0) {
+                        rate = parseFloat(direct.rates.KRW);
                         source = 'ER';
-                    }
-                } catch (e) {}
-            }
-
-            // 4차: Frankfurter
-            if (!(rate > 0)) {
-                try {
-                    var data2 = await fetchJsonDirect('https://api.frankfurter.dev/v2/rates?base=USD&quotes=KRW', 3500);
-                    if (Array.isArray(data2)) {
-                        for (var i = 0; i < data2.length; i++) {
-                            if (data2[i] && data2[i].quote === 'KRW' && parseFloat(data2[i].rate) > 0) {
-                                rate = parseFloat(data2[i].rate);
-                                source = 'Frankfurter';
-                                break;
-                            }
-                        }
-                    } else if (data2 && data2.rates && parseFloat(data2.rates.KRW) > 0) {
-                        rate = parseFloat(data2.rates.KRW);
-                        source = 'Frankfurter';
                     }
                 } catch (e) {}
             }
@@ -1243,10 +1271,10 @@
                 usdKrwRate = rate;
                 localStorage.setItem('my_usd_krw_rate', String(rate));
                 localStorage.setItem('my_usd_krw_rate_updated_at', new Date().toISOString());
-                renderExchangeHeader(rate, '');
+                renderExchangeHeader(rate, ' · ' + source);
             } else {
                 usdKrwRate = savedRate;
-                renderExchangeHeader(savedRate, ' · 저장값');
+                renderExchangeHeader(savedRate, getMarketProxyBase() ? ' · 저장값' : ' · 서버 미설정');
             }
             return usdKrwRate;
         }
