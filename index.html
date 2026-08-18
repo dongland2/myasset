@@ -38,9 +38,9 @@
                 <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
-                <!-- 버전 표시 뱃지 (v1.5.0 현금 슬롯 & 계좌별 대시보드 지원) -->
+                <!-- 버전 표시 뱃지 -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.0
+                    v1.5.1
                 </span>
             </div>
 
@@ -60,7 +60,7 @@
                 <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="통화 전환 (원화/달러)">
                     <i class="fa-solid fa-right-left text-[9px]"></i> <span id="currencyToggleText">KRW</span>
                 </button>
-                <!-- [신규 기능: 현금/예수금 관리 모달 버튼] -->
+                <!-- 현금/예수금 관리 모달 버튼 -->
                 <button onclick="openCashModal()" class="bg-emerald-600/90 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-emerald-600/30 active:scale-95 transition whitespace-nowrap" title="계좌별 현금/예수금 관리">
                     <i class="fa-solid fa-money-bill-wave text-[10px]"></i> 예수금
                 </button>
@@ -160,9 +160,14 @@
             </div>
         </section>
 
-        <!-- [신규 기능 2: 계좌별 독립 대시보드 탭 네비게이션 바] -->
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="accountDashboardTabBar">
-            <!-- 계좌 탭들이 동적으로 생성됩니다 -->
+        <!-- [개선: 대시보드 계좌 선택 콤보박스 (드롭다운)] -->
+        <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2">
+            <label class="text-xs font-bold text-gray-300 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fa-solid fa-building-columns text-teal-400"></i> 조회 계좌 선택:
+            </label>
+            <select id="dashboardAccountSelect" onchange="switchDashboardAccount(this.value)" class="flex-1 bg-gray-900 border border-teal-500/50 text-teal-300 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-teal-400 transition">
+                <option value="ALL">🏦 전체 계좌 통합</option>
+            </select>
         </div>
 
         <!-- 총 자산 및 대시보드 요약 카드 (계좌별 독립 반영) -->
@@ -176,7 +181,7 @@
             </div>
             <div class="text-2xl font-black tracking-tight text-white" id="totalAssetValue">0원</div>
 
-            <!-- [신규 기능 1: 현금성 자산(예수금) 서브 대시보드 슬롯] -->
+            <!-- 현금성 자산(예수금) 서브 대시보드 슬롯 -->
             <div class="bg-gray-900/80 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs">
                 <div class="flex items-center gap-2">
                     <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
@@ -268,7 +273,7 @@
                 <canvas id="sectorPieChart"></canvas>
             </div>
 
-            <!-- 계좌별 비중 도넛 차트 (현금 포함 비중 반영) -->
+            <!-- 계좌별 비중 도넛 차트 -->
             <div id="accountChartWrapper" class="relative h-48 w-full hidden">
                 <canvas id="accountPieChart"></canvas>
             </div>
@@ -333,7 +338,7 @@
         </section>
     </main>
 
-    <!-- [신규 모달: 계좌별 현금성 자산(예수금) 관리 모달] -->
+    <!-- [모달: 계좌별 현금성 자산(예수금) 관리 모달] -->
     <div id="cashModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -349,10 +354,7 @@
                 각 계좌에 남아있는 **원화 예수금**과 **달러 환전 잔액**을 입력하면 총 평가 자산에 자동 합산되어 실제 매수 여력을 함께 관리할 수 있습니다.
             </p>
 
-            <!-- 계좌별 현금 입력 폼 리스트 컨테이너 -->
-            <div id="cashAccountInputList" class="space-y-3 text-xs">
-                <!-- 자바스크립트로 동적 생성 -->
-            </div>
+            <div id="cashAccountInputList" class="space-y-3 text-xs"></div>
 
             <div class="pt-2 flex gap-2">
                 <button type="button" onclick="closeCashModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2.5 rounded-lg font-bold text-xs">
@@ -848,8 +850,8 @@
 
         // 전역 상태 변수
         let portfolio = [];
-        let cashBalances = {}; // [신규] 계좌별 현금 잔액 { [accountName]: { krw: number, usd: number } }
-        let selectedDashboardAccount = 'ALL'; // [신규] 독립 대시보드 선택 계좌 ('ALL' 또는 특정 계좌명)
+        let cashBalances = {};
+        let selectedDashboardAccount = 'ALL';
         let usdKrwRate = 1350;
         let monthlyChart = null;
         let pieChart = null;
@@ -906,7 +908,7 @@
             }
         }
 
-        // [신규 기능 1: 계좌별 현금(예수금) 헬퍼]
+        // 계좌별 현금(예수금) 헬퍼
         function getCashForAccount(accName) {
             if (!cashBalances[accName]) {
                 return { krw: 0, usd: 0 };
@@ -935,7 +937,6 @@
             const container = document.getElementById('cashAccountInputList');
             container.innerHTML = '';
 
-            // 전체 계좌 목록 추출 (종목 계좌 + 현금 계좌)
             const allAccounts = Array.from(new Set([
                 '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
                 ...portfolio.map(s => s.account || '일반계좌'),
@@ -1003,35 +1004,38 @@
             alert('계좌별 현금/예수금 잔액이 성공적으로 저장 및 총자산에 반영되었습니다!');
         }
 
-        // [신규 기능 2: 계좌별 독립 대시보드 탭 전환]
-        function renderAccountDashboardTabs() {
-            const bar = document.getElementById('accountDashboardTabBar');
-            bar.innerHTML = '';
+        // [개선: 대시보드 계좌 선택 콤보박스 옵션 갱신]
+        function updateDashboardAccountDropdown() {
+            const selectEl = document.getElementById('dashboardAccountSelect');
+            if (!selectEl) return;
 
-            const accounts = ['ALL', ...Array.from(new Set([
+            const accounts = Array.from(new Set([
                 ...portfolio.map(s => s.account || '일반계좌'),
                 ...Object.keys(cashBalances)
-            ])).filter(Boolean)];
+            ])).filter(Boolean);
+
+            const prevVal = selectedDashboardAccount;
+            selectEl.innerHTML = '<option value="ALL">🏦 전체 계좌 통합</option>';
 
             accounts.forEach(acc => {
-                const isSelected = (acc === selectedDashboardAccount);
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = `px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1 ${isSelected ? 'bg-teal-500 text-gray-950 shadow-md shadow-teal-500/30' : 'bg-gray-800/80 text-gray-400 hover:text-gray-200 border border-gray-700/60'}`;
-                
-                const label = (acc === 'ALL') ? '🏦 전체 통합' : `🏷️ ${acc}`;
-                btn.innerHTML = label;
-                btn.onclick = () => switchDashboardAccount(acc);
-                bar.appendChild(btn);
+                const opt = document.createElement('option');
+                opt.value = acc;
+                opt.innerText = `🏷️ ${acc}`;
+                if (acc === prevVal) opt.selected = true;
+                selectEl.appendChild(opt);
             });
+
+            if (!accounts.includes(prevVal) && prevVal !== 'ALL') {
+                selectedDashboardAccount = 'ALL';
+                selectEl.value = 'ALL';
+            }
         }
 
         function switchDashboardAccount(accName) {
             selectedDashboardAccount = accName;
-            // 하단 종목 리스트 필터와도 자동 동기화
             currentAccountFilter = accName;
-            const selectEl = document.getElementById('accountFilterSelect');
-            if (selectEl) selectEl.value = accName;
+            const filterEl = document.getElementById('accountFilterSelect');
+            if (filterEl) filterEl.value = accName;
             renderAll();
         }
 
@@ -1619,7 +1623,6 @@
 
         // 5. 통합 데이터 로드
         async function loadPortfolioData() {
-            // 현금 잔액 로드
             const savedCash = localStorage.getItem('my_cash_balances_v1');
             if (savedCash) {
                 try { cashBalances = JSON.parse(savedCash) || {}; } catch(e) { cashBalances = {}; }
@@ -1686,7 +1689,7 @@
             }
         }
 
-        // [3중 멀티 프록시 초고속 실시간 시세 조회 엔진]
+        // 3중 멀티 프록시 실시간 시세 조회 엔진
         async function tryFetchLiveOnline(symbol) {
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
             
@@ -1779,7 +1782,7 @@
                                 name: onlineResult.meta.shortName || upperRaw,
                                 market: (querySymbol.endsWith('.KS') || querySymbol.endsWith('.KQ')) ? 'KR' : 'US',
                                 sector: '기타',
-                                account: '일반계좌',
+                                account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
                                 price: livePrice,
                                 dps: 0,
                                 cycle: 'quarterly',
@@ -1798,7 +1801,7 @@
                         name: inputRaw,
                         market: isKR ? 'KR' : 'US',
                         sector: '기타',
-                        account: '일반계좌',
+                        account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
                         price: 0,
                         dps: 0,
                         cycle: 'quarterly',
@@ -1812,7 +1815,7 @@
                 document.getElementById('inputTicker').value = resolved.ticker;
                 document.getElementById('inputName').value = resolved.name;
                 document.getElementById('inputSector').value = resolved.sector || '기타';
-                document.getElementById('inputAccount').value = resolved.account || '일반계좌';
+                document.getElementById('inputAccount').value = resolved.account || ((selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌');
                 document.getElementById('inputCurrentPrice').value = resolved.price;
                 document.getElementById('inputDPS').value = resolved.dps;
 
@@ -1905,6 +1908,8 @@
         function setAccountFilter(accountName) {
             currentAccountFilter = accountName;
             selectedDashboardAccount = accountName;
+            const selectEl = document.getElementById('dashboardAccountSelect');
+            if (selectEl) selectEl.value = accountName;
             renderAll();
         }
 
@@ -1939,7 +1944,7 @@
 
         // 8. 화면 렌더링 총괄
         function renderAll() {
-            renderAccountDashboardTabs();
+            updateDashboardAccountDropdown();
             updateAccountFilterDropdown();
             renderSummaryAndList();
             updateFireCalculations();
@@ -2003,7 +2008,6 @@
         }
 
         function renderSummaryAndList() {
-            // 전체 자산 통계 변수
             let totalInvestedKRW = 0;
             let totalStockCurrentKRW = 0;
             let totalAnnualGrossKRW = 0;
@@ -2015,7 +2019,6 @@
             container.innerHTML = '';
             document.getElementById('stockCount').innerText = portfolio.length;
 
-            // [계좌별 독립 대시보드 계산 분기]
             portfolio.forEach(stock => {
                 const matchesDashboardAcc = (selectedDashboardAccount === 'ALL' || (stock.account || '일반계좌') === selectedDashboardAccount);
                 if (!matchesDashboardAcc) return;
@@ -2039,11 +2042,10 @@
                 totalAnnualGrossKRW += annualDivLocal * rate;
             });
 
-            // [현금 합산]: 선택된 계좌의 예수금 계산
+            // 현금 합산
             const targetCashKRW = getTotalCashKRW(selectedDashboardAccount);
             const totalAccountValueKRW = totalStockCurrentKRW + targetCashKRW;
 
-            // 계좌별 달러/원화 현금 추가 집계
             let cashUsdSum = 0;
             let cashKrwSum = 0;
             if (selectedDashboardAccount === 'ALL') {
@@ -2097,7 +2099,7 @@
                 displayList = displayList.filter(s => (s.account || '일반계좌') === currentAccountFilter);
             }
 
-            // 같은 종목 합쳐보기 (Merged View) 로직
+            // 같은 종목 합치기 (Merged View) 로직
             if (isMergedView && currentAccountFilter === 'ALL') {
                 const mergedMap = {};
                 displayList.forEach(stock => {
@@ -2290,7 +2292,7 @@
                 container.appendChild(card);
             });
 
-            // [대시보드 요약 통계 반영: 주식 손익 + 현금 포함 총자산]
+            // 대시보드 요약 통계 반영
             const totalStockProfitKRW = totalStockCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalStockProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = totalAnnualNetKRW / 12;
@@ -2300,7 +2302,6 @@
             document.getElementById('totalAssetTitle').innerText = `총 평가 자산 (주식+현금 ${displayCurrency === 'USD' ? 'USD' : 'KRW'})`;
             document.getElementById('totalAssetValue').innerText = formatMoney(totalAccountValueKRW);
 
-            // 현금 잔액 요약 표시
             document.getElementById('dashboardCashSummary').innerText = `${formatMoney(targetCashKRW)} (원화 ${Math.round(cashKrwSum).toLocaleString()}원 + $${cashUsdSum.toLocaleString()})`;
 
             document.getElementById('totalUsdAssetValue').innerText = `$${totalUsdAssetUSD.toLocaleString('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -2518,7 +2519,6 @@
                 values.push(Math.round(stock.quantity * stock.currentPrice * rate));
             });
 
-            // 선택된 계좌의 현금 잔액도 비중에 추가
             const cashKRW = getTotalCashKRW(selectedDashboardAccount);
             if (cashKRW > 0) {
                 labels.push('💵 현금 / 예수금');
@@ -2606,7 +2606,7 @@
             });
         }
 
-        // [계좌별 비중 도넛 차트: 주식 평가액 + 예수금 잔액 합산 반영]
+        // 계좌별 비중 도넛 차트
         function renderAccountPieChart() {
             const accountMap = {};
             const bgColors = ['#14B8A6', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316'];
@@ -2618,7 +2618,6 @@
                 accountMap[acc] = (accountMap[acc] || 0) + val;
             });
 
-            // 각 계좌별 현금도 해당 계좌 자산에 합산
             for (const acc in cashBalances) {
                 const c = getCashForAccount(acc);
                 const cashTotal = Math.round(c.krw + (c.usd * usdKrwRate));
@@ -2881,7 +2880,6 @@
                 `"${(s.payoutMonths || []).join(',')}"`
             ]);
 
-            // 현금 잔액 행 추가
             for (const acc in cashBalances) {
                 const c = getCashForAccount(acc);
                 if (c.krw > 0) {
@@ -2907,7 +2905,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.5.0',
+                version: '1.5.1',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
