@@ -39,9 +39,9 @@
                 <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
-                <!-- 버전 표시 뱃지 (v1.6.1 가독성 개선) -->
+                <!-- 버전 표시 뱃지 (v1.6.2 가독성 완벽 개선) -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.6.1
+                    v1.6.2
                 </span>
             </div>
 
@@ -905,7 +905,6 @@
             renderAll();
         });
 
-        // [신규 기능 2] 테마 모드 제어 (다크/라이트)
         function initThemeMode() {
             currentThemeMode = localStorage.getItem('my_theme_mode') || 'dark';
             applyThemeModeStyles();
@@ -2291,7 +2290,7 @@
                 }
 
                 const memoHtml = stock.memo ? `
-                    <div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-700 dark:text-gray-300">
+                    <div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200">
                         <i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i>
                         <span class="truncate">${stock.memo}</span>
                     </div>
@@ -2310,16 +2309,16 @@
                 const actionButtons = stock.isMerged ? `
                     <span class="text-[10px] opacity-60 font-bold">합산 상태</span>
                 ` : `
-                    <button onclick="openModal(${stock.originalIndex})" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 p-1 text-xs">
+                    <button onclick="openModal(${stock.originalIndex})" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-1 text-xs">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                    <button onclick="deleteStock(${stock.originalIndex})" class="text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 p-1 text-xs">
+                    <button onclick="deleteStock(${stock.originalIndex})" class="text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 `;
 
                 const card = document.createElement('div');
-                card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-200 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900' : 'bg-gray-800/90 border border-gray-700/70 p-4 rounded-xl shadow-md space-y-2.5 text-gray-100';
+                card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-white';
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -2335,9 +2334,9 @@
                             </div>
                             <div class="flex items-center gap-1 mt-1">
                                 <h3 class="font-bold text-sm text-gray-900 dark:text-white">${stock.name}</h3>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 font-mono">(${stock.ticker})</span>
+                                <span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5">보유: <b class="text-gray-900 dark:text-white">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
+                            <p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white">${stock.quantity}주</b> · 평단: ${stock.buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2})}${currSymbol}</p>
                         </div>
                         <div class="flex gap-1.5">
                             ${actionButtons}
@@ -2346,33 +2345,33 @@
 
                     ${memoHtml}
 
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700/50 text-xs">
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs">
                         <div>
-                            <span class="text-gray-500 dark:text-gray-400">현재가 / 평가액</span>
+                            <span class="text-gray-600 dark:text-gray-300">현재가 / 평가액</span>
                             <p class="font-bold text-gray-900 dark:text-white">${stock.currentPrice.toLocaleString()}${currSymbol}</p>
-                            <p class="text-[11px] text-gray-600 dark:text-gray-300">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
+                            <p class="text-[11px] text-gray-700 dark:text-gray-200">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-500 dark:text-gray-400">평가 손익</span>
+                            <span class="text-gray-600 dark:text-gray-300">평가 손익</span>
                             <p class="font-bold ${profitColor}">${profitLossLocal >= 0 ? '+' : ''}${Math.round(profitLossLocal).toLocaleString()}${currSymbol}</p>
                             <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${profitBadge}">${profitRate >= 0 ? '+' : ''}${profitRate.toFixed(2)}%</span>
                         </div>
                     </div>
 
-                    <div class="bg-gray-100 dark:bg-gray-900/60 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/40 flex justify-between items-center text-xs">
+                    <div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs">
                         <div>
-                            <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                                 <i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ${((1-taxRate)*100).toFixed(1)}%)
                             </span>
                             <p class="font-bold text-gray-900 dark:text-white mt-0.5">
                                 ${annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2})}${currSymbol}
-                                <span class="text-gray-600 dark:text-gray-300 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
+                                <span class="text-gray-700 dark:text-gray-300 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
                             </p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-500 dark:text-gray-400 text-[11px]">시가 / 투자배당률(YoC)</span>
-                            <p class="font-bold text-emerald-600 dark:text-emerald-400">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">/ ${yocRate.toFixed(2)}%</span></p>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
+                            <span class="text-gray-600 dark:text-gray-300 text-[11px]">시가 / 투자배당률(YoC)</span>
+                            <p class="font-bold text-emerald-700 dark:text-emerald-300">${yieldRate.toFixed(2)}% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-normal">/ ${yocRate.toFixed(2)}%</span></p>
+                            <p class="text-[10px] text-gray-600 dark:text-gray-300">주당 ${stock.dps.toLocaleString()}${currSymbol}</p>
                         </div>
                     </div>
                 `;
@@ -2462,11 +2461,11 @@
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10 } } },
                         y: {
                             grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
+                                color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB',
                                 font: { size: 9 },
                                 callback: val => {
                                     if (displayCurrency === 'USD') return `$${val}`;
@@ -2505,12 +2504,12 @@
                 card.onclick = () => openMonthDetailModal(m);
                 card.innerHTML = `
                     <div class="flex justify-between items-center text-[11px] mb-1">
-                        <span class="font-bold text-gray-800 dark:text-gray-200">${m}월</span>
+                        <span class="font-bold text-gray-900 dark:text-gray-100">${m}월</span>
                         <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">${stocksInMonth.length}개</span>
                     </div>
                     <p class="font-black text-xs text-gray-900 dark:text-white truncate">${formatMoney(monthGrossKRW)}</p>
                     <div class="flex gap-1 flex-wrap mt-1.5 overflow-hidden max-h-8">
-                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400">${t}</span>`).join('')}
+                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-300">${t}</span>`).join('')}
                     </div>
                 `;
                 container.appendChild(card);
@@ -2554,17 +2553,17 @@
                                 <span class="text-[9px] font-bold px-1 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
                                     ${isUS ? '미국' : '한국'}
                                 </span>
-                                <span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-900/60 text-teal-300">
+                                <span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
                                     ${stock.account || '일반계좌'}
                                 </span>
-                                <span class="font-bold text-gray-900 dark:text-gray-200 text-xs">${stock.name}</span>
-                                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">(${stock.ticker})</span>
+                                <span class="font-bold text-gray-900 dark:text-gray-100 text-xs">${stock.name}</span>
+                                <span class="text-[10px] text-gray-600 dark:text-gray-300 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-[11px] text-gray-600 dark:text-gray-400 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
+                            <p class="text-[11px] text-gray-700 dark:text-gray-300 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
                         </div>
                         <div class="text-right">
                             <span class="text-emerald-600 dark:text-emerald-400 font-bold text-xs">${formatMoney(payoutNetKRW)}</span>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400">세전: ${formatMoney(payoutGrossKRW)}</p>
+                            <p class="text-[10px] text-gray-600 dark:text-gray-300">세전: ${formatMoney(payoutGrossKRW)}</p>
                         </div>
                     `;
                     list.appendChild(item);
@@ -2625,7 +2624,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2676,7 +2675,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2727,7 +2726,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
+                        legend: { position: 'right', labels: { color: currentThemeMode === 'light' ? '#1F2937' : '#E5E7EB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
@@ -2816,13 +2815,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#D1D5DB', font: { size: 10 }, boxWidth: 12 } } },
+                    plugins: { legend: { labels: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 10 }, boxWidth: 12 } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF', font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB', font: { size: 9 } } },
                         y: {
                             grid: { color: currentThemeMode === 'light' ? '#E5E7EB' : '#374151' },
                             ticks: {
-                                color: currentThemeMode === 'light' ? '#4B5563' : '#9CA3AF',
+                                color: currentThemeMode === 'light' ? '#374151' : '#E5E7EB',
                                 font: { size: 9 },
                                 callback: val => displayCurrency === 'USD' ? `$${val}` : (val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val))
                             }
@@ -2982,7 +2981,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.6.0',
+                version: '1.6.2',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
