@@ -53,7 +53,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.11.4
+                    v1.11.5
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -140,7 +140,7 @@
             </div>
         </div>
 
-        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.4에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.5에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -693,7 +693,7 @@
                 </div>
                 <div id="payoutMonthsContainer">
                     <div class="flex items-center justify-between mb-1">
-                        <label class="block font-bold">배당 지급월</label>
+                        <label class="block font-bold">배당 일정월</label>
                         <button type="button" id="btnPayoutMonthEdit" onclick="togglePayoutMonthEditMode()" class="text-[10px] px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold">지급월 수정</button>
                     </div>
                     <div id="payoutMonthGrid" class="flex flex-wrap gap-1.5 text-center">
@@ -768,7 +768,7 @@
         // [1-1] 배당 지급일 일정
         // 월 정보만으로 임의의 '몇 일'을 만들어내지 않는다. 확인된 일정만 정확한 날짜로 표시한다.
         // =========================================================================
-        // v1.11.4: 종목별 지급일 하드코딩은 사용하지 않는다.
+        // v1.11.5: 종목별 지급일 하드코딩은 사용하지 않는다.
         // 한국은 /krdiv 또는 /etfdiv, 미국은 /usdiv 검색 결과만 사용한다.
         var PAYOUT_DATE_SCHEDULES = {};
 
@@ -972,7 +972,7 @@
                 label.classList.toggle('is-view-only', !payoutMonthEditMode);
             });
             var btn = document.getElementById('btnPayoutMonthEdit');
-            if (btn) btn.innerText = payoutMonthEditMode ? '수정 완료' : '지급월 수정';
+            if (btn) btn.innerText = payoutMonthEditMode ? '수정 완료' : '일정월 수정';
         }
 
         function formatDividendPerShareAmount(record) {
@@ -990,6 +990,13 @@
                 if (!label) return;
                 var exact = cb.checked ? getPayoutDateForMonth(stock, month) : '';
                 var record = cb.checked ? getDistributionRecordForMonth(stock, month) : null;
+                var exDatesForMonth = [];
+                if (cb.checked && stock && Array.isArray(stock.exDividendDates)) {
+                    exDatesForMonth = stock.exDividendDates.filter(function(iso){ return /^\d{4}-\d{2}-\d{2}$/.test(String(iso||'')) && parseInt(String(iso).slice(5,7),10) === month; }).sort().reverse();
+                }
+                if (!exDatesForMonth.length && cb.checked && currentFormDistributionData && stock && String(currentFormDistributionData.ticker||'').toUpperCase() === String(stock.ticker||'').toUpperCase()) {
+                    exDatesForMonth = (currentFormDistributionData.exDividendDates || []).filter(function(iso){ return /^\d{4}-\d{2}-\d{2}$/.test(String(iso||'')) && parseInt(String(iso).slice(5,7),10) === month; }).sort().reverse();
+                }
                 var tip = '';
                 if (!cb.checked) {
                     tip = month + '월: 배당 지급월 아님';
@@ -1005,7 +1012,11 @@
                 } else if (exact) {
                     tip = '지급 예정일: ' + formatPayoutDateKo(exact) + ' · 일정은 변경될 수 있음';
                 } else {
-                    tip = (stock && stock.payoutMonthBasis === 'ex-dividend') ? (month + '월: 최근 실제 배당락 이력에서 관측 · 정확한 지급일 미확정') : (month + '월 배당 지급 · 정확한 지급일은 아직 확인되지 않음');
+                    if (stock && stock.payoutMonthBasis === 'ex-dividend') {
+                        tip = exDatesForMonth.length ? ('배당락일: ' + exDatesForMonth.slice(0,3).map(formatPayoutDateKo).join(', ') + ' · 정확한 지급일 미확정') : (month + '월: 실제 배당락 이력에서 관측 · 정확한 지급일 미확정');
+                    } else {
+                        tip = month + '월 배당 지급 · 정확한 지급일은 아직 확인되지 않음';
+                    }
                 }
                 label.title = tip;
                 label.dataset.tooltip = tip;
@@ -1049,9 +1060,14 @@
                     help.innerText = '💡 최근 KIND 공시 지급일: ' + formatPayoutDateKo(disclosedRec.paymentDate) + (Number(disclosedRec.amount)>0 ? ' · 주당 ' + formatDividendPerShareAmount(disclosedRec) : '') + ' · 지급예정일 공시 기준';
                 } else if (history.length) {
                     var latestKnown = history[0];
-                    help.innerText = '💡 최근 공시 지급일: ' + formatPayoutDateKo(latestKnown.paymentDate) + (Number(latestKnown.amount)>0 ? ' · 주당 ' + formatDividendPerShareAmount(latestKnown) : '') + ' · 출처: ' + (latestKnown.source || 'KIND');
+                    help.innerText = '💡 최근 공시 지급일: ' + formatPayoutDateKo(latestKnown.paymentDate) + (Number(latestKnown.amount)>0 ? ' · 주당 ' + formatDividendPerShareAmount(latestKnown) : '') + ' · 출처: ' + (latestKnown.source || '공식 공시');
                 } else {
-                    help.innerText = '💡 검색으로 확인된 일정만 표시됩니다. 정확한 지급일이 없는 경우 배당락 이력/확인된 지급월만 표시하며 날짜를 임의로 만들지 않습니다.';
+                    var exDates = [];
+                    if (stock && Array.isArray(stock.exDividendDates)) exDates = stock.exDividendDates.slice();
+                    if (!exDates.length && currentFormDistributionData && stock && String(currentFormDistributionData.ticker||'').toUpperCase() === String(stock.ticker||'').toUpperCase()) exDates = (currentFormDistributionData.exDividendDates || []).slice();
+                    exDates = uniqueIsoDates(exDates).sort().reverse();
+                    if (exDates.length) help.innerText = '🟠 확인된 배당락일: ' + exDates.slice(0,3).map(formatPayoutDateKo).join(', ') + ' · 정확한 지급일은 공식 공시 확인 전입니다.';
+                    else help.innerText = '💡 검색으로 확인된 일정만 표시됩니다. 정확한 지급일이 없는 경우 배당락 이력/확인된 일정월만 표시하며 날짜를 임의로 만들지 않습니다.';
                 }
             }
         }
@@ -1059,9 +1075,10 @@
         function updatePayoutMonthTooltipsFromForm() {
             var ticker = document.getElementById('inputTicker') ? document.getElementById('inputTicker').value.trim() : '';
             var known = getKnownPayoutDateSchedule(ticker);
-            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '', payoutMonthBasis:'' };
+            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], exDividendDates: known && known.exDates ? known.exDates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '', payoutMonthBasis:'' };
             if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                 tipStock.payoutDates = currentFormDistributionData.payoutDates || tipStock.payoutDates;
+                tipStock.exDividendDates = currentFormDistributionData.exDividendDates || tipStock.exDividendDates;
                 tipStock.distributionHistory = currentFormDistributionData.history || [];
                 tipStock.payoutDateSource = currentFormDistributionData.source || '';
                 tipStock.payoutMonthBasis = currentFormDistributionData.payoutMonthBasis || '';
@@ -1157,6 +1174,8 @@
                     months: Array.isArray(data.months) ? data.months.slice() : [],
                     monthsComplete: data.monthsComplete === true,
                     payoutMonthsNoGuess: data.payoutMonthsNoGuess === true,
+                    payoutMonthBasis: data.payoutMonthBasis || '',
+                    officialPaymentDates: data.officialPaymentDates === true,
                     payoutDates: Array.isArray(data.payoutDates) ? data.payoutDates.slice() : [],
                     recordDates: Array.isArray(data.recordDates) ? data.recordDates.slice() : [],
                     history: Array.isArray(data.history) ? data.history.map(function(x){ return Object.assign({},x); }) : [],
@@ -1180,6 +1199,7 @@
             }
             target.payoutMonthsNoGuess = info.payoutMonthsNoGuess === true;
             target.payoutMonthsComplete = info.monthsComplete === true;
+            target.payoutMonthBasis = info.payoutMonthBasis || '';
             if (Array.isArray(info.months)) {
                 var exactMonths = target.payoutMonthsNoGuess ? cleanPayoutMonths(info.months) : normalizePayoutMonths(info.cycle || target.divCycle || target.cycle || 'unknown', info.months, target.ticker);
                 if (target.divCycle !== undefined || target.payoutMonths !== undefined) target.payoutMonths = exactMonths;
@@ -1228,7 +1248,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.11.4';
+        var CLOUD_SYNC_VERSION = '1.11.5';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -1496,7 +1516,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.11.4: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.11.5: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -2334,7 +2354,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.11.4: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.11.5: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2409,7 +2429,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.11.4: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.11.5: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -3371,11 +3391,13 @@
             var checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
             checkboxes.forEach(function(cb) { cb.checked = months.indexOf(parseInt(cb.value,10)) >= 0; });
             var known = getKnownPayoutDateSchedule(ticker);
-            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '' };
+            var tipStock = { ticker: ticker, payoutDates: known ? known.dates : [], exDividendDates: known && known.exDates ? known.exDates : [], distributionHistory: known && known.history ? known.history : [], payoutDateSource: known ? known.source : '', payoutMonthBasis:'' };
             if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                 tipStock.payoutDates = currentFormDistributionData.payoutDates || tipStock.payoutDates;
+                tipStock.exDividendDates = currentFormDistributionData.exDividendDates || tipStock.exDividendDates;
                 tipStock.distributionHistory = currentFormDistributionData.history || [];
                 tipStock.payoutDateSource = currentFormDistributionData.source || '';
+                tipStock.payoutMonthBasis = currentFormDistributionData.payoutMonthBasis || '';
             }
             updatePayoutMonthTooltips(tipStock);
         }
@@ -4010,7 +4032,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.11.4부터 비활성화.
+            // v1.11.5부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -4109,7 +4131,7 @@
         }
 
         // =========================================================================
-        // v1.11.4 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.11.5 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4451,7 +4473,7 @@
         }
 
         // =========================================================================
-        // v1.11.4: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.11.5: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -4832,7 +4854,7 @@
         }
 
         function copyDiagnosticRawData(){
-            var payload={version:'1.11.4',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
+            var payload={version:'1.11.5',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
             var text=JSON.stringify(payload,null,2);
             if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('진단 원본 JSON을 클립보드에 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);});else prompt('아래 JSON을 복사하세요:',text);
         }
