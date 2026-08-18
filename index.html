@@ -31,46 +31,73 @@
 <body class="bg-gray-900 text-gray-100 min-h-screen pb-24">
 
     <!-- 상단 네비게이션 헤더 -->
-    <header class="sticky top-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex justify-between items-center">
+    <header class="sticky top-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-3 py-3 flex justify-between items-center">
         <div>
-            <h1 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold text-emerald-400 flex items-center gap-1.5">
                 <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
             </h1>
             <div class="flex items-center gap-2 mt-0.5">
-                <p class="text-xs text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
+                <p class="text-[11px] text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
                 <!-- 클라우드 저장 상태 뱃지 -->
                 <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1">
                     <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">로컬 전용</span>
                 </span>
             </div>
         </div>
-        <div class="flex gap-1.5">
+
+        <div class="flex items-center gap-1">
+            <!-- [신규 기능: 통화 전환 토글] -->
+            <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1" title="표시 통화 전환 (원화/달러)">
+                <i class="fa-solid fa-right-left text-[10px]"></i> <span id="currencyToggleText">KRW</span>
+            </button>
+
+            <!-- [신규 기능: FIRE 은퇴 계산기 모달 열기] -->
+            <button onclick="openFireModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-orange-600/30 active:scale-95 transition" title="은퇴 파이어(FIRE) 계산기">
+                <i class="fa-solid fa-fire-flame-curved"></i> FIRE
+            </button>
+
+            <!-- [신규 기능: 스냅샷 롤백 히스토리 모달 열기] -->
+            <button onclick="openSnapshotModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 active:scale-95 transition" title="스냅샷 롤백 히스토리">
+                <i class="fa-solid fa-clock-rotate-left"></i> 롤백
+            </button>
+
             <!-- 웹 클라우드 동기화 설정 버튼 -->
             <button onclick="openCloudModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-blue-600/30 active:scale-95 transition" title="웹 클라우드 연동">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
             </button>
+
             <!-- DRIP 복리 시뮬레이터 버튼 -->
-            <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition">
+            <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition" title="배당 재투자(DRIP) 시뮬레이터">
                 <i class="fa-solid fa-seedling"></i> DRIP
             </button>
+
             <!-- 종목 추가 모달 버튼 -->
-            <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30 active:scale-95 transition">
+            <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30 active:scale-95 transition">
                 <i class="fa-solid fa-plus"></i> 추가
             </button>
-            <!-- 오프라인 백업/복원 버튼 -->
-            <button onclick="exportData()" class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs" title="파일로 백업">
-                <i class="fa-solid fa-download"></i>
-            </button>
-            <label class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs cursor-pointer" title="파일에서 복원">
-                <i class="fa-solid fa-upload"></i>
-                <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json">
-            </label>
+
+            <!-- 내보내기/가져오기 드롭다운 옵션 -->
+            <div class="flex gap-1">
+                <!-- CSV 내보내기 -->
+                <button onclick="exportCSV()" class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs" title="CSV/엑셀 내보내기">
+                    <i class="fa-solid fa-file-csv"></i>
+                </button>
+                <!-- JSON 백업 -->
+                <button onclick="exportData()" class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs" title="JSON 백업">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <!-- JSON 복원 -->
+                <label class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs cursor-pointer" title="JSON 복원">
+                    <i class="fa-solid fa-upload"></i>
+                    <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json">
+                </label>
+            </div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- [신규 기능 1] 금융소득종합과세 알림 배너 (2,000만원 기준 동적 표기) -->
+        <!-- 금융소득종합과세 알림 배너 (연 2,000만원 기준) -->
         <div id="taxWarningBanner" class="hidden p-3 rounded-xl border text-xs flex items-center justify-between shadow-md">
             <div class="flex items-center gap-2">
                 <span id="taxWarningIcon" class="text-base">⚠️</span>
@@ -81,10 +108,27 @@
             </div>
         </div>
 
+        <!-- [신규 기능: FIRE 생활비 달성률 요약 위젯] -->
+        <section id="fireWidgetCard" onclick="openFireModal()" class="bg-gradient-to-r from-orange-900/40 via-amber-900/30 to-gray-800 p-3.5 rounded-2xl border border-orange-500/30 shadow-lg cursor-pointer hover:border-orange-500/50 transition">
+            <div class="flex justify-between items-center mb-1.5">
+                <span class="text-xs font-bold text-orange-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-fire-flame-curved text-orange-400"></i> 은퇴 FIRE 생활비 충당률
+                </span>
+                <span class="text-xs font-black text-orange-300" id="fireWidgetRate">0.0%</span>
+            </div>
+            <div class="w-full bg-gray-900/80 rounded-full h-2 overflow-hidden border border-gray-700">
+                <div id="fireWidgetProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1.5">
+                <span>월 배당: <b class="text-gray-200" id="fireWidgetNetMonthly">0원</b></span>
+                <span>목표 생활비: <b class="text-gray-200" id="fireWidgetTargetExp">3,000,000원</b></span>
+            </div>
+        </section>
+
         <!-- 총 자산 및 대시보드 요약 카드 -->
         <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3">
             <div class="flex justify-between items-start">
-                <span class="text-xs font-semibold text-gray-400">총 평가 자산 (원화 환산 통합)</span>
+                <span class="text-xs font-semibold text-gray-400" id="totalAssetTitle">총 평가 자산 (원화 통합)</span>
                 <span id="totalProfitBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-gray-700 text-gray-300">+0.0%</span>
             </div>
             <div class="text-2xl font-black tracking-tight text-white" id="totalAssetValue">0원</div>
@@ -96,14 +140,14 @@
                         <i class="fa-solid fa-dollar-sign"></i> 미국 달러 자산
                     </p>
                     <p class="font-bold text-indigo-300 text-sm mt-0.5" id="totalUsdAssetValue">$0</p>
-                    <p class="text-[10px] text-gray-400 mt-0.5" id="totalUsdAssetKrwValue">0원</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5" id="totalUsdAssetSubValue">0원</p>
                 </div>
                 <div class="bg-gray-900/60 p-2.5 rounded-xl border border-gray-700/40">
                     <p class="text-[11px] text-rose-400 font-semibold flex items-center gap-1">
                         <i class="fa-solid fa-won-sign"></i> 한국 원화 자산
                     </p>
                     <p class="font-bold text-rose-300 text-sm mt-0.5" id="totalKrwAssetValue">0원</p>
-                    <p class="text-[10px] text-gray-400 mt-0.5">국내 주식 총액</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5" id="totalKrwAssetSubValue">국내 주식 총액</p>
                 </div>
             </div>
 
@@ -122,30 +166,33 @@
                     <p class="font-bold text-emerald-300 mt-0.5" id="totalAnnualDividend">0원</p>
                 </div>
                 <div>
-                    <p class="text-emerald-400 font-semibold">월평균 세후 배당금 <span class="text-[10px] text-gray-400 font-normal">(미국15%/한국15.4%)</span></p>
+                    <p class="text-emerald-400 font-semibold">월평균 세후 배당금 <span class="text-[10px] text-gray-400 font-normal">(US 15%/KR 15.4%)</span></p>
                     <p class="font-bold text-emerald-300 mt-0.5" id="monthlyNetDividend">0원</p>
                 </div>
             </div>
         </section>
 
-        <!-- 차트 영역 (월별 배당금 / 종목별 비중 / [신규] 섹터별 비중) -->
+        <!-- 차트 및 캘린더 영역 (월별 배당 / 종목 비중 / 섹터 비중 / [신규] 1년 타임라인) -->
         <section class="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
                     <button id="tabMonthlyBtn" onclick="switchChartTab('monthly')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                        <i class="fa-solid fa-calendar-days"></i> 월별 배당금
+                        <i class="fa-solid fa-calendar-days"></i> 월별 차트
                     </button>
                     <button id="tabPieBtn" onclick="switchChartTab('pie')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200">
-                        <i class="fa-solid fa-chart-pie"></i> 종목별 비중
+                        <i class="fa-solid fa-chart-pie"></i> 종목 비중
                     </button>
-                    <!-- [신규 기능 4] 섹터/자산군별 비중 탭 -->
                     <button id="tabSectorBtn" onclick="switchChartTab('sector')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200">
-                        <i class="fa-solid fa-layer-group"></i> 섹터별 비중
+                        <i class="fa-solid fa-layer-group"></i> 섹터 비중
+                    </button>
+                    <!-- [신규 기능: 1년 배당 타임라인 캘린더 탭] -->
+                    <button id="tabTimelineBtn" onclick="switchChartTab('timeline')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200">
+                        <i class="fa-solid fa-table-cells"></i> 1년 캘린더
                     </button>
                 </div>
             </div>
 
-            <!-- 월별 배당 막대 차트 (클릭 시 월 상세 팝업) -->
+            <!-- 월별 배당 막대 차트 -->
             <div id="monthlyChartWrapper" class="relative h-48 w-full">
                 <canvas id="monthlyDividendChart"></canvas>
             </div>
@@ -155,14 +202,20 @@
                 <canvas id="assetPieChart"></canvas>
             </div>
 
-            <!-- [신규 기능 4] 섹터별 비중 도넛 차트 -->
+            <!-- 섹터별 비중 도넛 차트 -->
             <div id="sectorChartWrapper" class="relative h-48 w-full hidden">
                 <canvas id="sectorPieChart"></canvas>
             </div>
-            <p id="monthlyChartTip" class="text-[10px] text-gray-400 text-center mt-2">💡 막대 그래프를 터치하면 해당 월의 세부 배당 지급 종목을 확인합니다.</p>
+
+            <!-- [신규 기능: 1년 배당 캘린더 타임라인 그리드 뷰] -->
+            <div id="timelineWrapper" class="hidden space-y-2">
+                <div class="grid grid-cols-3 gap-2" id="timelineGridContainer"></div>
+            </div>
+
+            <p id="monthlyChartTip" class="text-[10px] text-gray-400 text-center mt-2">💡 막대 그래프나 월별 카드를 터치하면 해당 월의 배당 종목을 상세 확인합니다.</p>
         </section>
 
-        <!-- 보유 종목 리스트 섹션 & [신규 기능 3] 필터 및 정렬 바 -->
+        <!-- 보유 종목 리스트 섹션 (필터 & 정렬 바) -->
         <section class="space-y-3">
             <div class="flex justify-between items-center px-1">
                 <h2 class="text-sm font-bold text-gray-300 flex items-center gap-1.5">
@@ -173,23 +226,22 @@
                 </button>
             </div>
 
-            <!-- [신규 기능 3] 필터 칩 & 정렬 드롭다운 컨트롤 -->
+            <!-- 필터 칩 & 정렬 드롭다운 -->
             <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50 flex flex-col gap-2 text-xs">
                 <div class="flex items-center justify-between gap-2">
-                    <!-- 필터 탭 -->
                     <div class="flex gap-1 overflow-x-auto pb-0.5">
                         <button onclick="setFilter('ALL')" id="filterBtn_ALL" class="px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">전체</button>
                         <button onclick="setFilter('US')" id="filterBtn_US" class="px-2 py-1 rounded-md font-bold bg-gray-700/50 text-gray-400 hover:text-gray-200">🇺🇸 미국</button>
                         <button onclick="setFilter('KR')" id="filterBtn_KR" class="px-2 py-1 rounded-md font-bold bg-gray-700/50 text-gray-400 hover:text-gray-200">🇰🇷 한국</button>
                         <button onclick="setFilter('MONTHLY')" id="filterBtn_MONTHLY" class="px-2 py-1 rounded-md font-bold bg-gray-700/50 text-gray-400 hover:text-gray-200">🗓️ 월배당</button>
                     </div>
-                    <!-- 정렬 옵션 셀렉트 -->
                     <select id="sortSelect" onchange="setSort(this.value)" class="bg-gray-900 border border-gray-700 text-gray-300 rounded-md px-2 py-1 focus:outline-none focus:border-emerald-500 font-semibold text-[11px]">
                         <option value="VALUE_DESC">평가금액 높은순</option>
                         <option value="VALUE_ASC">평가금액 낮은순</option>
                         <option value="PROFIT_DESC">평가손익 높은순</option>
                         <option value="RATE_DESC">수익률 높은순</option>
-                        <option value="YIELD_DESC">배당률 높은순</option>
+                        <option value="YIELD_DESC">시가배당률순</option>
+                        <option value="YOC_DESC">투자배당률(YoC)순</option>
                         <option value="INVEST_DESC">매수금액 높은순</option>
                         <option value="NAME_ASC">종목명 가나다순</option>
                     </select>
@@ -201,7 +253,82 @@
         </section>
     </main>
 
-    <!-- [신규 기능 2] 월별 배당 상세 내역 모달 -->
+    <!-- [신규 모달: FIRE 은퇴 시뮬레이터] -->
+    <div id="fireModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-fire-flame-curved text-orange-400"></i> 은퇴 파이어(FIRE) 시뮬레이터
+                </h3>
+                <button onclick="closeFireModal()" class="text-gray-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1">목표 월 생활비 (원)</label>
+                    <input type="number" id="inputTargetExpense" oninput="updateFireCalculations()" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white font-bold text-sm focus:outline-none focus:border-orange-500">
+                    <p class="text-[10px] text-gray-500 mt-1">💡 은퇴 후 매월 배당으로 해결하고 싶은 목표 생활비를 입력하세요.</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-gray-900 to-gray-850 p-4 rounded-xl border border-orange-500/30 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">현재 월 세후 배당 소득</span>
+                        <span class="font-bold text-emerald-400 text-sm" id="fireModalCurrentNet">0원</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">목표 생활비 충당률</span>
+                        <span class="font-black text-orange-400 text-base" id="fireModalRate">0.0%</span>
+                    </div>
+                    <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-700">
+                        <div id="fireModalProgressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="pt-2 border-t border-gray-800 flex justify-between items-center text-[11px]">
+                        <span class="text-gray-400">완전한 경제적 자유까지</span>
+                        <span class="font-bold text-gray-200" id="fireModalGapText">월 0원 부족</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/60 p-3 rounded-xl border border-gray-700/50 space-y-1 text-[11px] text-gray-300">
+                    <p class="font-bold text-orange-300 flex items-center gap-1">
+                        <i class="fa-solid fa-lightbulb"></i> 배당 파이어 전략 팁
+                    </p>
+                    <p class="leading-relaxed opacity-90" id="fireAdviceText">배당금을 재투자(DRIP)하여 복리 효과를 극대화하면 달성 시기를 앞당길 수 있습니다.</p>
+                </div>
+
+                <button type="button" onclick="closeFireModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2.5 rounded-lg font-bold">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [신규 모달: 스냅샷 롤백 히스토리 모달] -->
+    <div id="snapshotModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-blue-400"></i> 스냅샷 롤백 (로컬 히스토리)
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">최근 5개 시점의 데이터로 즉시 되돌릴 수 있습니다.</p>
+                </div>
+                <button onclick="closeSnapshotModal()" class="text-gray-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 스냅샷 리스트 -->
+            <div id="snapshotListContainer" class="space-y-2.5 text-xs"></div>
+
+            <button type="button" onclick="closeSnapshotModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2.5 rounded-lg font-bold">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- [모달: 월별 배당 상세 내역] -->
     <div id="monthDetailModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -216,7 +343,6 @@
                 </button>
             </div>
 
-            <!-- 배당 종목 리스트 렌더링 -->
             <div id="monthDetailList" class="space-y-2.5 text-xs"></div>
 
             <button type="button" onclick="closeMonthDetailModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2.5 rounded-lg font-bold">
@@ -326,7 +452,7 @@
                     <p class="text-[10px] text-gray-400 mt-1">💡 'SCHD', '리얼티인컴', '애플', '삼성전자', '005930' 등 입력 후 조회</p>
                 </div>
 
-                <!-- 종목명 & [신규 기능 4] 섹터 분류 -->
+                <!-- 종목명 & 섹터 분류 -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-gray-400 font-semibold mb-1">종목명</label>
@@ -367,6 +493,12 @@
                         <label class="block text-gray-400 font-semibold mb-1" id="dpsLabel">주당 연간 배당금 (DPS)</label>
                         <input type="number" step="any" id="inputDPS" required placeholder="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                     </div>
+                </div>
+
+                <!-- [신규 기능: 종목별 투자 메모장 필드] -->
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1">투자 메모 & 목표 (선택)</label>
+                    <input type="text" id="inputMemo" placeholder="예: 목표 100주 달성, 배당락일 3월/9월, 매달 2주씩 추가 매수" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <!-- 배당 주기 -->
@@ -513,16 +645,48 @@
         let cloudSyncKey = '';
         let currentFilter = 'ALL';
         let currentSort = 'VALUE_DESC';
+        let displayCurrency = 'KRW'; // 'KRW' 또는 'USD'
+        let targetMonthlyExpense = 3000000; // FIRE 목표 월 생활비 (기본 300만원)
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
         // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', async () => {
+            initDisplayCurrency();
+            initFireSettings();
             initCloudSyncStatus();
             await loadPortfolioData();
             await fetchExchangeRate();
             renderAll();
         });
+
+        // 0. 통화 전환 토글 엔진 (KRW ⇄ USD)
+        function initDisplayCurrency() {
+            displayCurrency = localStorage.getItem('my_display_currency') || 'KRW';
+            updateCurrencyButton();
+        }
+
+        function toggleCurrency() {
+            displayCurrency = displayCurrency === 'KRW' ? 'USD' : 'KRW';
+            localStorage.setItem('my_display_currency', displayCurrency);
+            updateCurrencyButton();
+            renderAll();
+        }
+
+        function updateCurrencyButton() {
+            const btnText = document.getElementById('currencyToggleText');
+            btnText.innerText = displayCurrency;
+        }
+
+        // 금액 포맷터 헬퍼 (통화 토글 상태에 맞춰 변환 출력)
+        function formatMoney(amountKRW) {
+            if (displayCurrency === 'USD') {
+                const valUSD = amountKRW / usdKrwRate;
+                return `$${valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            } else {
+                return `${Math.round(amountKRW).toLocaleString()}원`;
+            }
+        }
 
         // 1. 공용 고속 REST API 클라우드 동기화 엔진
         function initCloudSyncStatus() {
@@ -655,6 +819,7 @@
                 if (res.ok) {
                     const result = await res.json();
                     if (result && result.data && Array.isArray(result.data.portfolio)) {
+                        createSnapshot('클라우드 복원 전 자동 백업');
                         portfolio = result.data.portfolio;
                         cloudSyncKey = key;
                         localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
@@ -698,7 +863,85 @@
             }
         }
 
-        // 2. 클립보드 텍스트 백업/복원
+        // 2. 스냅샷 자동 생성 및 롤백 엔진 (최근 5회 보관)
+        function createSnapshot(reason = '변경 전 백업') {
+            if (!portfolio || portfolio.length === 0) return;
+            try {
+                let snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
+                const newSnap = {
+                    id: Date.now(),
+                    dateStr: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    reason: reason,
+                    stockCount: portfolio.length,
+                    data: JSON.parse(JSON.stringify(portfolio))
+                };
+                snapshots.unshift(newSnap);
+                if (snapshots.length > 5) snapshots = snapshots.slice(0, 5);
+                localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(snapshots));
+            } catch (e) {
+                console.warn('스냅샷 생성 실패:', e);
+            }
+        }
+
+        function openSnapshotModal() {
+            const listContainer = document.getElementById('snapshotListContainer');
+            listContainer.innerHTML = '';
+
+            let snapshots = [];
+            try {
+                snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
+            } catch (e) { snapshots = []; }
+
+            if (snapshots.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 bg-gray-900/50 rounded-xl border border-gray-700">
+                        <i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i>
+                        <p>저장된 이전 스냅샷이 없습니다.<br>종목을 수정하거나 추가하면 자동 기록됩니다.</p>
+                    </div>
+                `;
+            } else {
+                snapshots.forEach((snap, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 flex justify-between items-center';
+                    item.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">#${idx + 1}</span>
+                                <span class="font-bold text-gray-200 text-xs">${snap.dateStr}</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-1">${snap.reason} (종목수: <b>${snap.stockCount}개</b>)</p>
+                        </div>
+                        <button onclick="rollbackToSnapshot(${snap.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">
+                            복원
+                        </button>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            document.getElementById('snapshotModal').classList.remove('hidden');
+        }
+
+        function closeSnapshotModal() {
+            document.getElementById('snapshotModal').classList.add('hidden');
+        }
+
+        function rollbackToSnapshot(snapId) {
+            let snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
+            const target = snapshots.find(s => s.id === snapId);
+            if (target && Array.isArray(target.data)) {
+                if (confirm(`${target.dateStr} 시점의 데이터로 복원하시겠습니까?`)) {
+                    createSnapshot('롤백 실행 직전 현재 상태 백업');
+                    portfolio = JSON.parse(JSON.stringify(target.data));
+                    saveToStorage(false); // 스냅샷 중복 기록 방지
+                    renderAll();
+                    alert('선택한 시점의 포트폴리오로 성공적으로 롤백되었습니다!');
+                    closeSnapshotModal();
+                }
+            }
+        }
+
+        // 3. 클립보드 텍스트 백업/복원
         function copyPortfolioToClipboard() {
             if (portfolio.length === 0) {
                 alert('복사할 종목 데이터가 없습니다.');
@@ -729,6 +972,7 @@
             try {
                 const parsed = JSON.parse(text.trim());
                 if (Array.isArray(parsed) && parsed.length > 0) {
+                    createSnapshot('클립보드 붙여넣기 전 백업');
                     portfolio = parsed;
                     saveToStorage();
                     renderAll();
@@ -742,7 +986,64 @@
             }
         }
 
-        // 3. 통합 데이터 로드
+        // 4. 은퇴 파이어(FIRE) 시뮬레이터 로직
+        function initFireSettings() {
+            targetMonthlyExpense = parseFloat(localStorage.getItem('my_fire_target_expense')) || 3000000;
+            document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
+        }
+
+        function openFireModal() {
+            document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
+            updateFireCalculations();
+            document.getElementById('fireModal').classList.remove('hidden');
+        }
+
+        function closeFireModal() {
+            document.getElementById('fireModal').classList.add('hidden');
+        }
+
+        function updateFireCalculations() {
+            const inputVal = parseFloat(document.getElementById('inputTargetExpense').value) || 0;
+            targetMonthlyExpense = inputVal;
+            localStorage.setItem('my_fire_target_expense', targetMonthlyExpense);
+
+            // 전체 세후 월배당금 계산
+            let totalAnnualNetKRW = 0;
+            portfolio.forEach(stock => {
+                const isUS = stock.market === 'US';
+                const rate = isUS ? usdKrwRate : 1;
+                const annualDivLocal = stock.quantity * stock.dps;
+                const taxRate = isUS ? 0.15 : 0.154;
+                totalAnnualNetKRW += annualDivLocal * (1 - taxRate) * rate;
+            });
+
+            const netMonthlyKRW = totalAnnualNetKRW / 12;
+            const fireRate = targetMonthlyExpense > 0 ? (netMonthlyKRW / targetMonthlyExpense) * 100 : 0;
+            const gapKRW = Math.max(0, targetMonthlyExpense - netMonthlyKRW);
+
+            // 위젯 및 모달 UI 동시 갱신
+            const clampedWidth = Math.min(100, Math.max(0, fireRate));
+            document.getElementById('fireWidgetRate').innerText = `${fireRate.toFixed(1)}%`;
+            document.getElementById('fireWidgetProgressBar').style.width = `${clampedWidth}%`;
+            document.getElementById('fireWidgetNetMonthly').innerText = formatMoney(netMonthlyKRW);
+            document.getElementById('fireWidgetTargetExp').innerText = formatMoney(targetMonthlyExpense);
+
+            document.getElementById('fireModalCurrentNet').innerText = formatMoney(netMonthlyKRW);
+            document.getElementById('fireModalRate').innerText = `${fireRate.toFixed(1)}%`;
+            document.getElementById('fireModalProgressBar').style.width = `${clampedWidth}%`;
+            document.getElementById('fireModalGapText').innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : `월 ${formatMoney(gapKRW)} 부족`;
+
+            const adviceEl = document.getElementById('fireAdviceText');
+            if (fireRate >= 100) {
+                adviceEl.innerText = "축하합니다! 현재 세후 배당금만으로 설정하신 목표 생활비를 100% 충당하고 있어 완전한 경제적 자유(FIRE)를 달성하셨습니다.";
+            } else if (fireRate >= 50) {
+                adviceEl.innerText = "목표 생활비의 절반 이상을 배당으로 해결하고 계십니다! 배당성장주 지속 매수와 배당 재투자(DRIP)로 속도를 높여보세요.";
+            } else {
+                adviceEl.innerText = "기초 파이어 자산이 축적되는 단계입니다. 절약과 시드 추가 투입을 병행하여 1차 목표(충당률 30%)를 달성해 보세요.";
+            }
+        }
+
+        // 5. 통합 데이터 로드
         async function loadPortfolioData() {
             const saved = localStorage.getItem('my_dividend_portfolio_v9');
             if (saved) {
@@ -769,18 +1070,21 @@
             }
 
             portfolio = [
-                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '005930', name: '삼성전자', sector: '배당성장', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
+                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', memo: '핵심 배당성장 ETF (100주 달성)', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
+                { market: 'KR', ticker: '005930', name: '삼성전자', sector: '배당성장', memo: '국내 대표 분기 배당주', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
             ];
-            saveToStorage();
+            saveToStorage(false);
         }
 
-        function saveToStorage() {
+        function saveToStorage(recordSnapshot = true) {
+            if (recordSnapshot) {
+                createSnapshot('데이터 변경');
+            }
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             pushToCloudQuietly();
         }
 
-        // 4. 환율 조회
+        // 6. 실시간 환율 조회
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -935,7 +1239,7 @@
             alert(`${updatedCount}개 종목의 시세가 최신 기준으로 갱신되었습니다.`);
         }
 
-        // [신규 기능 3] 필터 및 정렬 핸들러
+        // 7. 필터 및 정렬 핸들러
         function setFilter(filterType) {
             currentFilter = filterType;
             ['ALL', 'US', 'KR', 'MONTHLY'].forEach(type => {
@@ -956,15 +1260,18 @@
             renderSummaryAndList();
         }
 
-        // 5. 화면 렌더링 총괄
+        // 8. 화면 렌더링 총괄
         function renderAll() {
             renderSummaryAndList();
+            updateFireCalculations();
             if (activeChartTab === 'monthly') {
                 renderMonthlyDividendChart();
             } else if (activeChartTab === 'pie') {
                 renderAssetPieChart();
-            } else {
+            } else if (activeChartTab === 'sector') {
                 renderSectorPieChart();
+            } else {
+                renderTimelineGrid();
             }
         }
 
@@ -973,14 +1280,16 @@
             const mBtn = document.getElementById('tabMonthlyBtn');
             const pBtn = document.getElementById('tabPieBtn');
             const sBtn = document.getElementById('tabSectorBtn');
+            const tBtn = document.getElementById('tabTimelineBtn');
+
             const mWrap = document.getElementById('monthlyChartWrapper');
             const pWrap = document.getElementById('pieChartWrapper');
             const sWrap = document.getElementById('sectorChartWrapper');
+            const tWrap = document.getElementById('timelineWrapper');
             const tip = document.getElementById('monthlyChartTip');
 
-            // 탭 스타일 초기화
-            [mBtn, pBtn, sBtn].forEach(b => b.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200");
-            [mWrap, pWrap, sWrap].forEach(w => w.classList.add('hidden'));
+            [mBtn, pBtn, sBtn, tBtn].forEach(b => b.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200");
+            [mWrap, pWrap, sWrap, tWrap].forEach(w => w.classList.add('hidden'));
 
             if (tab === 'monthly') {
                 mBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
@@ -992,11 +1301,16 @@
                 pWrap.classList.remove('hidden');
                 tip.classList.add('hidden');
                 renderAssetPieChart();
-            } else {
+            } else if (tab === 'sector') {
                 sBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
                 sWrap.classList.remove('hidden');
                 tip.classList.add('hidden');
                 renderSectorPieChart();
+            } else {
+                tBtn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                tWrap.classList.remove('hidden');
+                tip.classList.remove('hidden');
+                renderTimelineGrid();
             }
         }
 
@@ -1012,7 +1326,7 @@
             container.innerHTML = '';
             document.getElementById('stockCount').innerText = portfolio.length;
 
-            // 1) 전체 자산 통계 계산 (국가별 원천징수 분리 적용: 미국 15%, 한국 15.4%)
+            // 전체 자산 통계 계산 (미국 15%, 한국 15.4% 분리 원천징수)
             portfolio.forEach(stock => {
                 const isUS = stock.market === 'US';
                 const rate = isUS ? usdKrwRate : 1;
@@ -1022,11 +1336,9 @@
 
                 if (isUS) {
                     totalUsdAssetUSD += currentValLocal;
-                    // 미국 주식: 15% 원천징수
                     totalAnnualNetKRW += (annualDivLocal * (1 - 0.15)) * rate;
                 } else {
                     totalKrwAssetKRW += currentValLocal;
-                    // 한국 주식: 15.4% 원천징수
                     totalAnnualNetKRW += annualDivLocal * (1 - 0.154);
                 }
 
@@ -1035,7 +1347,7 @@
                 totalAnnualGrossKRW += annualDivLocal * rate;
             });
 
-            // [신규 기능 1] 금융소득종합과세 알림 배너 렌더링
+            // 금융소득종합과세 경고 배너 렌더링
             const taxBanner = document.getElementById('taxWarningBanner');
             const taxIcon = document.getElementById('taxWarningIcon');
             const taxTitle = document.getElementById('taxWarningTitle');
@@ -1045,19 +1357,19 @@
                 taxBanner.className = "p-3 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between shadow-md";
                 taxIcon.innerText = "🚨";
                 taxTitle.innerText = "금융소득종합과세 대상 (연 2,000만 원 초과)";
-                taxDesc.innerText = `현재 연 세전 배당금: ${Math.round(totalAnnualGrossKRW).toLocaleString()}원 (초과액: ${Math.round(totalAnnualGrossKRW - 20000000).toLocaleString()}원)`;
+                taxDesc.innerText = `현재 연 세전 배당금: ${formatMoney(totalAnnualGrossKRW)} (초과액: ${formatMoney(totalAnnualGrossKRW - 20000000)})`;
                 taxBanner.classList.remove('hidden');
             } else if (totalAnnualGrossKRW >= 18000000) {
                 taxBanner.className = "p-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between shadow-md";
                 taxIcon.innerText = "⚠️";
                 taxTitle.innerText = "금융소득종합과세 주의 (연 2,000만 원 한도 근접)";
-                taxDesc.innerText = `한도까지 약 ${Math.round(20000000 - totalAnnualGrossKRW).toLocaleString()}원 남았습니다. (현재: ${Math.round(totalAnnualGrossKRW).toLocaleString()}원)`;
+                taxDesc.innerText = `한도까지 약 ${formatMoney(20000000 - totalAnnualGrossKRW)} 남았습니다.`;
                 taxBanner.classList.remove('hidden');
             } else {
                 taxBanner.classList.add('hidden');
             }
 
-            // 2) 필터링 적용
+            // 필터링 적용
             let displayList = portfolio.map((stock, originalIndex) => ({ ...stock, originalIndex }));
 
             if (currentFilter === 'US') {
@@ -1068,7 +1380,7 @@
                 displayList = displayList.filter(s => s.divCycle === 'monthly' || (s.payoutMonths && s.payoutMonths.length === 12));
             }
 
-            // 3) 정렬 적용
+            // 정렬 적용
             displayList.sort((a, b) => {
                 const aRate = a.market === 'US' ? usdKrwRate : 1;
                 const bRate = b.market === 'US' ? usdKrwRate : 1;
@@ -1082,6 +1394,8 @@
                 const bProfitRate = bInvest > 0 ? (bProfit / bInvest) : 0;
                 const aYield = a.currentPrice > 0 ? (a.dps / a.currentPrice) : 0;
                 const bYield = b.currentPrice > 0 ? (b.dps / b.currentPrice) : 0;
+                const aYoC = a.buyPrice > 0 ? (a.dps / a.buyPrice) : 0;
+                const bYoC = b.buyPrice > 0 ? (b.dps / b.buyPrice) : 0;
 
                 switch (currentSort) {
                     case 'VALUE_DESC': return bVal - aVal;
@@ -1089,6 +1403,7 @@
                     case 'PROFIT_DESC': return bProfit - aProfit;
                     case 'RATE_DESC': return bProfitRate - aProfitRate;
                     case 'YIELD_DESC': return bYield - aYield;
+                    case 'YOC_DESC': return bYoC - aYoC;
                     case 'INVEST_DESC': return bInvest - aInvest;
                     case 'NAME_ASC': return a.name.localeCompare(b.name, 'ko');
                     default: return 0;
@@ -1104,11 +1419,12 @@
                 `;
             }
 
-            // 4) 종목 리스트 카드 렌더링
+            // 개별 종목 카드 렌더링 (메모장 및 YoC 포함)
             displayList.forEach(stock => {
-                const rate = stock.market === 'US' ? usdKrwRate : 1;
-                const currSymbol = stock.market === 'US' ? '$' : '원';
-                const taxRate = stock.market === 'US' ? 0.15 : 0.154;
+                const isUS = stock.market === 'US';
+                const rate = isUS ? usdKrwRate : 1;
+                const currSymbol = isUS ? '$' : '원';
+                const taxRate = isUS ? 0.15 : 0.154;
 
                 const investedLocal = stock.quantity * stock.buyPrice;
                 const currentValLocal = stock.quantity * stock.currentPrice;
@@ -1116,19 +1432,27 @@
                 const profitRate = investedLocal > 0 ? (profitLossLocal / investedLocal) * 100 : 0;
                 const annualDivLocal = stock.quantity * stock.dps;
                 const yieldRate = stock.currentPrice > 0 ? (stock.dps / stock.currentPrice) * 100 : 0;
-                const yocRate = stock.buyPrice > 0 ? (stock.dps / stock.buyPrice) * 100 : 0; // YoC (매수가 대비 배당률)
+                const yocRate = stock.buyPrice > 0 ? (stock.dps / stock.buyPrice) * 100 : 0;
 
                 const profitColor = profitLossLocal >= 0 ? 'text-rose-400' : 'text-blue-400';
                 const profitBadge = profitLossLocal >= 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400';
 
+                // 메모 영역 템플릿
+                const memoHtml = stock.memo ? `
+                    <div class="bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-300">
+                        <i class="fa-regular fa-note-sticky text-amber-400 text-[10px]"></i>
+                        <span class="truncate">${stock.memo}</span>
+                    </div>
+                ` : '';
+
                 const card = document.createElement('div');
-                card.className = 'bg-gray-800/90 border border-gray-700/70 p-4 rounded-xl shadow-md space-y-3';
+                card.className = 'bg-gray-800/90 border border-gray-700/70 p-4 rounded-xl shadow-md space-y-2.5';
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${stock.market === 'US' ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
-                                    ${stock.market === 'US' ? '미국' : '한국'}
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
+                                    ${isUS ? '미국' : '한국'}
                                 </span>
                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">
                                     ${stock.sector || '기타'}
@@ -1148,11 +1472,13 @@
                         </div>
                     </div>
 
+                    ${memoHtml}
+
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-700/50 text-xs">
                         <div>
                             <span class="text-gray-400">현재가 / 평가액</span>
                             <p class="font-bold text-gray-200">${stock.currentPrice.toLocaleString()}${currSymbol}</p>
-                            <p class="text-[11px] text-gray-400">총 ${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${Math.round(currentValLocal * rate).toLocaleString()}원)</p>
+                            <p class="text-[11px] text-gray-400">${Math.round(currentValLocal).toLocaleString()}${currSymbol} (${formatMoney(currentValLocal * rate)})</p>
                         </div>
                         <div class="text-right">
                             <span class="text-gray-400">평가 손익</span>
@@ -1168,7 +1494,7 @@
                             </span>
                             <p class="font-bold text-gray-200 mt-0.5">
                                 ${annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2})}${currSymbol}
-                                <span class="text-gray-400 font-normal text-[11px]">(${Math.round(annualDivLocal * (1 - taxRate) * rate).toLocaleString()}원)</span>
+                                <span class="text-gray-400 font-normal text-[11px]">(${formatMoney(annualDivLocal * (1 - taxRate) * rate)})</span>
                             </p>
                         </div>
                         <div class="text-right">
@@ -1181,32 +1507,34 @@
                 container.appendChild(card);
             });
 
-            // 5) 대시보드 요약 통계 반영
-            const totalUsdAssetKRW = totalUsdAssetUSD * usdKrwRate;
+            // 대시보드 통계 반영 (통화 토글 완벽 적용)
             const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = totalAnnualNetKRW / 12;
 
-            document.getElementById('totalAssetValue').innerText = `${Math.round(totalCurrentKRW).toLocaleString()}원`;
-            document.getElementById('totalUsdAssetValue').innerText = `$${totalUsdAssetUSD.toLocaleString('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('totalUsdAssetKrwValue').innerText = `(${Math.round(totalUsdAssetKRW).toLocaleString()}원)`;
-            document.getElementById('totalKrwAssetValue').innerText = `${Math.round(totalKrwAssetKRW).toLocaleString()}원`;
+            document.getElementById('totalAssetTitle').innerText = `총 평가 자산 (${displayCurrency === 'USD' ? 'USD 환산' : 'KRW 통합'})`;
+            document.getElementById('totalAssetValue').innerText = formatMoney(totalCurrentKRW);
 
-            document.getElementById('totalInvested').innerText = `${Math.round(totalInvestedKRW).toLocaleString()}원`;
+            document.getElementById('totalUsdAssetValue').innerText = `$${totalUsdAssetUSD.toLocaleString('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('totalUsdAssetSubValue').innerText = `(${formatMoney(totalUsdAssetUSD * usdKrwRate)})`;
+            document.getElementById('totalKrwAssetValue').innerText = `${Math.round(totalKrwAssetKRW).toLocaleString()}원`;
+            document.getElementById('totalKrwAssetSubValue').innerText = displayCurrency === 'USD' ? `($${(totalKrwAssetKRW / usdKrwRate).toFixed(2)})` : '국내 주식 총액';
+
+            document.getElementById('totalInvested').innerText = formatMoney(totalInvestedKRW);
 
             const profitEl = document.getElementById('totalProfitLoss');
-            profitEl.innerText = `${totalProfitKRW >= 0 ? '+' : ''}${Math.round(totalProfitKRW).toLocaleString()}원`;
+            profitEl.innerText = `${totalProfitKRW >= 0 ? '+' : ''}${formatMoney(totalProfitKRW)}`;
             profitEl.className = `font-bold mt-0.5 ${totalProfitKRW >= 0 ? 'text-rose-400' : 'text-blue-400'}`;
 
             const badgeEl = document.getElementById('totalProfitBadge');
             badgeEl.innerText = `${totalProfitRate >= 0 ? '+' : ''}${totalProfitRate.toFixed(2)}%`;
             badgeEl.className = `text-xs px-2 py-0.5 rounded-full font-bold ${totalProfitRate >= 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'}`;
 
-            document.getElementById('totalAnnualDividend').innerText = `${Math.round(totalAnnualGrossKRW).toLocaleString()}원`;
-            document.getElementById('monthlyNetDividend').innerText = `${Math.round(monthlyNetKRW).toLocaleString()}원`;
+            document.getElementById('totalAnnualDividend').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('monthlyNetDividend').innerText = formatMoney(monthlyNetKRW);
         }
 
-        // 6. 월별 배당 막대 차트 (클릭 인터랙션 포함)
+        // 9. 월별 배당 막대 차트
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -1224,12 +1552,15 @@
             const ctx = document.getElementById('monthlyDividendChart').getContext('2d');
             if (monthlyChart) monthlyChart.destroy();
 
+            // 표시 통화에 맞춰 차트 데이터 변환
+            const chartData = monthlySums.map(v => displayCurrency === 'USD' ? +(v / usdKrwRate).toFixed(2) : Math.round(v));
+
             monthlyChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
                     datasets: [{
-                        data: monthlySums.map(v => Math.round(v)),
+                        data: chartData,
                         backgroundColor: 'rgba(16, 185, 129, 0.7)',
                         hoverBackgroundColor: 'rgba(52, 211, 153, 0.9)',
                         borderColor: 'rgba(16, 185, 129, 1)',
@@ -1242,7 +1573,7 @@
                     maintainAspectRatio: false,
                     onClick: (evt, elements) => {
                         if (elements && elements.length > 0) {
-                            const monthIdx = elements[0].index; // 0 ~ 11
+                            const monthIdx = elements[0].index;
                             openMonthDetailModal(monthIdx + 1);
                         }
                     },
@@ -1250,7 +1581,7 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: ctx => `${ctx.parsed.y.toLocaleString()}원 (터치하여 상세 보기)`
+                                label: ctx => `${displayCurrency === 'USD' ? '$' : ''}${ctx.parsed.y.toLocaleString()}${displayCurrency === 'KRW' ? '원' : ''} (터치하여 상세 보기)`
                             }
                         }
                     },
@@ -1261,7 +1592,10 @@
                             ticks: {
                                 color: '#9CA3AF',
                                 font: { size: 9 },
-                                callback: val => val >= 10000 ? `${(val/10000).toFixed(0)}만` : val
+                                callback: val => {
+                                    if (displayCurrency === 'USD') return `$${val}`;
+                                    return val >= 10000 ? `${(val/10000).toFixed(0)}만` : val;
+                                }
                             }
                         }
                     }
@@ -1269,7 +1603,43 @@
             });
         }
 
-        // [신규 기능 2] 특정 월 배당 상세 내역 모달 열기
+        // [신규 기능: 1년 배당 타임라인 캘린더 그리드 렌더링]
+        function renderTimelineGrid() {
+            const container = document.getElementById('timelineGridContainer');
+            container.innerHTML = '';
+
+            for (let m = 1; m <= 12; m++) {
+                let monthGrossKRW = 0;
+                const stocksInMonth = [];
+
+                portfolio.forEach(stock => {
+                    const months = stock.payoutMonths || [];
+                    if (months.includes(m)) {
+                        const rate = stock.market === 'US' ? usdKrwRate : 1;
+                        const payoutKRW = ((stock.quantity * stock.dps) / months.length) * rate;
+                        monthGrossKRW += payoutKRW;
+                        stocksInMonth.push(stock.ticker);
+                    }
+                });
+
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-xl border cursor-pointer transition ${monthGrossKRW > 0 ? 'bg-gray-900/80 border-emerald-500/40 hover:border-emerald-400' : 'bg-gray-900/40 border-gray-800 opacity-60'}`;
+                card.onclick = () => openMonthDetailModal(m);
+                card.innerHTML = `
+                    <div class="flex justify-between items-center text-[11px] mb-1">
+                        <span class="font-bold text-gray-200">${m}월</span>
+                        <span class="text-[10px] text-emerald-400 font-bold">${stocksInMonth.length}개</span>
+                    </div>
+                    <p class="font-black text-xs text-white truncate">${formatMoney(monthGrossKRW)}</p>
+                    <div class="flex gap-1 flex-wrap mt-1.5 overflow-hidden max-h-8">
+                        ${stocksInMonth.map(t => `<span class="text-[9px] px-1 rounded bg-gray-800 text-gray-400">${t}</span>`).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // 특정 월 배당 상세 내역 모달
         function openMonthDetailModal(month) {
             const modal = document.getElementById('monthDetailModal');
             const title = document.getElementById('monthModalTitle');
@@ -1292,7 +1662,6 @@
                     const currSymbol = isUS ? '$' : '원';
                     const taxRate = isUS ? 0.15 : 0.154;
 
-                    // 해당 월 1회 지급액 계산
                     const payoutGrossLocal = (stock.quantity * stock.dps) / months.length;
                     const payoutGrossKRW = payoutGrossLocal * rate;
                     const payoutNetKRW = payoutGrossKRW * (1 - taxRate);
@@ -1311,11 +1680,11 @@
                                 <span class="font-bold text-gray-200 text-xs">${stock.name}</span>
                                 <span class="text-[10px] text-gray-400 font-mono">(${stock.ticker})</span>
                             </div>
-                            <p class="text-[11px] text-gray-400 mt-1">보유: ${stock.quantity}주 · 주당 배당금: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
+                            <p class="text-[11px] text-gray-400 mt-1">보유: ${stock.quantity}주 · 주당: ${(stock.dps/months.length).toFixed(2)}${currSymbol}</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-emerald-400 font-bold text-xs">${Math.round(payoutNetKRW).toLocaleString()}원</span>
-                            <p class="text-[10px] text-gray-400">세전: ${Math.round(payoutGrossKRW).toLocaleString()}원</p>
+                            <span class="text-emerald-400 font-bold text-xs">${formatMoney(payoutNetKRW)}</span>
+                            <p class="text-[10px] text-gray-400">세전: ${formatMoney(payoutGrossKRW)}</p>
                         </div>
                     `;
                     list.appendChild(item);
@@ -1330,7 +1699,7 @@
                 `;
             }
 
-            summary.innerText = `총 예상 세전: ${Math.round(totalMonthGrossKRW).toLocaleString()}원 / 세후: ${Math.round(totalMonthNetKRW).toLocaleString()}원`;
+            summary.innerText = `총 예상 세전: ${formatMoney(totalMonthGrossKRW)} / 세후: ${formatMoney(totalMonthNetKRW)}`;
             modal.classList.remove('hidden');
         }
 
@@ -1338,14 +1707,11 @@
             document.getElementById('monthDetailModal').classList.add('hidden');
         }
 
-        // 7. 종목별 자산 비중 도넛 차트
+        // 10. 종목별 자산 비중 도넛 차트
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
-            const bgColors = [
-                '#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', 
-                '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#84CC16'
-            ];
+            const bgColors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#84CC16'];
 
             portfolio.forEach(stock => {
                 const rate = stock.market === 'US' ? usdKrwRate : 1;
@@ -1371,13 +1737,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 }
-                        },
+                        legend: { position: 'right', labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
-                                label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()}원`
+                                label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
                             }
                         }
                     }
@@ -1385,7 +1748,7 @@
             });
         }
 
-        // [신규 기능 4] 섹터/자산군별 비중 도넛 차트
+        // 11. 섹터별 비중 도넛 차트
         function renderSectorPieChart() {
             const sectorMap = {};
             const bgColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6'];
@@ -1418,13 +1781,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 }
-                        },
+                        legend: { position: 'right', labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 10 } },
                         tooltip: {
                             callbacks: {
-                                label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()}원`
+                                label: ctx => ` ${ctx.label}: ${formatMoney(ctx.parsed)}`
                             }
                         }
                     }
@@ -1432,7 +1792,7 @@
             });
         }
 
-        // 8. DRIP(배당 재투자) 복리 시뮬레이터
+        // 12. DRIP 시뮬레이터
         function openDripModal() {
             document.getElementById('dripModal').classList.remove('hidden');
             runDripSimulation();
@@ -1480,8 +1840,8 @@
 
             const finalMonthlyNet = (dripAsset * currentDivRate * (1 - 0.154)) / 12;
 
-            document.getElementById('dripFinalAsset').innerText = `${Math.round(dripAsset).toLocaleString()}원`;
-            document.getElementById('dripFinalMonthlyDiv').innerText = `${Math.round(finalMonthlyNet).toLocaleString()}원 / 월`;
+            document.getElementById('dripFinalAsset').innerText = formatMoney(dripAsset);
+            document.getElementById('dripFinalMonthlyDiv').innerText = `${formatMoney(finalMonthlyNet)} / 월`;
 
             const ctx = document.getElementById('dripChart').getContext('2d');
             if (dripChartInstance) dripChartInstance.destroy();
@@ -1493,7 +1853,7 @@
                     datasets: [
                         {
                             label: '배당 재투자(DRIP)',
-                            data: dripData,
+                            data: dripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v),
                             borderColor: '#6366F1',
                             backgroundColor: 'rgba(99, 102, 241, 0.2)',
                             fill: true,
@@ -1501,7 +1861,7 @@
                         },
                         {
                             label: '단순 보유(재투자 X)',
-                            data: noDripData,
+                            data: noDripData.map(v => displayCurrency === 'USD' ? +(v/usdKrwRate).toFixed(2) : v),
                             borderColor: '#9CA3AF',
                             borderDash: [4, 4],
                             tension: 0.3
@@ -1511,9 +1871,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 12 } }
-                    },
+                    plugins: { legend: { labels: { color: '#D1D5DB', font: { size: 10 }, boxWidth: 12 } } },
                     scales: {
                         x: { grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 9 } } },
                         y: {
@@ -1521,7 +1879,7 @@
                             ticks: {
                                 color: '#9CA3AF',
                                 font: { size: 9 },
-                                callback: val => val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val)
+                                callback: val => displayCurrency === 'USD' ? `$${val}` : (val >= 100000000 ? `${(val/100000000).toFixed(1)}억` : (val >= 10000 ? `${(val/10000).toFixed(0)}만` : val))
                             }
                         }
                     }
@@ -1529,7 +1887,7 @@
             });
         }
 
-        // 9. 모달 팝업 및 입력 폼 제어
+        // 13. 모달 팝업 및 종목 폼 제어
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -1541,6 +1899,7 @@
                 document.getElementById('inputTicker').value = item.ticker;
                 document.getElementById('inputName').value = item.name;
                 document.getElementById('inputSector').value = item.sector || '배당성장';
+                document.getElementById('inputMemo').value = item.memo || '';
                 document.getElementById('inputQuantity').value = item.quantity;
                 document.getElementById('inputBuyPrice').value = item.buyPrice;
                 document.getElementById('inputCurrentPrice').value = item.currentPrice;
@@ -1594,6 +1953,7 @@
             const ticker = document.getElementById('inputTicker').value.trim();
             const name = document.getElementById('inputName').value.trim();
             const sector = document.getElementById('inputSector').value;
+            const memo = document.getElementById('inputMemo').value.trim();
             const quantity = parseFloat(document.getElementById('inputQuantity').value) || 0;
             const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
             const currentPrice = parseFloat(document.getElementById('inputCurrentPrice').value) || 0;
@@ -1605,7 +1965,7 @@
                 payoutMonths.push(parseInt(cb.value));
             });
 
-            const stockData = { market, ticker, name, sector, quantity, buyPrice, currentPrice, dps, divCycle, payoutMonths };
+            const stockData = { market, ticker, name, sector, memo, quantity, buyPrice, currentPrice, dps, divCycle, payoutMonths };
 
             if (editIdx >= 0) {
                 portfolio[editIdx] = stockData;
@@ -1626,7 +1986,42 @@
             }
         }
 
-        // 10. 수동 JSON 파일 백업 및 복원
+        // 14. 파일 내보내기 및 가져오기 (JSON 및 [신규] CSV)
+        function exportCSV() {
+            if (portfolio.length === 0) {
+                alert('내보낼 종목 데이터가 없습니다.');
+                return;
+            }
+
+            const headers = ['시장(Market)', '티커(Ticker)', '종목명(Name)', '섹터(Sector)', '투자메모(Memo)', '보유수량(Quantity)', '매수가(BuyPrice)', '현재가(CurrentPrice)', '주당배당금(DPS)', '배당주기(Cycle)', '배당지급월(Months)'];
+            const rows = portfolio.map(s => [
+                s.market,
+                s.ticker,
+                `"${(s.name || '').replace(/"/g, '""')}"`,
+                `"${(s.sector || '').replace(/"/g, '""')}"`,
+                `"${(s.memo || '').replace(/"/g, '""')}"`,
+                s.quantity,
+                s.buyPrice,
+                s.currentPrice,
+                s.dps,
+                s.divCycle,
+                `"${(s.payoutMonths || []).join(',')}"`
+            ]);
+
+            // UTF-8 BOM(\uFEFF) 추가로 엑셀 한글 깨짐 방지
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dividend_portfolio_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio, null, 2));
             const a = document.createElement('a');
@@ -1645,6 +2040,7 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported)) {
+                        createSnapshot('JSON 파일 복원 전 백업');
                         portfolio = imported;
                         saveToStorage();
                         renderAll();
