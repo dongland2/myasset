@@ -41,6 +41,8 @@
             opacity: 0.45;
         }
         .payout-month-chip.is-view-only { cursor: help !important; }
+        .health-dot { width: 8px; height: 8px; border-radius: 9999px; display: inline-block; flex: 0 0 auto; }
+        .debug-stock-panel { word-break: break-word; }
     </style>
 </head>
 <body id="appBody" class="bg-gray-900 text-gray-100 min-h-screen pb-24">
@@ -53,7 +55,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.11.7
+                    v1.12.0
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -116,6 +118,14 @@
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
+        <!-- HTML / Worker 버전 불일치 경고 -->
+        <div id="versionMismatchBanner" class="hidden p-3 rounded-xl border border-amber-500/60 bg-amber-500/15 text-amber-800 dark:text-amber-200 text-xs shadow-md">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-start gap-2"><i class="fa-solid fa-triangle-exclamation mt-0.5"></i><div><p class="font-black">앱/Worker 버전 확인 필요</p><p id="versionMismatchText" class="text-[10px] font-semibold mt-0.5 leading-relaxed"></p></div></div>
+                <button onclick="openDataDiagnosticModal()" class="shrink-0 px-2 py-1 rounded-lg bg-amber-500/25 border border-amber-500/40 font-bold text-[10px]">진단</button>
+            </div>
+        </div>
+
         <!-- 긴급 복구 배너 -->
         <div id="emergencyRecoverBanner" class="hidden p-3.5 rounded-xl border border-amber-500/60 bg-amber-500/15 text-amber-800 dark:text-amber-200 text-xs shadow-lg space-y-2">
             <div class="flex items-center justify-between">
@@ -140,7 +150,7 @@
             </div>
         </div>
 
-        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.11.7에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.12.0에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -285,6 +295,14 @@
                     <div class="text-center"><p id="dividendCalendarTitle" class="text-sm font-black"></p><p class="text-[9px] opacity-70">🟠 배당락일 · 🟢 실 수령 · 🟦 확인 지급 · 🟣 공시 지급 · 🔵 지급 예정</p></div>
                     <button onclick="changeDividendCalendarMonth(1)" class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 font-bold"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
+                <div class="flex gap-1 overflow-x-auto pb-0.5" id="dividendCalendarFilters">
+                    <button data-calendar-filter="ALL" onclick="setDividendCalendarFilter('ALL')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/30">전체</button>
+                    <button data-calendar-filter="receipt" onclick="setDividendCalendarFilter('receipt')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">실제수령</button>
+                    <button data-calendar-filter="official" onclick="setDividendCalendarFilter('official')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">공식지급</button>
+                    <button data-calendar-filter="observed" onclick="setDividendCalendarFilter('observed')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">확인지급</button>
+                    <button data-calendar-filter="ex" onclick="setDividendCalendarFilter('ex')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">배당락</button>
+                    <button data-calendar-filter="deadline" onclick="setDividendCalendarFilter('deadline')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">법정기한</button>
+                </div>
                 <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-gray-500"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
                 <div id="dividendCalendarGrid" class="grid grid-cols-7 gap-1"></div>
                 <div id="dividendCalendarUnscheduled" class="space-y-1"></div>
@@ -416,10 +434,11 @@
             <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
                 <div>
                     <h3 class="text-base font-bold flex items-center gap-1.5"><i class="fa-solid fa-clock-rotate-left text-blue-500 dark:text-blue-400"></i> 스냅샷 롤백 (로컬)</h3>
-                    <p class="text-xs font-semibold opacity-80 mt-0.5">최근 5개 시점으로 복원</p>
+                    <p class="text-xs font-semibold opacity-80 mt-0.5">최근 변경 + 일별 세대(오늘/어제/3일/1주)를 최대 20개 보존</p>
                 </div>
                 <button onclick="closeSnapshotModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            <div id="snapshotPreviewBox" class="hidden p-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-[10px] leading-relaxed"></div>
             <div id="snapshotListContainer" class="space-y-2.5 text-xs"></div>
             <button onclick="closeSnapshotModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
         </div>
@@ -575,9 +594,17 @@
     <div id="dataDiagnosticModal" class="fixed inset-0 z-[80] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-3 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                <div><h3 class="text-base font-bold"><i class="fa-solid fa-stethoscope text-cyan-500"></i> ETF · 데이터 진단</h3><p class="text-[10px] opacity-70 mt-0.5">시세·분배금·운용사·중복·이상값을 한 번에 검사합니다.</p></div>
+                <div><h3 class="text-base font-bold"><i class="fa-solid fa-stethoscope text-cyan-500"></i> 시스템 진단 센터</h3><p class="text-[10px] opacity-70 mt-0.5">Worker·시세·환율·한국/미국 배당·ETF·데이터 상태를 한 번에 확인합니다.</p></div>
                 <button onclick="closeDataDiagnosticModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            <div class="p-3 rounded-xl border border-cyan-500/25 bg-cyan-500/5 space-y-2">
+                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.12.0 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
+                <div id="systemHealthGrid" class="grid grid-cols-2 gap-1.5"></div>
+            </div>
+            <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-[10px] font-bold">
+                <span><i class="fa-solid fa-code text-indigo-500 mr-1"></i>개발자/진단 모드 <span class="font-normal opacity-65">(종목 카드에 원본 출처 표시)</span></span>
+                <input id="developerDiagnosticToggle" type="checkbox" onchange="setDeveloperDiagnosticMode(this.checked)" class="w-4 h-4 accent-indigo-500">
+            </label>
             <div id="diagnosticStats" class="grid grid-cols-4 gap-2 text-center"></div>
             <div id="diagnosticRefreshInfo" class="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 text-[10px] font-semibold leading-relaxed"></div>
             <div>
@@ -768,7 +795,7 @@
         // [1-1] 배당 지급일 일정
         // 월 정보만으로 임의의 '몇 일'을 만들어내지 않는다. 확인된 일정만 정확한 날짜로 표시한다.
         // =========================================================================
-        // v1.11.7: 종목별 지급일 하드코딩은 사용하지 않는다.
+        // v1.12.0: 종목별 지급일 하드코딩은 사용하지 않는다.
         // 한국은 /krdiv 또는 /etfdiv, 미국은 /usdiv 검색 결과만 사용한다.
         var PAYOUT_DATE_SCHEDULES = {};
 
@@ -1267,6 +1294,7 @@
         var cloudSyncKey = '';
         var currentFilter = 'ALL';
         var currentAccountFilter = 'ALL';
+        var APP_VERSION = '1.12.0';
         var currentSort = 'VALUE_DESC';
         var isMergedView = false;
         var displayCurrency = 'KRW';
@@ -1274,11 +1302,15 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.11.7';
+        var CLOUD_SYNC_VERSION = APP_VERSION;
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
         var marketProxyLastOk = false;
+        var dividendCalendarFilter = localStorage.getItem('my_dividend_calendar_filter_v1') || 'ALL';
+        var developerDiagnosticMode = localStorage.getItem('my_developer_diagnostic_mode_v1') === '1';
+        var systemHealthState = {};
+        var lastWorkerVersion = '';
 
         // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', function() {
@@ -1288,6 +1320,7 @@
             initCloudSyncStatus();
             ensureDefaultMarketServer();
             initMarketServerStatus();
+            initFinalStabilityFeatures();
             loadDividendReceipts();
             loadCachedEtfUniverse();
             // 전체 ETF 목록은 앱 시작을 막지 않고 뒤에서 갱신한다. 실패해도 마지막 정상 캐시를 그대로 쓴다.
@@ -1302,6 +1335,7 @@
             // 환율 조회와 시세 조회는 서로 기다리지 않고 독립적으로 실행한다.
             loadPortfolioData().then(function() {
                 renderAll();
+                try { ensureDailySafetySnapshot(); } catch (e) { console.warn('daily safety snapshot failed', e); }
                 try { checkAndPromptDataRecovery(); } catch (e) { console.warn('recovery check failed', e); }
                 setTimeout(function() { refreshAllStockData(true); }, 50);
             }).catch(function(err) {
@@ -1542,7 +1576,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.11.7: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.12.0: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -2384,7 +2418,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.11.7: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.12.0: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2459,7 +2493,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.11.7: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.12.0: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -2751,16 +2785,21 @@
                     }
                 }
 
+                var trust=getDividendConfidence(stock);
+                var trustBadge=trust?('<span title="'+escapeHtml(trust.detail)+'" class="text-[10px] font-bold px-1.5 py-0.5 rounded border '+trust.cls+' cursor-help">'+trust.icon+' '+trust.label+'</span>'):'';
+                var staleWarnings=getStaleWarnings(stock);
+                var staleBadge=staleWarnings.length?('<span title="'+escapeHtml(staleWarnings.join(' · '))+'" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-help">⚠ 오래됨</span>'):'';
                 var memoHtml = stock.memo ? '<div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200 font-medium"><i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i><span class="truncate">' + stock.memo + '</span></div>' : '';
                 var accountBadge = stock.isMerged ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30"><i class="fa-solid fa-code-merge text-[9px]"></i> ' + stock.account + ' (' + stock.accounts.length + '개 계좌 합산)</span>' : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-500/30"><i class="fa-solid fa-tag text-[9px]"></i> ' + (stock.account || '일반계좌') + '</span>';
                 var historyBtn = (!stock.isMerged && ((Array.isArray(stock.distributionHistory) && stock.distributionHistory.length) || (Array.isArray(stock.payoutDates) && stock.payoutDates.length))) ? '<button onclick="openDistributionHistoryModal(' + stock.originalIndex + ')" class="text-violet-600 dark:text-violet-300 hover:text-violet-800 dark:hover:text-violet-100 p-1 text-xs" title="배당/분배금 이력"><i class="fa-solid fa-clock-rotate-left"></i></button>' : '';
-                var actionButtons = stock.isMerged ? '<span class="text-[10px] opacity-60 font-bold">합산 상태</span>' : historyBtn + '<button onclick="openModal(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteStock(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>';
+                var actionButtons = stock.isMerged ? '<span class="text-[10px] opacity-60 font-bold">합산 상태</span>' : '<button onclick="refreshSingleStock(' + stock.originalIndex + ',this)" class="text-emerald-600 dark:text-emerald-300 hover:text-emerald-800 p-1 text-xs" title="이 종목만 현재가/배당정보 다시 조회"><i class="fa-solid fa-rotate"></i></button>' + historyBtn + '<button onclick="openModal(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteStock(' + stock.originalIndex + ')" class="text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>';
                 var dividendMetaText = getDividendMetadataText(stock);
                 var dividendMetaHtml = dividendMetaText ? '<div class="mt-1.5 pt-1.5 border-t border-gray-300 dark:border-gray-700/60 text-[9px] text-gray-500 dark:text-gray-400 font-semibold leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i>' + escapeHtml(dividendMetaText) + '</div>' : '';
+                var developerHtml = (!stock.isMerged && developerDiagnosticMode) ? '<div class="debug-stock-panel mt-1.5 p-2 rounded-lg border border-indigo-500/25 bg-indigo-500/5 text-[9px] font-mono leading-relaxed"><div class="flex justify-between gap-2"><span class="font-bold text-indigo-600 dark:text-indigo-300">DIAG</span><button onclick="copyStockDiagnostic('+stock.originalIndex+')" class="font-sans font-bold text-indigo-600 dark:text-indigo-300">JSON 복사</button></div><div>PRICE: '+escapeHtml(stock.lastPriceSource||stock.priceSource||'-')+' · '+escapeHtml(stock.lastPriceUpdatedAt||'-')+'</div><div>DIV: '+escapeHtml(stock.payoutDateSource||stock.dividendSource||'-')+' · basis='+escapeHtml(stock.payoutMonthBasis||'-')+' · '+escapeHtml(stock.lastDividendUpdatedAt||stock.dividendAsOf||'-')+'</div></div>' : '';
 
                 var card = document.createElement('div');
                 card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900 font-semibold' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-gray-100 font-semibold';
-                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + formatLocalAmount(currentValLocal, isUS) + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + formatLocalAmount(profitLossLocal, isUS) + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>' + dividendMetaHtml;
+                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + trustBadge + staleBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + formatLocalAmount(currentValLocal, isUS) + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + formatLocalAmount(profitLossLocal, isUS) + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>' + dividendMetaHtml + developerHtml;
                 container.appendChild(card);
             });
 
@@ -3675,14 +3714,30 @@
             document.getElementById('isaTotalTaxSaved').innerText = '+' + Math.round(totalSaved).toLocaleString() + '원';
         }
 
+        function snapshotDayKeyFromId(id) {
+            var d = new Date(Number(id) || Date.now());
+            return isNaN(d.getTime()) ? getLocalDateKey(new Date()) : getLocalDateKey(d);
+        }
+
+        function pruneSnapshotsGenerational(snapshots) {
+            snapshots = Array.isArray(snapshots) ? snapshots.slice().sort(function(a,b){return Number(b.id||0)-Number(a.id||0);}) : [];
+            var keep=[], seenId={}, seenDay={};
+            function add(x){var id=String(x&&x.id||'');if(!id||seenId[id])return;seenId[id]=true;keep.push(x);}
+            snapshots.slice(0,8).forEach(add); // 가장 최근 변경은 촘촘하게 보존
+            snapshots.forEach(function(x){
+                var day=x.dayKey||snapshotDayKeyFromId(x.id); if(!seenDay[day]){seenDay[day]=true;add(x);}
+            });
+            return keep.sort(function(a,b){return Number(b.id||0)-Number(a.id||0);}).slice(0,20);
+        }
+
         function createSnapshot(reason) {
             if (reason === undefined) reason = '변경 전 백업';
-            // 빈 상태도 스냅샷으로 남긴다. 첫 종목 추가/첫 배당기록 추가도 완전히 되돌릴 수 있어야 한다.
             try {
                 var snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
+                var now=new Date();
                 var newSnap = {
-                    id: Date.now(),
-                    dateStr: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    id: Date.now(), dayKey:getLocalDateKey(now),
+                    dateStr: now.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                     reason: reason, stockCount: Array.isArray(portfolio) ? portfolio.length : 0,
                     receiptCount: Array.isArray(dividendReceipts) ? dividendReceipts.length : 0,
                     data: JSON.parse(JSON.stringify(portfolio || [])),
@@ -3690,27 +3745,47 @@
                     receiptData: JSON.parse(JSON.stringify(dividendReceipts || []))
                 };
                 snapshots.unshift(newSnap);
-                if (snapshots.length > 5) snapshots = snapshots.slice(0, 5);
-                localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(snapshots));
-            } catch (e) {}
+                localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(pruneSnapshotsGenerational(snapshots)));
+            } catch (e) { console.warn('snapshot create failed', e); }
+        }
+
+        function ensureDailySafetySnapshot() {
+            try {
+                var today=getLocalDateKey(new Date()), snapshots=JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1')||'[]');
+                var exists=Array.isArray(snapshots)&&snapshots.some(function(x){return (x.dayKey||snapshotDayKeyFromId(x.id))===today && String(x.reason||'').indexOf('자동 일일 백업')>=0;});
+                if(!exists) createSnapshot('자동 일일 백업');
+            } catch(e) {}
+        }
+
+        function getSnapshotGenerationLabel(snap) {
+            var d=new Date(Number(snap.id||0)), now=new Date();
+            if(isNaN(d.getTime())) return '백업';
+            var a=new Date(now.getFullYear(),now.getMonth(),now.getDate()), b=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+            var days=Math.round((a-b)/86400000);
+            if(days===0)return '오늘'; if(days===1)return '어제'; if(days<=3)return days+'일 전'; if(days<=7)return '1주 이내'; return days+'일 전';
+        }
+
+        function previewSnapshot(snapId) {
+            var snapshots=[]; try{snapshots=JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1')||'[]');}catch(e){}
+            var target=snapshots.find(function(x){return Number(x.id)===Number(snapId);}), box=document.getElementById('snapshotPreviewBox');
+            if(!target||!box)return;
+            var names=(target.data||[]).slice(0,6).map(function(x){return escapeHtml((x.name||x.ticker||'종목')+' ['+(x.account||'일반계좌')+']');});
+            var cash=target.cashData||{}, cashAccounts=Object.keys(cash).length;
+            box.innerHTML='<div class="flex justify-between gap-2"><p class="font-black text-blue-700 dark:text-blue-300">'+escapeHtml(target.dateStr||'백업')+' · '+escapeHtml(target.reason||'')+'</p><button onclick="document.getElementById(\'snapshotPreviewBox\').classList.add(\'hidden\')" class="opacity-60"><i class="fa-solid fa-xmark"></i></button></div><p class="mt-1">종목 '+Number(target.stockCount||0)+'개 · 배당기록 '+Number(target.receiptCount||0)+'건 · 예수금 계좌 '+cashAccounts+'개</p><p class="mt-1 opacity-80">'+(names.length?names.join(' · '):'보유 종목 없음')+((target.data||[]).length>6?' 외 '+((target.data||[]).length-6)+'개':'')+'</p>';
+            box.classList.remove('hidden');
         }
 
         function openSnapshotModal() {
-            var listContainer = document.getElementById('snapshotListContainer');
-            listContainer.innerHTML = '';
-            var snapshots = [];
-            try { snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]'); } catch (e) { snapshots = []; }
-
-            if (snapshots.length === 0) {
-                listContainer.innerHTML = '<div class="text-center py-8 opacity-70 font-semibold"><i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i><p>저장된 이전 스냅샷이 없습니다.</p></div>';
-            } else {
-                snapshots.forEach(function(snap, idx) {
-                    var item = document.createElement('div');
-                    item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 flex justify-between items-center font-semibold' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 flex justify-between items-center font-semibold';
-                    item.innerHTML = '<div><div class="flex items-center gap-1.5"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">#' + (idx + 1) + '</span><span class="text-xs">' + snap.dateStr + '</span></div><p class="text-[11px] opacity-80 mt-1">' + snap.reason + ' (종목 <b>' + (snap.stockCount||0) + '개</b> · 배당기록 <b>' + (snap.receiptCount||0) + '건</b>)</p></div><button onclick="rollbackToSnapshot(' + snap.id + ')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">복원</button>';
-                    listContainer.appendChild(item);
-                });
-            }
+            var listContainer = document.getElementById('snapshotListContainer'); listContainer.innerHTML = '';
+            var box=document.getElementById('snapshotPreviewBox'); if(box)box.classList.add('hidden');
+            var snapshots = []; try { snapshots = pruneSnapshotsGenerational(JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]')); localStorage.setItem('my_portfolio_snapshots_v1',JSON.stringify(snapshots)); } catch (e) { snapshots = []; }
+            if (!snapshots.length) listContainer.innerHTML = '<div class="text-center py-8 opacity-70 font-semibold"><i class="fa-solid fa-clock-rotate-left text-2xl mb-2"></i><p>저장된 이전 스냅샷이 없습니다.</p></div>';
+            else snapshots.forEach(function(snap, idx) {
+                var item = document.createElement('div');
+                item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 font-semibold' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 font-semibold';
+                item.innerHTML = '<div class="flex justify-between items-start gap-2"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">'+escapeHtml(getSnapshotGenerationLabel(snap))+'</span><span class="text-xs">'+escapeHtml(snap.dateStr||'')+'</span></div><p class="text-[11px] opacity-80 mt-1">'+escapeHtml(snap.reason||'')+' (종목 <b>'+(snap.stockCount||0)+'개</b> · 배당기록 <b>'+(snap.receiptCount||0)+'건</b>)</p></div><div class="flex gap-1"><button onclick="previewSnapshot('+Number(snap.id)+')" class="bg-gray-200 dark:bg-gray-700 px-2 py-1.5 rounded-lg text-[10px] font-bold">미리보기</button><button onclick="rollbackToSnapshot('+Number(snap.id)+')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1.5 rounded-lg text-[10px] font-bold">복원</button></div></div>';
+                listContainer.appendChild(item);
+            });
             document.getElementById('snapshotModal').classList.remove('hidden');
         }
 
@@ -4068,7 +4143,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.11.7부터 비활성화.
+            // v1.12.0부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -4167,7 +4242,7 @@
         }
 
         // =========================================================================
-        // v1.11.7 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.12.0 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4475,6 +4550,9 @@
             var first = new Date(y, m - 1, 1).getDay();
             var days = new Date(y, m, 0).getDate();
             var events = collectDividendCalendarEvents(y, m);
+            updateDividendCalendarFilterButtons();
+            events.exact = events.exact.filter(calendarFilterMatches);
+            events.unscheduled = events.unscheduled.filter(calendarUnscheduledMatches);
             for (var b=0; b<first; b++) {
                 var blank = document.createElement('div');
                 blank.className = 'min-h-[68px]';
@@ -4521,7 +4599,7 @@
         }
 
         // =========================================================================
-        // v1.11.7: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.12.0: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -4762,6 +4840,128 @@
             localStorage.setItem('my_market_quarantine_v1',JSON.stringify(quarantinedMarketUpdates));
         }
 
+        function initFinalStabilityFeatures() {
+            var t=document.getElementById('developerDiagnosticToggle'); if(t)t.checked=developerDiagnosticMode;
+            setTimeout(function(){checkWorkerVersionCompatibility(true);},600);
+        }
+
+        function setDeveloperDiagnosticMode(enabled) {
+            developerDiagnosticMode=!!enabled;
+            localStorage.setItem('my_developer_diagnostic_mode_v1',developerDiagnosticMode?'1':'0');
+            renderAllSafely('developer diagnostic mode');
+        }
+
+        function getDividendConfidence(stock) {
+            var source=String((stock&&stock.payoutDateSource)|| (stock&&stock.dividendSource)||'');
+            var basis=String(stock&&stock.payoutMonthBasis||'');
+            var history=Array.isArray(stock&&stock.distributionHistory)?stock.distributionHistory:[];
+            if(/KIND|DART|KRX|금융감독원|공시/i.test(source)) return {key:'official',label:'공식',icon:'🟢',cls:'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',detail:source||'공식 공시'};
+            if(history.some(function(x){return String(x&&x.status||'').toLowerCase()==='observed-payment';}) || /DividendKing|koreadividend|Nasdaq|네이버/i.test(source)) return {key:'confirmed',label:'확인',icon:'🔵',cls:'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',detail:source||'확인 데이터'};
+            if(basis==='ex-dividend'||basis==='legal-deadline'||/Yahoo/i.test(source)) return {key:'estimated',label:'추정',icon:'🟠',cls:'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',detail:basis==='legal-deadline'?'법정 지급기한 기준':(source||'배당락 이력 기준')};
+            if((parseFloat(stock&&stock.dps)||0)>0 || (Array.isArray(stock&&stock.payoutMonths)&&stock.payoutMonths.length)) return {key:'manual',label:'수동',icon:'⚪',cls:'bg-gray-500/15 text-gray-700 dark:text-gray-300 border-gray-500/30',detail:'공식 출처 미기록/사용자 입력 가능'};
+            return null;
+        }
+
+        function isoAgeHours(value) { var t=new Date(value||'').getTime(); return isFinite(t)?Math.max(0,(Date.now()-t)/3600000):Infinity; }
+        function getStaleWarnings(stock) {
+            var out=[];
+            if(stock&&stock.lastPriceUpdatedAt && isoAgeHours(stock.lastPriceUpdatedAt)>24) out.push('시세 24시간+');
+            if(stock&&stock.lastDividendUpdatedAt && isoAgeHours(stock.lastDividendUpdatedAt)>30*24) out.push('배당정보 30일+');
+            if(stock&&stock.market==='US') { var fxAt=localStorage.getItem('my_usd_krw_rate_updated_at'); if(fxAt&&isoAgeHours(fxAt)>24)out.push('환율 24시간+'); }
+            return out;
+        }
+
+        function stockDebugPayload(stock) {
+            return {appVersion:APP_VERSION,ticker:stock.ticker,name:stock.name,market:stock.market,account:stock.account,price:{value:stock.currentPrice,source:stock.lastPriceSource||stock.priceSource||'',updatedAt:stock.lastPriceUpdatedAt||''},dividend:{dps:stock.dps,cycle:stock.divCycle,payoutMonths:stock.payoutMonths,payoutDates:stock.payoutDates,exDividendDates:stock.exDividendDates,legalPaymentDeadlines:stock.legalPaymentDeadlines,source:stock.payoutDateSource||stock.dividendSource||'',basis:stock.payoutMonthBasis||'',updatedAt:stock.lastDividendUpdatedAt||stock.dividendAsOf||''},confidence:getDividendConfidence(stock)};
+        }
+        function copyStockDiagnostic(index) {
+            var stock=portfolio[index]; if(!stock)return; var text=JSON.stringify(stockDebugPayload(stock),null,2);
+            if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('종목 진단 JSON을 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);}); else prompt('아래 JSON을 복사하세요:',text);
+        }
+
+        function setDividendCalendarFilter(value) {
+            dividendCalendarFilter=value||'ALL'; localStorage.setItem('my_dividend_calendar_filter_v1',dividendCalendarFilter); renderDividendCalendar();
+        }
+        function calendarFilterMatches(e) {
+            if(dividendCalendarFilter==='ALL')return true;
+            if(dividendCalendarFilter==='receipt')return e.type==='receipt'||(e.record&&String(e.record.status||'').toLowerCase()==='actual');
+            if(dividendCalendarFilter==='observed')return !!(e.record&&String(e.record.status||'').toLowerCase()==='observed-payment');
+            if(dividendCalendarFilter==='ex')return e.type==='ex';
+            if(dividendCalendarFilter==='deadline')return e.type==='deadline';
+            if(dividendCalendarFilter==='official')return e.type==='scheduled'||(e.type==='pay'&&!(e.record&&String(e.record.status||'').toLowerCase()==='observed-payment'));
+            return true;
+        }
+        function calendarUnscheduledMatches(u) {
+            if(dividendCalendarFilter==='ALL')return true;
+            var b=String(u&&u.basis||'');
+            if(dividendCalendarFilter==='ex')return b==='ex-dividend';
+            if(dividendCalendarFilter==='deadline')return b==='legal-deadline';
+            if(dividendCalendarFilter==='observed')return b==='observed-payment';
+            if(dividendCalendarFilter==='official')return b==='payment';
+            return false;
+        }
+        function updateDividendCalendarFilterButtons() {
+            var buttons=document.querySelectorAll('[data-calendar-filter]');
+            buttons.forEach(function(b){var active=b.getAttribute('data-calendar-filter')===dividendCalendarFilter;b.className='px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap '+(active?'bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/30':'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300');});
+        }
+
+        function updateVersionMismatchBanner(workerVersion) {
+            lastWorkerVersion=String(workerVersion||''); var b=document.getElementById('versionMismatchBanner'),txt=document.getElementById('versionMismatchText'); if(!b||!txt)return;
+            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION){txt.innerText='웹앱 v'+APP_VERSION+' / Worker v'+lastWorkerVersion+' · ZIP의 deploy_worker_update.bat 실행이 필요합니다.';b.classList.remove('hidden');}
+            else b.classList.add('hidden');
+            var line=document.getElementById('diagnosticVersionLine'); if(line)line.innerText='HTML v'+APP_VERSION+' · Worker '+(lastWorkerVersion?('v'+lastWorkerVersion):'확인 전');
+        }
+        async function checkWorkerVersionCompatibility(silent) {
+            try{var h=await marketProxyFetch('/health',8000); updateVersionMismatchBanner(h&&h.version); return h;}catch(e){if(!silent){var b=document.getElementById('versionMismatchBanner'),txt=document.getElementById('versionMismatchText');if(b&&txt){txt.innerText='Worker 연결을 확인할 수 없습니다. 시스템 진단 센터에서 연결 테스트를 실행하세요.';b.classList.remove('hidden');}}return null;}
+        }
+
+        function saveSystemHealthState(){try{localStorage.setItem('my_system_health_v1',JSON.stringify(systemHealthState));}catch(e){}}
+        function loadSystemHealthState(){try{var x=JSON.parse(localStorage.getItem('my_system_health_v1')||'{}');systemHealthState=x&&typeof x==='object'?x:{};}catch(e){systemHealthState={};}}
+        function setHealthResult(key,label,status,detail){var now=new Date().toISOString(),prev=systemHealthState[key]||{};systemHealthState[key]={label:label,status:status,detail:String(detail||''),at:now,lastOkAt:status==='ok'?now:(prev.lastOkAt||''),lastIssue:(status==='error'||status==='warn')?String(detail||''):(prev.lastIssue||'')};saveSystemHealthState();renderSystemHealthGrid();}
+        function renderSystemHealthGrid(){
+            var grid=document.getElementById('systemHealthGrid');if(!grid)return;loadSystemHealthState();grid.innerHTML='';
+            var keys=['worker','krquote','fx','etflist','kind','krdiv','usquote','usdiv'];
+            keys.forEach(function(k){var x=systemHealthState[k]||{label:{worker:'Worker',krquote:'국내시세',fx:'환율',etflist:'ETF목록',kind:'KIND',krdiv:'국내배당',usquote:'미국시세',usdiv:'미국배당'}[k],status:'unknown',detail:'확인 전'};var cls=x.status==='ok'?'bg-emerald-500':x.status==='warn'?'bg-amber-500':x.status==='error'?'bg-rose-500':'bg-gray-400';var row=document.createElement('div');row.className='p-2 rounded-lg bg-white/60 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 min-w-0';row.innerHTML='<div class="flex items-center gap-1.5"><span class="health-dot '+cls+'"></span><span class="text-[10px] font-black">'+escapeHtml(x.label||k)+'</span></div><p class="text-[8px] mt-1 opacity-70 truncate" title="'+escapeHtml(x.detail||'')+'">'+escapeHtml(x.detail||'')+'</p><p class="text-[7px] mt-0.5 opacity-45">정상 '+(x.lastOkAt?escapeHtml(formatCloudLocalTime(x.lastOkAt)):'기록 없음')+'</p>'+(x.lastIssue?'<p class="text-[7px] mt-0.5 text-amber-600 dark:text-amber-300 truncate" title="'+escapeHtml(x.lastIssue)+'">최근 이슈: '+escapeHtml(x.lastIssue)+'</p>':'');grid.appendChild(row);});
+        }
+        async function runSystemHealthChecks(silent) {
+            var btn=document.getElementById('btnRunSystemHealth');if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>검사중';}
+            loadSystemHealthState();
+            async function check(key,label,fn){try{var r=await fn();setHealthResult(key,label,'ok',r||'정상');return true;}catch(e){setHealthResult(key,label,'error',(e&&e.message)||'실패');return false;}}
+            try{
+                var health=null; await check('worker','Worker',async function(){health=await marketProxyFetch('/health',8000);updateVersionMismatchBanner(health&&health.version);return 'v'+(health&&health.version||'?')+' · KV '+(health&&health.kvConfigured?'정상':'미설정');});
+                var kr=portfolio.find(function(x){return x.market==='KR'&&isKoreanTicker(normalizeKoreanTicker(x.ticker));});
+                if(kr) await check('krquote','국내시세',async function(){var code=normalizeKoreanTicker(kr.ticker),q=await marketProxyFetch('/quote?codes='+encodeURIComponent(code),9000);if(!(q&&Array.isArray(q.datas)&&q.datas.length))throw new Error('NAVER 응답 형식 이상');return 'NAVER 응답 정상 · '+code;}); else setHealthResult('krquote','국내시세','warn','보유 국내주식 없음 · 실조회 생략');
+                await check('fx','환율',async function(){var q=await marketProxyFetch('/fx',9000);return 'USD/KRW '+(q&&((q.rate||q.usdKrw)||q.value)||'응답 정상');});
+                await check('etflist','ETF목록',async function(){var q=await marketProxyFetch('/etflist',12000);return '전체 '+Number(q&&q.total||0)+'개';});
+                var etf=portfolio.find(function(x){return x.market==='KR'&&looksLikeKoreanEtf(x.name,x.ticker)&&isKoreanTicker(normalizeKoreanTicker(x.ticker));});
+                if(etf) await check('kind','KIND',async function(){var q=await marketProxyFetch('/etfdiv?code='+encodeURIComponent(normalizeKoreanTicker(etf.ticker))+'&name='+encodeURIComponent(etf.name||''),18000);return q&&q.ok?'ETF 공시 조회 정상':'응답 확인 필요';}); else setHealthResult('kind','KIND','warn','보유 ETF 없음 · 실조회 생략');
+                var kro=portfolio.find(function(x){return x.market==='KR'&&!looksLikeKoreanEtf(x.name,x.ticker)&&isKoreanTicker(normalizeKoreanTicker(x.ticker));});
+                if(kro) {try{var q=await marketProxyFetch('/krdiv?code='+encodeURIComponent(normalizeKoreanTicker(kro.ticker))+'&name='+encodeURIComponent(kro.name||''),24000);setHealthResult('krdiv','국내배당','ok',(q&&q.source)||'배당 조회 정상');}catch(e){setHealthResult('krdiv','국내배당','warn','일정 없음/외부소스 제한 · '+((e&&e.message)||''));}} else setHealthResult('krdiv','국내배당','warn','보유 일반 국내주식 없음');
+                var us=portfolio.find(function(x){return x.market==='US'&&x.ticker;});
+                if(us){await check('usquote','미국시세',async function(){var q=await marketProxyFetch('/usquote?symbol='+encodeURIComponent(us.ticker),10000);return q?'Yahoo 응답 정상':'응답 없음';});try{var ud=await marketProxyFetch('/usdiv?symbol='+encodeURIComponent(us.ticker),20000);setHealthResult('usdiv','미국배당','ok',(ud&&ud.source)||'배당 조회 정상');}catch(e){setHealthResult('usdiv','미국배당','warn','배당 없음/외부소스 제한 · '+((e&&e.message)||''));}} else {setHealthResult('usquote','미국시세','warn','보유 미국주식 없음');setHealthResult('usdiv','미국배당','warn','보유 미국주식 없음');}
+                if(!silent)alert('시스템 연결 테스트를 완료했습니다.\n빨강은 연결 오류, 노랑은 대상 없음/데이터 미확정을 뜻합니다.');
+            } finally {if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트';}renderSystemHealthGrid();runDataDiagnostics();}
+        }
+
+        async function refreshSingleStock(index, button) {
+            var stock=portfolio[index]; if(!stock)return; var old=button?button.innerHTML:'';if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}
+            var priceOk=false,divOk=false;
+            try{
+                if(stock.market==='KR'){
+                    var code=normalizeKoreanTicker(stock.ticker), map=await fetchKoreanRealtimeBatch([code]), q=map[code];
+                    if(q&&q.price>0)priceOk=applySafeMarketPrice(stock,q.price,q.source||'NAVER realtime',q.tradedAt||new Date().toISOString());
+                    if(looksLikeKoreanEtf(stock.name,code)){var ei=await fetchEtfDistributionInfo(code,stock.name,true);if(ei){if(ei.annualComplete&&Number(ei.annualDistribution)>0)stock.dps=Number(ei.annualDistribution);stock.divCycle=ei.cycle||stock.divCycle;if(Array.isArray(ei.months))stock.payoutMonths=ei.months.slice();stock.payoutDates=ei.payoutDates||[];stock.recordDates=ei.recordDates||[];stock.distributionHistory=ei.history||[];stock.payoutDateSource=ei.source||'';stock.dividendSource=ei.source||stock.dividendSource||'';stock.lastDividendUpdatedAt=ei.updatedAt||new Date().toISOString();divOk=true;}}
+                    else {var ki=await fetchKoreanStockDividendInfo(code,stock.name,true);if(ki)divOk=applyKoreanStockDividendInfo(stock,ki)||true;}
+                } else {
+                    var y=await fetchUsQuoteFromProxy(stock.ticker);if(y&&y.chart&&y.chart.result&&y.chart.result[0]){var meta=y.chart.result[0].meta||{},p=parseFloat(meta.regularMarketPrice||meta.chartPreviousClose||0);if(p>0)priceOk=applySafeMarketPrice(stock,p,'Yahoo',new Date().toISOString());if(meta.shortName)stock.name=meta.shortName;}
+                    var ui=await fetchUsStockDividendInfo(stock.ticker,true);if(ui)divOk=applyUsStockDividendInfo(stock,ui)||true;
+                }
+                if(priceOk||divOk){localStorage.setItem('my_last_market_refresh_at',new Date().toISOString());saveToStorage(false);recordDailyAssetSnapshot();renderAllSafely('single stock refresh');runDataDiagnostics();}
+                alert((stock.name||stock.ticker)+' 갱신 완료\n현재가: '+(priceOk?'정상':'미갱신')+' · 배당정보: '+(divOk?'정상':'변경/정보 없음'));
+            }catch(e){console.error('single stock refresh failed',e);alert('이 종목 갱신 중 오류가 발생했습니다.\n'+((e&&e.message)||'연결 실패'));}
+            finally{if(button){button.disabled=false;button.innerHTML=old;}}
+        }
+
         function clearMarketQuarantine() {
             loadQuarantinedMarketUpdates();
             if (!quarantinedMarketUpdates.length) { alert('비울 시세 격리 기록이 없습니다.'); return; }
@@ -4794,6 +4994,8 @@
 
         function openDataDiagnosticModal(){
             document.getElementById('dataDiagnosticModal').classList.remove('hidden');
+            var t=document.getElementById('developerDiagnosticToggle');if(t)t.checked=developerDiagnosticMode;
+            renderSystemHealthGrid(); checkWorkerVersionCompatibility(true);
             loadCachedEtfUniverse();
             runDataDiagnostics();
             fetchEtfUniverse(false).then(function(){runDataDiagnostics();}).catch(function(){runDataDiagnostics();});
@@ -4862,7 +5064,8 @@
                 var cp=parseFloat(s.currentPrice)||0;
                 if(!(cp>0))issues.push({level:'error',text:'현재가가 0 또는 비정상: '+label});
                 if(!s.lastPriceUpdatedAt)issues.push({level:'info',text:'현재가 갱신시각 없음: '+label});
-                else{var age=now-new Date(s.lastPriceUpdatedAt).getTime();if(isFinite(age)&&age>72*3600*1000)issues.push({level:'warn',text:'현재가가 72시간 이상 오래됨: '+label});}
+                else{var age=now-new Date(s.lastPriceUpdatedAt).getTime();if(isFinite(age)&&age>24*3600*1000)issues.push({level:'warn',text:'현재가가 24시간 이상 오래됨: '+label});}
+                if(s.lastDividendUpdatedAt){var divAge=now-new Date(s.lastDividendUpdatedAt).getTime();if(isFinite(divAge)&&divAge>30*24*3600*1000)issues.push({level:'warn',text:'배당정보가 30일 이상 오래됨: '+label});}
                 var dps=parseFloat(s.dps)||0, yieldPct=cp>0?dps/cp*100:0;
                 if(yieldPct>30)issues.push({level:'warn',text:'배당수익률 30% 초과 확인 필요: '+label+' ('+yieldPct.toFixed(1)+'%)'});
                 if((dps<=0)&&/배당|고배당|리츠|Dividend|Income|REIT/i.test((s.sector||'')+' '+(s.name||'')))issues.push({level:'warn',text:'배당주 분류인데 DPS/분배금 0: '+label});
@@ -4875,6 +5078,8 @@
                     else{var dage=now-new Date(s.lastDividendUpdatedAt).getTime();if(isFinite(dage)&&dage>60*24*3600*1000)issues.push({level:'info',text:'ETF 분배금 데이터가 60일 이상 오래됨: '+label});}
                 }
             });
+            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION) issues.push({level:'error',text:'웹앱/Worker 버전 불일치: HTML v'+APP_VERSION+' / Worker v'+lastWorkerVersion});
+            var fxAt=localStorage.getItem('my_usd_krw_rate_updated_at'); if(fxAt&&isoAgeHours(fxAt)>24)issues.push({level:'warn',text:'환율 데이터가 24시간 이상 오래됨'});
             var universe=loadCachedEtfUniverse();
             if(!universe) issues.push({level:'warn',text:'전체 ETF 목록 캐시가 아직 없습니다. [전체 ETF 목록 갱신]을 실행하면 시장 전체 운용사 통계를 확인할 수 있습니다.'});
             else if(Number(universe.unknownManagerCount||0)>0) issues.push({level:'info',text:'전체 ETF 중 운용사 자동분류 미확인: '+Number(universe.unknownManagerCount||0)+'개 · 신규 브랜드일 수 있어 원본 JSON에서 확인 필요'});
@@ -4902,7 +5107,7 @@
         }
 
         function copyDiagnosticRawData(){
-            var payload={version:'1.11.7',generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
+            var payload={version:APP_VERSION,workerVersion:lastWorkerVersion,generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),systemHealth:systemHealthState,issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
             var text=JSON.stringify(payload,null,2);
             if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('진단 원본 JSON을 클립보드에 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);});else prompt('아래 JSON을 복사하세요:',text);
         }
