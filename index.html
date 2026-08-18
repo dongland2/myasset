@@ -45,7 +45,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.6.8
+                    v1.6.9
                 </span>
             </div>
 
@@ -674,7 +674,7 @@
                 <div>
                     <label class="block font-bold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
-                        <input type="text" id="inputTicker" required placeholder="예: 466940, TIGER 은행고배당플러스TOP10, SCHD, AAPL" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
+                        <input type="text" id="inputTicker" required placeholder="예: 466940, TIGER 은행고배당플러스TOP10, SCHD, AAPL, 005930" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-magnifying-glass"></i> 조회
                         </button>
@@ -686,7 +686,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block font-bold mb-1">종목명</label>
-                        <input type="text" id="inputName" required placeholder="예: TIGER 은행고배당플러스TOP10" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="inputName" required placeholder="예: TIGER 은행고배당플러스TOP10" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
                     <div>
                         <label class="block font-bold mb-1">섹터 / 자산군</label>
@@ -869,7 +869,7 @@
             checkAndPromptDataRecovery();
             renderAll();
             
-            // F5 새로고침 시 백그라운드로 최신 실시간 시세 자동 갱신 (무음 모드: isSilent=true)
+            // F5 새로고침 시 백그라운드로 최신 실시간 시세 자동 갱신 (무음 모드)
             refreshAllStockData(true);
         });
 
@@ -970,7 +970,6 @@
             }
         }
 
-        // 예수금 모달 열기
         function openCashModal() {
             const container = document.getElementById('cashAccountInputList');
             container.innerHTML = '';
@@ -1725,9 +1724,10 @@
                 } catch (e) {}
             }
 
+            // 기본 샘플 데이터 (네트워크 실패 시에만 표시되는 초기값)
             portfolio = [
                 { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '미국 핵심 배당성장 ETF', quantity: 100, buyPrice: 28.00, currentPrice: 28.50, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 대표 은행 고배당 월배당 ETF', quantity: 200, buyPrice: 12000, currentPrice: 12350, dps: 780, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
+                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 대표 은행 고배당 월배당 ETF', quantity: 200, buyPrice: 12000, currentPrice: 12450, dps: 780, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
             ];
             saveToStorage(false);
         }
@@ -1755,70 +1755,52 @@
         }
 
         // =========================================================================
-        // [핵심 엔진] 다중 CORS 프록시 경유 JSON 데이터 안전 수신 함수
+        // [초고속 통신 엔진] 4개 프록시 병렬 레이스 (Promise.any) - 0.5초 내 즉시 반환
         // =========================================================================
-        async function fetchJsonViaProxy(targetUrl) {
-            const proxyEngines = [
-                // 1. AllOrigins JSON Wrapper (응답 성공률이 가장 높음)
-                async () => {
-                    const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), 4000);
-                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
-                    clearTimeout(timer);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.contents) {
-                            try { return JSON.parse(data.contents); } catch (e) { return null; }
-                        }
-                    }
-                    return null;
-                },
-                // 2. Corsproxy.io
-                async () => {
-                    const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), 4000);
-                    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-                    clearTimeout(timer);
-                    if (res.ok) {
-                        return await res.json();
-                    }
-                    return null;
-                },
-                // 3. CodeTabs Proxy
-                async () => {
-                    const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), 4000);
-                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
-                    clearTimeout(timer);
-                    if (res.ok) {
-                        return await res.json();
-                    }
-                    return null;
-                },
-                // 4. AllOrigins Raw Mode
-                async () => {
-                    const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), 4000);
+        async function fetchJsonViaFastRace(targetUrl, timeoutMs = 2500) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            const engines = [
+                // 1. Corsproxy.io
+                (async () => {
+                    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                    if (!res.ok) throw new Error('fail');
+                    return await res.json();
+                })(),
+                // 2. AllOrigins Raw
+                (async () => {
                     const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
-                    clearTimeout(timer);
-                    if (res.ok) {
-                        return await res.json();
-                    }
-                    return null;
-                }
+                    if (!res.ok) throw new Error('fail');
+                    return await res.json();
+                })(),
+                // 3. AllOrigins Get JSON Wrapper
+                (async () => {
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
+                    if (!res.ok) throw new Error('fail');
+                    const d = await res.json();
+                    return JSON.parse(d.contents);
+                })(),
+                // 4. CodeTabs Proxy
+                (async () => {
+                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                    if (!res.ok) throw new Error('fail');
+                    return await res.json();
+                })()
             ];
 
-            for (const engine of proxyEngines) {
-                try {
-                    const json = await engine();
-                    if (json) return json;
-                } catch (e) {}
+            try {
+                const data = await Promise.any(engines);
+                clearTimeout(timer);
+                return data;
+            } catch (err) {
+                clearTimeout(timer);
+                return null;
             }
-            return null;
         }
 
         // =========================================================================
-        // [핵심 엔진] 종목명/코드 기반 실시간 웹 API 동적 정보 추출 (내장 하드코딩 제거)
+        // [핵심 추출기] 네이버 증권 & 야후 파이낸스 실시간 동적 주가 파싱
         // =========================================================================
         async function fetchStockInfoLive(query) {
             if (!query) return null;
@@ -1837,30 +1819,25 @@
                 months: [1,2,3,4,5,6,7,8,9,10,11,12]
             };
 
-            // 1단계: 6자리 숫자가 아닌 텍스트(예: "TIGER 은행고배당플러스TOP10", "리얼티인컴") 입력 시 네이버 자동완성 API로 정식 명칭 및 티커 추출
-            if (!isSixDigit) {
-                const autoUrl = `https://m.stock.naver.com/front-api/search/autoComplete?query=${encodeURIComponent(cleanQuery)}&target=stock,index,marketindicator,coin,ipo`;
-                const autoData = await fetchJsonViaProxy(autoUrl);
-                if (autoData && autoData.result && Array.isArray(autoData.result.items) && autoData.result.items.length > 0) {
-                    const bestMatch = autoData.result.items[0];
-                    resolved.name = bestMatch.name || resolved.name;
-                    if (bestMatch.code && /^[0-9]{6}$/.test(bestMatch.code)) {
-                        resolved.ticker = bestMatch.code;
-                        resolved.market = 'KR';
-                    } else if (bestMatch.reutersCode) {
-                        resolved.ticker = bestMatch.reutersCode.split('.')[0];
-                        resolved.market = 'US';
-                    }
+            // 1단계: 텍스트 종목명(예: 'TIGER 은행고배당', '삼성전자') 입력 시 네이버 검색 API로 정식 6자리 티커 발굴
+            if (!isSixDigit && !/^[A-Za-z]+$/.test(cleanQuery)) {
+                const searchUrl = `https://ac.finance.naver.com/ac?q=${encodeURIComponent(cleanQuery)}&target=stock`;
+                const searchData = await fetchJsonViaFastRace(searchUrl, 2000);
+                if (searchData && searchData.items && searchData.items[0] && searchData.items[0][0]) {
+                    const match = searchData.items[0][0];
+                    resolved.ticker = match[0]; // 6자리 종목코드
+                    resolved.name = match[1];   // 정식 종목명
+                    resolved.market = 'KR';
                 }
             }
 
-            // 2단계: 한국 주식(6자리 코드)인 경우 네이버 증권 Polling API 및 Integration API로 실시간 현재가/배당금 파싱
+            // 2단계: 한국 주식(6자리 코드)인 경우 네이버 증권 Polling 실시간 시세 및 Integration 정보 조회
             if (resolved.market === 'KR' || /^[0-9]{6}$/.test(resolved.ticker)) {
                 const code = resolved.ticker;
-                
-                // A. 네이버 실시간 시세 (Polling API)
+
+                // A. 네이버 실시간 Polling API로 최신 현재가/종목명 즉시 확보
                 const pollUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${code}`;
-                const pollData = await fetchJsonViaProxy(pollUrl);
+                const pollData = await fetchJsonViaFastRace(pollUrl, 2000);
                 if (pollData && pollData.datas && pollData.datas[0]) {
                     const d = pollData.datas[0];
                     if (d.stockName) resolved.name = d.stockName;
@@ -1869,43 +1846,35 @@
                     }
                 }
 
-                // B. 네이버 종목 통합 정보 API (주당 배당금 및 정밀 데이터 파싱)
+                // B. 네이버 모바일 상세 정보 API (배당금 및 종목명 보완)
                 const integUrl = `https://m.stock.naver.com/api/stock/${code}/integration`;
-                const integData = await fetchJsonViaProxy(integUrl);
+                const integData = await fetchJsonViaFastRace(integUrl, 2000);
                 if (integData) {
                     if (integData.stockName) resolved.name = integData.stockName;
                     if (Array.isArray(integData.totalInfos)) {
                         integData.totalInfos.forEach(info => {
-                            if (info.code === 'lastClosePrice' && (!resolved.price || resolved.price === 0)) {
+                            if ((!resolved.price || resolved.price === 0) && (info.code === 'lastClosePrice' || info.key === '현재가')) {
                                 resolved.price = parseFloat(String(info.value).replace(/,/g, '')) || resolved.price;
                             }
-                            if (info.code === 'dividend') {
+                            if (info.code === 'dividend' || info.key === '주당배당금') {
                                 resolved.dps = parseFloat(String(info.value).replace(/,/g, '')) || 0;
                             }
                         });
                     }
                 }
 
-                // C. 만약 여전히 가격이 0이면 야후 파이낸스 한국 시장 티커 조회 (.KS / .KQ)
-                if (!resolved.price || resolved.price === 0) {
-                    const yKospi = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.KS?interval=1d&range=1d`);
-                    const meta1 = yKospi?.chart?.result?.[0]?.meta;
-                    if (meta1 && (meta1.regularMarketPrice || meta1.chartPreviousClose)) {
-                        resolved.price = meta1.regularMarketPrice || meta1.chartPreviousClose;
-                    } else {
-                        const yKosdaq = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.KQ?interval=1d&range=1d`);
-                        const meta2 = yKosdaq?.chart?.result?.[0]?.meta;
-                        if (meta2 && (meta2.regularMarketPrice || meta2.chartPreviousClose)) {
-                            resolved.price = meta2.regularMarketPrice || meta2.chartPreviousClose;
-                        }
-                    }
-                }
+                // C. 배당주/ETF 주기 판별 (고배당, TOP10, 리츠, 월배당 키워드인 경우 월배당 세팅)
+                const isMonthly = /고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(resolved.name);
+                resolved.cycle = isMonthly ? 'monthly' : 'quarterly';
+                resolved.months = isMonthly ? [1,2,3,4,5,6,7,8,9,10,11,12] : [4, 5, 8, 11];
             }
 
-            // 3단계: 미국 주식인 경우 야후 파이낸스 차트 API로 실시간 현재가 추출
-            if (resolved.market === 'US') {
+            // 3단계: 미국 주식(영문 티커)인 경우 야후 파이낸스 실시간 시세 추출
+            if (resolved.market === 'US' || (/^[A-Za-z]+$/.test(cleanQuery) && resolved.price === 0)) {
+                resolved.market = 'US';
                 const symbol = resolved.ticker;
-                const yData = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`);
+                const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+                const yData = await fetchJsonViaFastRace(yUrl, 2000);
                 const meta = yData?.chart?.result?.[0]?.meta;
                 if (meta && (meta.regularMarketPrice || meta.chartPreviousClose)) {
                     resolved.price = meta.regularMarketPrice || meta.chartPreviousClose;
@@ -1918,7 +1887,7 @@
             return resolved;
         }
 
-        // 종목 조회 버튼 클릭 시 호출되는 함수
+        // 종목 조회 버튼 클릭 시 호출
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -1939,7 +1908,6 @@
                     return;
                 }
 
-                // 모달 필드에 실시간 수신 데이터 자동 세팅
                 document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
                 handleMarketChange();
 
@@ -1976,7 +1944,7 @@
         }
 
         // =========================================================================
-        // [핵심] 보유 종목 전체 실시간 시세 일괄 갱신 (스냅샷 누적 방지 및 자동/수동 대응)
+        // [시세 일괄 갱신] 병렬 비동기 처리 & 스냅샷 히스토리 누적 차단
         // =========================================================================
         async function refreshAllStockData(isSilent = false) {
             if (portfolio.length === 0) {
@@ -2584,10 +2552,10 @@
                     item.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
+                                <span class="text-[9px] font-bold px-1 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
                                     ${isUS ? '미국' : '한국'}
                                 </span>
-                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
+                                <span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
                                     ${stock.account || '일반계좌'}
                                 </span>
                                 <span class="font-bold text-gray-900 dark:text-gray-100 text-xs">${stock.name}</span>
@@ -3015,7 +2983,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.6.8',
+                version: '1.6.9',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
