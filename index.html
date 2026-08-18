@@ -26,6 +26,21 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         ::-webkit-scrollbar { display: none; }
+
+        .payout-month-chip {
+            position: relative;
+            min-width: 64px;
+            user-select: none;
+        }
+        .payout-month-chip.is-selected {
+            background: rgb(5 150 105) !important;
+            border-color: rgb(16 185 129) !important;
+            color: white !important;
+        }
+        .payout-month-chip.is-unselected {
+            opacity: 0.45;
+        }
+        .payout-month-chip.is-view-only { cursor: help !important; }
     </style>
 </head>
 <body id="appBody" class="bg-gray-900 text-gray-100 min-h-screen pb-24">
@@ -38,7 +53,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.11
+                    v1.9.12
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -523,11 +538,14 @@
                     <select id="inputDivCycle" onchange="handleCycleChange()" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-bold"><option value="monthly">월 배당</option><option value="quarterly">분기 배당</option><option value="semiannual">반기 배당</option><option value="annual">연 배당</option></select>
                 </div>
                 <div id="payoutMonthsContainer">
-                    <label class="block font-bold mb-1">배당 지급월</label>
-                    <div class="grid grid-cols-6 gap-1 text-center">
-                        <script>for(let m=1; m<=12; m++) document.write('<label class="p-1 rounded bg-gray-200 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 cursor-pointer has-[:checked]:bg-emerald-600 has-[:checked]:text-white" data-payout-month="'+m+'"><input type="checkbox" name="payoutMonth" value="'+m+'" class="hidden" onchange="updatePayoutMonthTooltipsFromForm()"><span class="text-[11px] font-bold">'+m+'월</span></label>');</script>
-                        <p id="payoutDateHelp" class="col-span-6 text-[10px] text-gray-500 dark:text-gray-400 text-left pt-1">💡 체크된 월에 마우스를 올리면 지급일 정보를 볼 수 있습니다.</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block font-bold">배당 지급월</label>
+                        <button type="button" id="btnPayoutMonthEdit" onclick="togglePayoutMonthEditMode()" class="text-[10px] px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold">지급월 수정</button>
                     </div>
+                    <div id="payoutMonthGrid" class="flex flex-wrap gap-1.5 text-center">
+                        <script>for(let m=1; m<=12; m++) document.write('<label class="payout-month-chip p-1.5 rounded bg-gray-200 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600" data-payout-month="'+m+'" tabindex="0" onmouseenter="showPayoutMonthTooltip(this)" onmouseleave="hidePayoutMonthTooltip()" onfocus="showPayoutMonthTooltip(this)" onblur="hidePayoutMonthTooltip()" onclick="return handlePayoutMonthChipClick(event,this)"><input type="checkbox" name="payoutMonth" value="'+m+'" class="hidden" onchange="updatePayoutMonthTooltipsFromForm()"><span class="text-[11px] font-bold">'+m+'월</span></label>');</script>
+                    </div>
+                    <p id="payoutDateHelp" class="text-[10px] text-gray-500 dark:text-gray-400 text-left pt-1.5">💡 실제 지급월만 표시됩니다. 날짜가 확인된 종목은 월 위에 마우스를 올리면 지급일이 표시됩니다.</p>
                 </div>
                 <div class="pt-3 flex gap-2">
                     <button type="button" onclick="closeModal()" class="flex-1 bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">취소</button>
@@ -612,6 +630,11 @@
                 year: 2026,
                 dates: ["2026-03-30", "2026-06-29", "2026-09-28", "2026-12-15"],
                 source: "Schwab 2026 distribution schedule"
+            },
+            "035250": {
+                year: 2026,
+                dates: ["2026-04-24"],
+                source: "강원랜드 2026 현금배당 결정"
             }
         };
 
@@ -696,6 +719,79 @@
             return '';
         }
 
+        var payoutMonthEditMode = false;
+        var payoutMonthTooltipEl = null;
+
+        function ensurePayoutMonthTooltipEl() {
+            if (payoutMonthTooltipEl && document.body.contains(payoutMonthTooltipEl)) return payoutMonthTooltipEl;
+            var el = document.createElement('div');
+            el.id = 'payoutMonthTooltip';
+            el.style.position = 'fixed';
+            el.style.zIndex = '99999';
+            el.style.maxWidth = '280px';
+            el.style.padding = '7px 10px';
+            el.style.borderRadius = '8px';
+            el.style.background = 'rgba(15, 23, 42, 0.97)';
+            el.style.color = '#fff';
+            el.style.fontSize = '11px';
+            el.style.fontWeight = '700';
+            el.style.lineHeight = '1.45';
+            el.style.boxShadow = '0 8px 24px rgba(0,0,0,.35)';
+            el.style.pointerEvents = 'none';
+            el.style.display = 'none';
+            document.body.appendChild(el);
+            payoutMonthTooltipEl = el;
+            return el;
+        }
+
+        function showPayoutMonthTooltip(label) {
+            if (!label || !label.dataset || !label.dataset.tooltip) return;
+            var el = ensurePayoutMonthTooltipEl();
+            el.textContent = label.dataset.tooltip;
+            el.style.display = 'block';
+            var r = label.getBoundingClientRect();
+            var left = r.left + (r.width / 2) - (el.offsetWidth / 2);
+            left = Math.max(8, Math.min(left, window.innerWidth - el.offsetWidth - 8));
+            var top = r.top - el.offsetHeight - 8;
+            if (top < 8) top = r.bottom + 8;
+            el.style.left = Math.round(left) + 'px';
+            el.style.top = Math.round(top) + 'px';
+        }
+
+        function hidePayoutMonthTooltip() {
+            if (payoutMonthTooltipEl) payoutMonthTooltipEl.style.display = 'none';
+        }
+
+        function handlePayoutMonthChipClick(evt, label) {
+            if (!payoutMonthEditMode) {
+                if (evt) evt.preventDefault();
+                showPayoutMonthTooltip(label);
+                setTimeout(hidePayoutMonthTooltip, 1800);
+                return false;
+            }
+            return true;
+        }
+
+        function togglePayoutMonthEditMode(forceValue) {
+            payoutMonthEditMode = (typeof forceValue === 'boolean') ? forceValue : !payoutMonthEditMode;
+            syncPayoutMonthUI();
+        }
+
+        function syncPayoutMonthUI() {
+            var boxes = document.querySelectorAll('input[name="payoutMonth"]');
+            boxes.forEach(function(cb) {
+                var label = cb.closest('label');
+                if (!label) return;
+                var selected = !!cb.checked;
+                label.style.display = (!payoutMonthEditMode && !selected) ? 'none' : '';
+                label.classList.toggle('is-selected', selected);
+                label.classList.toggle('is-unselected', !selected);
+                label.classList.toggle('is-view-only', !payoutMonthEditMode);
+            });
+            var btn = document.getElementById('btnPayoutMonthEdit');
+            if (btn) btn.innerText = payoutMonthEditMode ? '수정 완료' : '지급월 수정';
+        }
+
         function updatePayoutMonthTooltips(stock) {
             var boxes = document.querySelectorAll('input[name="payoutMonth"]');
             boxes.forEach(function(cb) {
@@ -703,24 +799,34 @@
                 var label = cb.closest('label');
                 if (!label) return;
                 var exact = cb.checked ? getPayoutDateForMonth(stock, month) : '';
-                if (!cb.checked) label.title = month + '월: 배당 지급월 아님';
-                else if (exact) label.title = formatPayoutDateKo(exact) + ' 지급 예정 · 일정은 변경될 수 있음';
-                else label.title = month + '월 배당 지급 · 정확한 지급일 정보 없음';
+                var tip = '';
+                if (!cb.checked) tip = month + '월: 배당 지급월 아님';
+                else if (exact) tip = '지급일: ' + formatPayoutDateKo(exact) + ' · 일정은 변경될 수 있음';
+                else tip = month + '월 배당 지급 · 정확한 지급일 정보 없음';
+                label.title = tip;
+                label.dataset.tooltip = tip;
             });
+
+            syncPayoutMonthUI();
 
             var help = document.getElementById('payoutDateHelp');
             if (help) {
-                var nextExact = '';
-                var today = new Date();
                 var dates = stock && Array.isArray(stock.payoutDates) ? stock.payoutDates.slice() : [];
                 if (!dates.length && stock) { var known = getKnownPayoutDateSchedule(stock.ticker); if (known) dates = known.dates; }
-                dates.sort();
+                dates = dates.filter(function(v){ return /^\d{4}-\d{2}-\d{2}$/.test(v); }).sort();
+                var today = new Date();
+                var nextExact = '';
                 for (var i=0; i<dates.length; i++) {
                     var d = new Date(dates[i] + 'T23:59:59');
                     if (!isNaN(d.getTime()) && d >= today) { nextExact = dates[i]; break; }
                 }
-                if (nextExact) help.innerText = '💡 다음 지급 예정일: ' + formatPayoutDateKo(nextExact) + ' · 월 버튼에 마우스를 올리면 날짜가 표시됩니다.';
-                else help.innerText = '💡 체크된 월에 마우스를 올리면 지급일 정보를 볼 수 있습니다. 정확한 날짜가 없는 종목은 “정보 없음”으로 표시합니다.';
+                if (nextExact) {
+                    help.innerText = '💡 다음 지급 예정일: ' + formatPayoutDateKo(nextExact) + ' · 지급월 위에 마우스를 올리면 날짜가 표시됩니다.';
+                } else if (dates.length) {
+                    help.innerText = '💡 확인된 최근 지급일: ' + formatPayoutDateKo(dates[dates.length - 1]) + ' · 다음 일정은 아직 확인되지 않았습니다.';
+                } else {
+                    help.innerText = '💡 실제 지급월만 표시됩니다. 정확한 지급일이 확인되지 않은 종목은 툴팁에 “정보 없음”으로 표시됩니다.';
+                }
             }
         }
 
@@ -794,7 +900,7 @@
         var detectedBackupData = null;
         var currentBestSnapId = null;
         var currentThemeMode = 'dark';
-        var CLOUD_SYNC_VERSION = '1.9.11';
+        var CLOUD_SYNC_VERSION = '1.9.12';
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
         var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
@@ -980,7 +1086,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.9.11: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.9.12: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -1303,6 +1409,7 @@
                         for(var i=0; i<(resolved.months || []).length; i++) { if(resolved.months[i] === val) includes = true; }
                         cb.checked = includes;
                     });
+                    payoutMonthEditMode = false;
                     updatePayoutMonthTooltips(resolved);
 
                     var unit = resolved.market === 'US' ? '$' : '원';
@@ -1568,7 +1675,7 @@
                         }
                         portfolio = deduplicatePortfolioByStockAccount(mapped);
                         // 이전 버전의 연속 저장 버그로 생긴 중복 카드도 새로고침 시 자동 정리한다.
-                        // v1.9.11: 배당주기와 지급월 불일치(예: 분기배당인데 1~12월)를 로드 시 자동 교정해 저장한다.
+                        // v1.9.12: 배당주기와 지급월 불일치(예: 분기배당인데 1~12월)를 로드 시 자동 교정해 저장한다.
                         localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
                         if (portfolio.length !== mapped.length) console.info('중복 종목 정리:', (mapped.length - portfolio.length) + '개 제거');
                         return;
@@ -1663,7 +1770,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.9.11: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.9.12: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -2508,6 +2615,8 @@
 
         function openModal(editIdx) {
             if (editIdx === undefined) editIdx = -1;
+            payoutMonthEditMode = false;
+            hidePayoutMonthTooltip();
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
 
@@ -3194,7 +3303,7 @@
         }
 
         function exportData() {
-            var payload = { version: '1.9.11', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
+            var payload = { version: '1.9.12', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             var a = document.createElement('a');
             a.setAttribute("href", dataStr); a.setAttribute("download", 'dividend_portfolio_' + new Date().toISOString().slice(0,10) + '.json');
