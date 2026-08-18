@@ -30,64 +30,71 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen pb-24">
 
-    <!-- 상단 네비게이션 헤더 -->
-    <header class="sticky top-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-3 py-3 flex justify-between items-center">
-        <div>
-            <h1 class="text-base sm:text-lg font-bold text-emerald-400 flex items-center gap-1.5">
-                <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
-            </h1>
-            <div class="flex items-center gap-2 mt-0.5">
-                <p class="text-[11px] text-gray-400" id="headerExchangeRate">환율: 불러오는 중...</p>
-                <!-- 클라우드 저장 상태 뱃지 -->
-                <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1">
-                    <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">로컬 전용</span>
+    <!-- 상단 2단 구조 네비게이션 헤더 -->
+    <header class="sticky top-0 z-30 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3.5 py-2.5 space-y-2">
+        <!-- 1단: 타이틀, 버전 표시, 환율 및 클라우드 상태 뱃지 -->
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+                <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
+                </h1>
+                <!-- 버전 표시 뱃지 -->
+                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
+                    v1.2.0
+                </span>
+            </div>
+
+            <!-- 환율 및 클라우드 동기화 상태 -->
+            <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
+                <p class="text-[10px] text-gray-400" id="headerExchangeRate">환율: 조회중...</p>
+                <span id="cloudStatusBadge" onclick="openCloudModal()" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold cursor-pointer hover:bg-blue-500/30 flex items-center gap-1 whitespace-nowrap">
+                    <i class="fa-solid fa-cloud text-[9px]"></i> <span id="cloudStatusText">로컬 전용</span>
                 </span>
             </div>
         </div>
 
-        <div class="flex items-center gap-1">
-            <!-- [신규 기능: 통화 전환 토글] -->
-            <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1" title="표시 통화 전환 (원화/달러)">
-                <i class="fa-solid fa-right-left text-[10px]"></i> <span id="currencyToggleText">KRW</span>
-            </button>
+        <!-- 2단: 모바일 최적화 기능 버튼 툴바 (2열 분할 랩핑) -->
+        <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-gray-800/80">
+            <!-- 좌측 기능: 통화 전환, FIRE, 롤백, 클라우드, DRIP -->
+            <div class="flex items-center gap-1 flex-wrap">
+                <!-- 통화 전환 토글 버튼 -->
+                <button onclick="toggleCurrency()" id="currencyToggleBtn" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 whitespace-nowrap" title="통화 전환 (원화/달러)">
+                    <i class="fa-solid fa-right-left text-[9px]"></i> <span id="currencyToggleText">KRW</span>
+                </button>
+                <!-- 은퇴 FIRE 계산기 -->
+                <button onclick="openFireModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-orange-600/30 active:scale-95 transition whitespace-nowrap" title="은퇴 FIRE 계산기">
+                    <i class="fa-solid fa-fire-flame-curved text-[10px]"></i> FIRE
+                </button>
+                <!-- 스냅샷 롤백 히스토리 -->
+                <button onclick="openSnapshotModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 active:scale-95 transition whitespace-nowrap" title="스냅샷 롤백">
+                    <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> 롤백
+                </button>
+                <!-- 웹 클라우드 동기화 -->
+                <button onclick="openCloudModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-blue-600/30 active:scale-95 transition whitespace-nowrap" title="웹 클라우드 연동">
+                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i>
+                </button>
+                <!-- DRIP 복리 시뮬레이터 -->
+                <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-indigo-600/30 active:scale-95 transition whitespace-nowrap" title="DRIP 복리 시뮬레이터">
+                    <i class="fa-solid fa-seedling text-[10px]"></i> DRIP
+                </button>
+            </div>
 
-            <!-- [신규 기능: FIRE 은퇴 계산기 모달 열기] -->
-            <button onclick="openFireModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-orange-600/30 active:scale-95 transition" title="은퇴 파이어(FIRE) 계산기">
-                <i class="fa-solid fa-fire-flame-curved"></i> FIRE
-            </button>
-
-            <!-- [신규 기능: 스냅샷 롤백 히스토리 모달 열기] -->
-            <button onclick="openSnapshotModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 active:scale-95 transition" title="스냅샷 롤백 히스토리">
-                <i class="fa-solid fa-clock-rotate-left"></i> 롤백
-            </button>
-
-            <!-- 웹 클라우드 동기화 설정 버튼 -->
-            <button onclick="openCloudModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-blue-600/30 active:scale-95 transition" title="웹 클라우드 연동">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-            </button>
-
-            <!-- DRIP 복리 시뮬레이터 버튼 -->
-            <button onclick="openDripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-indigo-600/30 active:scale-95 transition" title="배당 재투자(DRIP) 시뮬레이터">
-                <i class="fa-solid fa-seedling"></i> DRIP
-            </button>
-
-            <!-- 종목 추가 모달 버튼 -->
-            <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-md shadow-emerald-500/30 active:scale-95 transition">
-                <i class="fa-solid fa-plus"></i> 추가
-            </button>
-
-            <!-- 내보내기/가져오기 드롭다운 옵션 -->
-            <div class="flex gap-1">
-                <!-- CSV 내보내기 -->
-                <button onclick="exportCSV()" class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs" title="CSV/엑셀 내보내기">
+            <!-- 우측 기능: 종목 추가, CSV 내보내기, 백업/복원 -->
+            <div class="flex items-center gap-1">
+                <!-- 종목 추가 -->
+                <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm shadow-emerald-500/30 active:scale-95 transition whitespace-nowrap">
+                    <i class="fa-solid fa-plus text-[10px]"></i> 추가
+                </button>
+                <!-- CSV/엑셀 내보내기 -->
+                <button onclick="exportCSV()" class="bg-gray-800 text-gray-300 hover:text-white px-1.5 py-1 rounded-lg text-xs whitespace-nowrap" title="CSV/엑셀 내보내기">
                     <i class="fa-solid fa-file-csv"></i>
                 </button>
-                <!-- JSON 백업 -->
-                <button onclick="exportData()" class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs" title="JSON 백업">
+                <!-- JSON 파일 백업 -->
+                <button onclick="exportData()" class="bg-gray-800 text-gray-300 hover:text-white px-1.5 py-1 rounded-lg text-xs whitespace-nowrap" title="JSON 백업">
                     <i class="fa-solid fa-download"></i>
                 </button>
-                <!-- JSON 복원 -->
-                <label class="bg-gray-800 text-gray-300 hover:text-white px-2 py-1.5 rounded-lg text-xs cursor-pointer" title="JSON 복원">
+                <!-- JSON 파일 복원 -->
+                <label class="bg-gray-800 text-gray-300 hover:text-white px-1.5 py-1 rounded-lg text-xs cursor-pointer whitespace-nowrap" title="JSON 복원">
                     <i class="fa-solid fa-upload"></i>
                     <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json">
                 </label>
@@ -108,7 +115,7 @@
             </div>
         </div>
 
-        <!-- [신규 기능: FIRE 생활비 달성률 요약 위젯] -->
+        <!-- FIRE 생활비 달성률 요약 위젯 카드 -->
         <section id="fireWidgetCard" onclick="openFireModal()" class="bg-gradient-to-r from-orange-900/40 via-amber-900/30 to-gray-800 p-3.5 rounded-2xl border border-orange-500/30 shadow-lg cursor-pointer hover:border-orange-500/50 transition">
             <div class="flex justify-between items-center mb-1.5">
                 <span class="text-xs font-bold text-orange-300 flex items-center gap-1.5">
@@ -151,7 +158,7 @@
                 </div>
             </div>
 
-            <!-- 자산 세부 통계 그리드 (세전 연배당금, 국가별 분리 세후 월배당금) -->
+            <!-- 자산 세부 통계 그리드 -->
             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
                 <div>
                     <p class="text-gray-400">총 매수 금액</p>
@@ -172,7 +179,7 @@
             </div>
         </section>
 
-        <!-- 차트 및 캘린더 영역 (월별 배당 / 종목 비중 / 섹터 비중 / [신규] 1년 타임라인) -->
+        <!-- 차트 및 캘린더 영역 -->
         <section class="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-lg">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex gap-1.5 flex-wrap">
@@ -185,7 +192,6 @@
                     <button id="tabSectorBtn" onclick="switchChartTab('sector')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200">
                         <i class="fa-solid fa-layer-group"></i> 섹터 비중
                     </button>
-                    <!-- [신규 기능: 1년 배당 타임라인 캘린더 탭] -->
                     <button id="tabTimelineBtn" onclick="switchChartTab('timeline')" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-200">
                         <i class="fa-solid fa-table-cells"></i> 1년 캘린더
                     </button>
@@ -197,7 +203,7 @@
                 <canvas id="monthlyDividendChart"></canvas>
             </div>
 
-            <!-- 자산 비중 도넛 차트 -->
+            <!-- 종목 비중 도넛 차트 -->
             <div id="pieChartWrapper" class="relative h-48 w-full hidden">
                 <canvas id="assetPieChart"></canvas>
             </div>
@@ -207,7 +213,7 @@
                 <canvas id="sectorPieChart"></canvas>
             </div>
 
-            <!-- [신규 기능: 1년 배당 캘린더 타임라인 그리드 뷰] -->
+            <!-- 1년 배당 캘린더 타임라인 그리드 뷰 -->
             <div id="timelineWrapper" class="hidden space-y-2">
                 <div class="grid grid-cols-3 gap-2" id="timelineGridContainer"></div>
             </div>
@@ -215,7 +221,7 @@
             <p id="monthlyChartTip" class="text-[10px] text-gray-400 text-center mt-2">💡 막대 그래프나 월별 카드를 터치하면 해당 월의 배당 종목을 상세 확인합니다.</p>
         </section>
 
-        <!-- 보유 종목 리스트 섹션 (필터 & 정렬 바) -->
+        <!-- 보유 종목 리스트 섹션 (필터 & 정렬) -->
         <section class="space-y-3">
             <div class="flex justify-between items-center px-1">
                 <h2 class="text-sm font-bold text-gray-300 flex items-center gap-1.5">
@@ -253,7 +259,7 @@
         </section>
     </main>
 
-    <!-- [신규 모달: FIRE 은퇴 시뮬레이터] -->
+    <!-- [모달 1: FIRE 은퇴 시뮬레이터] -->
     <div id="fireModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -304,7 +310,7 @@
         </div>
     </div>
 
-    <!-- [신규 모달: 스냅샷 롤백 히스토리 모달] -->
+    <!-- [모달 2: 스냅샷 롤백 히스토리] -->
     <div id="snapshotModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -319,7 +325,6 @@
                 </button>
             </div>
 
-            <!-- 스냅샷 리스트 -->
             <div id="snapshotListContainer" class="space-y-2.5 text-xs"></div>
 
             <button type="button" onclick="closeSnapshotModal()" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2.5 rounded-lg font-bold">
@@ -328,7 +333,7 @@
         </div>
     </div>
 
-    <!-- [모달: 월별 배당 상세 내역] -->
+    <!-- [모달 3: 월별 배당 상세 내역] -->
     <div id="monthDetailModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -351,7 +356,7 @@
         </div>
     </div>
 
-    <!-- [모달 1: 웹 클라우드 동기화 설정] -->
+    <!-- [모달 4: 웹 클라우드 동기화 설정] -->
     <div id="cloudModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -412,7 +417,7 @@
         </div>
     </div>
 
-    <!-- [모달 2: 종목 추가 및 수정] -->
+    <!-- [모달 5: 종목 추가 및 수정] -->
     <div id="stockModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -495,7 +500,7 @@
                     </div>
                 </div>
 
-                <!-- [신규 기능: 종목별 투자 메모장 필드] -->
+                <!-- 종목별 투자 메모장 -->
                 <div>
                     <label class="block text-gray-400 font-semibold mb-1">투자 메모 & 목표 (선택)</label>
                     <input type="text" id="inputMemo" placeholder="예: 목표 100주 달성, 배당락일 3월/9월, 매달 2주씩 추가 매수" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
@@ -537,7 +542,7 @@
         </div>
     </div>
 
-    <!-- [모달 3: DRIP(배당 재투자) 복리 시뮬레이터] -->
+    <!-- [모달 6: DRIP(배당 재투자) 복리 시뮬레이터] -->
     <div id="dripModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -646,7 +651,7 @@
         let currentFilter = 'ALL';
         let currentSort = 'VALUE_DESC';
         let displayCurrency = 'KRW'; // 'KRW' 또는 'USD'
-        let targetMonthlyExpense = 3000000; // FIRE 목표 월 생활비 (기본 300만원)
+        let targetMonthlyExpense = 3000000; // FIRE 목표 월 생활비
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
@@ -678,7 +683,7 @@
             btnText.innerText = displayCurrency;
         }
 
-        // 금액 포맷터 헬퍼 (통화 토글 상태에 맞춰 변환 출력)
+        // 금액 포맷터 헬퍼 (통화 상태에 맞춤 환산 출력)
         function formatMoney(amountKRW) {
             if (displayCurrency === 'USD') {
                 const valUSD = amountKRW / usdKrwRate;
@@ -694,7 +699,7 @@
             const statusText = document.getElementById('cloudStatusText');
             const badge = document.getElementById('cloudIdBadge');
             if (cloudSyncKey) {
-                statusText.innerText = '클라우드 연동됨';
+                statusText.innerText = '클라우드 ON';
                 badge.innerText = `ID: ${cloudSyncKey.substring(0, 8)}...`;
                 badge.className = 'text-[10px] text-emerald-400 font-bold';
                 document.getElementById('inputSyncKey').value = cloudSyncKey;
@@ -933,7 +938,7 @@
                 if (confirm(`${target.dateStr} 시점의 데이터로 복원하시겠습니까?`)) {
                     createSnapshot('롤백 실행 직전 현재 상태 백업');
                     portfolio = JSON.parse(JSON.stringify(target.data));
-                    saveToStorage(false); // 스냅샷 중복 기록 방지
+                    saveToStorage(false);
                     renderAll();
                     alert('선택한 시점의 포트폴리오로 성공적으로 롤백되었습니다!');
                     closeSnapshotModal();
@@ -1007,7 +1012,6 @@
             targetMonthlyExpense = inputVal;
             localStorage.setItem('my_fire_target_expense', targetMonthlyExpense);
 
-            // 전체 세후 월배당금 계산
             let totalAnnualNetKRW = 0;
             portfolio.forEach(stock => {
                 const isUS = stock.market === 'US';
@@ -1021,7 +1025,6 @@
             const fireRate = targetMonthlyExpense > 0 ? (netMonthlyKRW / targetMonthlyExpense) * 100 : 0;
             const gapKRW = Math.max(0, targetMonthlyExpense - netMonthlyKRW);
 
-            // 위젯 및 모달 UI 동시 갱신
             const clampedWidth = Math.min(100, Math.max(0, fireRate));
             document.getElementById('fireWidgetRate').innerText = `${fireRate.toFixed(1)}%`;
             document.getElementById('fireWidgetProgressBar').style.width = `${clampedWidth}%`;
@@ -1326,7 +1329,6 @@
             container.innerHTML = '';
             document.getElementById('stockCount').innerText = portfolio.length;
 
-            // 전체 자산 통계 계산 (미국 15%, 한국 15.4% 분리 원천징수)
             portfolio.forEach(stock => {
                 const isUS = stock.market === 'US';
                 const rate = isUS ? usdKrwRate : 1;
@@ -1419,7 +1421,7 @@
                 `;
             }
 
-            // 개별 종목 카드 렌더링 (메모장 및 YoC 포함)
+            // 개별 종목 카드 렌더링
             displayList.forEach(stock => {
                 const isUS = stock.market === 'US';
                 const rate = isUS ? usdKrwRate : 1;
@@ -1437,7 +1439,6 @@
                 const profitColor = profitLossLocal >= 0 ? 'text-rose-400' : 'text-blue-400';
                 const profitBadge = profitLossLocal >= 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400';
 
-                // 메모 영역 템플릿
                 const memoHtml = stock.memo ? `
                     <div class="bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-300">
                         <i class="fa-regular fa-note-sticky text-amber-400 text-[10px]"></i>
@@ -1507,7 +1508,7 @@
                 container.appendChild(card);
             });
 
-            // 대시보드 통계 반영 (통화 토글 완벽 적용)
+            // 대시보드 통계 반영
             const totalProfitKRW = totalCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = totalAnnualNetKRW / 12;
@@ -1552,7 +1553,6 @@
             const ctx = document.getElementById('monthlyDividendChart').getContext('2d');
             if (monthlyChart) monthlyChart.destroy();
 
-            // 표시 통화에 맞춰 차트 데이터 변환
             const chartData = monthlySums.map(v => displayCurrency === 'USD' ? +(v / usdKrwRate).toFixed(2) : Math.round(v));
 
             monthlyChart = new Chart(ctx, {
@@ -1603,7 +1603,7 @@
             });
         }
 
-        // [신규 기능: 1년 배당 타임라인 캘린더 그리드 렌더링]
+        // 1년 배당 타임라인 캘린더 그리드 렌더링
         function renderTimelineGrid() {
             const container = document.getElementById('timelineGridContainer');
             container.innerHTML = '';
@@ -1986,7 +1986,7 @@
             }
         }
 
-        // 14. 파일 내보내기 및 가져오기 (JSON 및 [신규] CSV)
+        // 14. 파일 내보내기 및 가져오기 (JSON 및 CSV)
         function exportCSV() {
             if (portfolio.length === 0) {
                 alert('내보낼 종목 데이터가 없습니다.');
@@ -2008,7 +2008,6 @@
                 `"${(s.payoutMonths || []).join(',')}"`
             ]);
 
-            // UTF-8 BOM(\uFEFF) 추가로 엑셀 한글 깨짐 방지
             const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
