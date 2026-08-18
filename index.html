@@ -45,7 +45,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.6.5
+                    v1.6.6
                 </span>
             </div>
 
@@ -321,7 +321,7 @@
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                     <i class="fa-solid fa-list-check text-blue-600 dark:text-blue-400"></i> 보유 종목 현황 (<span id="stockCount">0</span>)
                 </h2>
-                <button onclick="refreshAllStockData()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
+                <button onclick="refreshAllStockData(false)" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
                     <i class="fa-solid fa-rotate" id="refreshIcon"></i> 시세 일괄 갱신 (15~20분 지연)
                 </button>
             </div>
@@ -834,6 +834,7 @@
 
     <!-- 핵심 비즈니스 로직 스크립트 -->
     <script>
+        // 기본 내장 종목 데이터베이스
         const BUILTIN_STOCKS = {
             "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
             "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
@@ -875,6 +876,7 @@
             "카카오": { ticker: "035720", name: "카카오", market: "KR", sector: "성장/기술주", account: "일반계좌", price: 40700, dps: 61, cycle: "annual", months: [4] }
         };
 
+        // 전역 상태 변수
         let portfolio = [];
         let cashBalances = {};
         let selectedDashboardAccount = 'ALL';
@@ -898,6 +900,7 @@
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
+        // DOM 로드 완료 시 초기화 루틴
         window.addEventListener('DOMContentLoaded', async () => {
             initThemeMode();
             initDisplayCurrency();
@@ -907,13 +910,18 @@
             await fetchExchangeRate();
             checkAndPromptDataRecovery();
             renderAll();
+            
+            // [개선] 페이지 새로고침(F5) 시 백그라운드로 최신 실시간 시세 자동 갱신 (무음 모드: silent=true)
+            refreshAllStockData(true);
         });
 
+        // 테마 모드 초기화
         function initThemeMode() {
             currentThemeMode = localStorage.getItem('my_theme_mode') || 'dark';
             applyThemeModeStyles();
         }
 
+        // 테마 모드 토글
         function toggleThemeMode() {
             currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
             localStorage.setItem('my_theme_mode', currentThemeMode);
@@ -921,6 +929,7 @@
             renderAll();
         }
 
+        // 테마별 CSS 클래스 적용
         function applyThemeModeStyles() {
             const body = document.getElementById('appBody');
             const header = document.getElementById('appHeader');
@@ -951,11 +960,13 @@
             }
         }
 
+        // 표시 통화(KRW/USD) 초기화
         function initDisplayCurrency() {
             displayCurrency = localStorage.getItem('my_display_currency') || 'KRW';
             updateCurrencyButton();
         }
 
+        // 표시 통화 토글
         function toggleCurrency() {
             displayCurrency = displayCurrency === 'KRW' ? 'USD' : 'KRW';
             localStorage.setItem('my_display_currency', displayCurrency);
@@ -963,11 +974,13 @@
             renderAll();
         }
 
+        // 통화 버튼 텍스트 갱신
         function updateCurrencyButton() {
             const btnText = document.getElementById('currencyToggleText');
             btnText.innerText = displayCurrency;
         }
 
+        // 통화 포맷팅 함수
         function formatMoney(amountKRW) {
             if (displayCurrency === 'USD') {
                 const valUSD = amountKRW / usdKrwRate;
@@ -977,6 +990,7 @@
             }
         }
 
+        // 계좌별 예수금 객체 반환
         function getCashForAccount(accName) {
             if (!cashBalances[accName]) {
                 return { krw: 0, usd: 0 };
@@ -987,6 +1001,7 @@
             };
         }
 
+        // 계좌별 또는 전체 예수금 원화 환산 총합 반환
         function getTotalCashKRW(accName = 'ALL') {
             if (accName === 'ALL') {
                 let sum = 0;
@@ -1001,6 +1016,7 @@
             }
         }
 
+        // 예수금 모달 열기
         function openCashModal() {
             const container = document.getElementById('cashAccountInputList');
             container.innerHTML = '';
@@ -1039,10 +1055,12 @@
             document.getElementById('cashModal').classList.remove('hidden');
         }
 
+        // 예수금 모달 닫기
         function closeCashModal() {
             document.getElementById('cashModal').classList.add('hidden');
         }
 
+        // 예수금 저장 및 총자산 반영 (수동 변경 시에는 스냅샷 생성)
         function saveCashBalancesFromModal() {
             const allAccounts = Array.from(new Set([
                 '일반계좌', 'ISA', '연금저축1', '연금저축2', '퇴직연금(IRP)',
@@ -1072,6 +1090,7 @@
             alert('계좌별 현금/예수금 잔액이 성공적으로 저장 및 총자산에 반영되었습니다!');
         }
 
+        // 상단 계좌 선택 드롭다운 갱신
         function updateDashboardAccountDropdown() {
             const selectEl = document.getElementById('dashboardAccountSelect');
             if (!selectEl) return;
@@ -1098,6 +1117,7 @@
             }
         }
 
+        // 대시보드 계좌 전환
         function switchDashboardAccount(accName) {
             selectedDashboardAccount = accName;
             currentAccountFilter = accName;
@@ -1106,6 +1126,7 @@
             renderAll();
         }
 
+        // 과거 저장 데이터 복구 체크
         function checkAndPromptDataRecovery() {
             if (portfolio.length <= 2) {
                 const backupKeys = [
@@ -1146,6 +1167,7 @@
             }
         }
 
+        // 긴급 복구 배너 노출
         function showEmergencyRecoveryBanner(count) {
             const banner = document.getElementById('emergencyRecoverBanner');
             const badge = document.getElementById('recoverItemCountBadge');
@@ -1153,6 +1175,7 @@
             banner.classList.remove('hidden');
         }
 
+        // 발견된 백업 데이터로 복원 실행
         function applyEmergencyRecovery() {
             if (detectedBackupData && Array.isArray(detectedBackupData)) {
                 createSnapshot('긴급 데이터 복구 직전 백업');
@@ -1164,6 +1187,7 @@
             }
         }
 
+        // 긴급 복구 닫기
         function dismissEmergencyRecovery() {
             if (currentBestSnapId) {
                 localStorage.setItem('dismissed_recovery_' + currentBestSnapId, 'true');
@@ -1171,6 +1195,7 @@
             document.getElementById('emergencyRecoverBanner').classList.add('hidden');
         }
 
+        // 종목 합치기 모드 토글
         function toggleMergedView() {
             isMergedView = !isMergedView;
             const btn = document.getElementById('mergedViewToggleBtn');
@@ -1186,6 +1211,7 @@
             renderSummaryAndList();
         }
 
+        // 다음 배당락일 D-Day 계산
         function calculateNextExDividendDate(stock) {
             const now = new Date();
             const currentYear = now.getFullYear();
@@ -1224,6 +1250,7 @@
             return null;
         }
 
+        // 클라우드 동기화 상태 초기화
         function initCloudSyncStatus() {
             cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
             const statusText = document.getElementById('cloudStatusText');
@@ -1240,15 +1267,18 @@
             }
         }
 
+        // 클라우드 모달 열기
         function openCloudModal() {
             document.getElementById('inputSyncKey').value = localStorage.getItem('my_cloud_sync_key') || '';
             document.getElementById('cloudModal').classList.remove('hidden');
         }
 
+        // 클라우드 모달 닫기
         function closeCloudModal() {
             document.getElementById('cloudModal').classList.add('hidden');
         }
 
+        // 새 클라우드 저장 공간 생성
         async function createNewCloudStorage() {
             const btn = document.getElementById('btnCreateCloud');
             const originText = btn.innerHTML;
@@ -1295,6 +1325,7 @@
             }
         }
 
+        // 클라우드 서버에 업로드
         async function uploadToCloudStorage() {
             let key = document.getElementById('inputSyncKey').value.trim();
             const payload = {
@@ -1366,6 +1397,7 @@
             }
         }
 
+        // 클라우드 서버에서 복원
         async function downloadFromCloudStorage() {
             const key = document.getElementById('inputSyncKey').value.trim();
             if (!key) {
@@ -1413,6 +1445,7 @@
             }
         }
 
+        // 클라우드 백그라운드 자동 푸시
         async function pushToCloudQuietly() {
             if (!cloudSyncKey) return;
             try {
@@ -1434,6 +1467,7 @@
             }
         }
 
+        // 스냅샷 생성 함수
         function createSnapshot(reason = '변경 전 백업') {
             if (!portfolio || portfolio.length === 0) return;
             try {
@@ -1454,6 +1488,7 @@
             }
         }
 
+        // 스냅샷 롤백 모달 열기
         function openSnapshotModal() {
             const listContainer = document.getElementById('snapshotListContainer');
             listContainer.innerHTML = '';
@@ -1493,10 +1528,12 @@
             document.getElementById('snapshotModal').classList.remove('hidden');
         }
 
+        // 스냅샷 모달 닫기
         function closeSnapshotModal() {
             document.getElementById('snapshotModal').classList.add('hidden');
         }
 
+        // 특정 스냅샷으로 롤백 복원
         function rollbackToSnapshot(snapId) {
             let snapshots = JSON.parse(localStorage.getItem('my_portfolio_snapshots_v1') || '[]');
             const target = snapshots.find(s => s.id === snapId);
@@ -1516,6 +1553,7 @@
             }
         }
 
+        // 포트폴리오 클립보드 복사
         function copyPortfolioToClipboard() {
             if (portfolio.length === 0) {
                 alert('복사할 종목 데이터가 없습니다.');
@@ -1533,6 +1571,7 @@
             });
         }
 
+        // 클립보드에서 붙여넣어 복원
         function pastePortfolioFromClipboard() {
             navigator.clipboard.readText().then(text => {
                 if (!text) {
@@ -1545,6 +1584,7 @@
             });
         }
 
+        // 붙여넣은 데이터 파싱 및 저장
         function processPastedData(text) {
             if (!text) return;
             try {
@@ -1564,7 +1604,7 @@
                     return;
                 }
 
-                saveToStorage();
+                saveToStorage(true);
                 renderAll();
                 alert(`총 ${portfolio.length}개의 종목 및 예수금 데이터를 성공적으로 복원했습니다!`);
                 closeCloudModal();
@@ -1573,21 +1613,25 @@
             }
         }
 
+        // FIRE 설정 초기화
         function initFireSettings() {
             targetMonthlyExpense = parseFloat(localStorage.getItem('my_fire_target_expense')) || 3000000;
             document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
         }
 
+        // FIRE 모달 열기
         function openFireModal() {
             document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
             updateFireCalculations();
             document.getElementById('fireModal').classList.remove('hidden');
         }
 
+        // FIRE 모달 닫기
         function closeFireModal() {
             document.getElementById('fireModal').classList.add('hidden');
         }
 
+        // FIRE 달성률 계산 및 UI 갱신
         function updateFireCalculations() {
             const inputVal = parseFloat(document.getElementById('inputTargetExpense').value) || 0;
             targetMonthlyExpense = inputVal;
@@ -1618,6 +1662,7 @@
             document.getElementById('fireModalGapText').innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : `월 ${formatMoney(gapKRW)} 부족`;
         }
 
+        // 절세/세액공제 모달 열기
         function openTaxSavingsModal() {
             document.getElementById('taxSavingsModal').classList.remove('hidden');
             switchTaxTab('pension');
@@ -1625,10 +1670,12 @@
             calculateIsaTaxSavings();
         }
 
+        // 절세/세액공제 모달 닫기
         function closeTaxSavingsModal() {
             document.getElementById('taxSavingsModal').classList.add('hidden');
         }
 
+        // 절세 모달 탭 전환 (연금/ISA)
         function switchTaxTab(tab) {
             const pBtn = document.getElementById('taxTabPensionBtn');
             const iBtn = document.getElementById('taxTabIsaBtn');
@@ -1650,6 +1697,7 @@
             }
         }
 
+        // 연금 세액공제 계산
         function calculatePensionTaxCredit() {
             const rate = parseFloat(document.getElementById('salaryTierSelect').value);
             const pensionInput = parseFloat(document.getElementById('inputPensionAmount').value) || 0;
@@ -1668,6 +1716,7 @@
             document.getElementById('remainingTaxCreditLimit').innerText = `${Math.round(remainingLimit).toLocaleString()}원`;
         }
 
+        // 포트폴리오의 연금/IRP 매수금액 자동 채우기
         function autoFillPensionFromPortfolio() {
             let pensionSum = 0;
             let irpSum = 0;
@@ -1690,6 +1739,7 @@
             alert(`포트폴리오 연금 계좌(${Math.round(pensionSum).toLocaleString()}원) 및 IRP 계좌(${Math.round(irpSum).toLocaleString()}원) 매수 금액을 반영했습니다.`);
         }
 
+        // ISA 절세 효과 계산
         function calculateIsaTaxSavings() {
             const limit = parseFloat(document.getElementById('isaTypeSelect').value);
             let isaAnnualDivKRW = 0;
@@ -1718,6 +1768,7 @@
             document.getElementById('isaTotalTaxSaved').innerText = `+${Math.round(totalSaved).toLocaleString()}원`;
         }
 
+        // 로컬스토리지 및 클라우드에서 포트폴리오 데이터 불러오기
         async function loadPortfolioData() {
             const savedCash = localStorage.getItem('my_cash_balances_v1');
             if (savedCash) {
@@ -1762,6 +1813,7 @@
             saveToStorage(false);
         }
 
+        // 로컬스토리지 저장 및 클라우드 동기화 (recordSnapshot: true일 때만 롤백 스냅샷 생성)
         function saveToStorage(recordSnapshot = true) {
             if (recordSnapshot) {
                 createSnapshot('데이터 변경');
@@ -1771,6 +1823,7 @@
             pushToCloudQuietly();
         }
 
+        // 실시간 환율 조회 API 호출
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -1784,6 +1837,7 @@
             }
         }
 
+        // 프록시 기반 야후 파이낸스 실시간 시세 조회
         async function tryFetchLiveOnline(symbol) {
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
             
@@ -1832,6 +1886,7 @@
             return null;
         }
 
+        // 종목 추가/수정 모달에서의 실시간 단건 조회
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -1937,14 +1992,16 @@
             }
         }
 
-        async function refreshAllStockData() {
+        // 보유 종목 전체 실시간 시세 일괄 갱신
+        // isSilent: true인 경우 (새로고침 등 자동 실행) alert 창을 띄우지 않음
+        async function refreshAllStockData(isSilent = false) {
             if (portfolio.length === 0) {
-                alert('갱신할 종목이 없습니다.');
+                if (!isSilent) alert('갱신할 종목이 없습니다.');
                 return;
             }
 
             const icon = document.getElementById('refreshIcon');
-            icon.classList.add('fa-spin');
+            if (icon) icon.classList.add('fa-spin');
             let updatedCount = 0;
 
             const updatePromises = portfolio.map(async (stock) => {
@@ -1977,12 +2034,18 @@
 
             await Promise.allSettled(updatePromises);
 
-            saveToStorage();
+            // [개선] 단순 시세 갱신 작업이므로 스냅샷(롤백 히스토리)을 생성하지 않도록 false 전달
+            saveToStorage(false);
             renderAll();
-            icon.classList.remove('fa-spin');
-            alert(`총 ${updatedCount}개 종목의 실시간 시세가 최신 기준으로 일괄 갱신되었습니다.`);
+            if (icon) icon.classList.remove('fa-spin');
+            
+            // 수동으로 버튼을 눌렀을 때만 완료 안내 알림창 팝업
+            if (!isSilent) {
+                alert(`총 ${updatedCount}개 종목의 실시간 시세가 최신 기준으로 일괄 갱신되었습니다.`);
+            }
         }
 
+        // 국가/배당주기 필터 변경
         function setFilter(filterType) {
             currentFilter = filterType;
             ['ALL', 'US', 'KR', 'MONTHLY'].forEach(type => {
@@ -1998,6 +2061,7 @@
             renderSummaryAndList();
         }
 
+        // 계좌별 필터 변경
         function setAccountFilter(accountName) {
             currentAccountFilter = accountName;
             selectedDashboardAccount = accountName;
@@ -2006,11 +2070,13 @@
             renderAll();
         }
 
+        // 정렬 기준 변경
         function setSort(sortType) {
             currentSort = sortType;
             renderSummaryAndList();
         }
 
+        // 계좌 필터 드롭다운 목록 갱신
         function updateAccountFilterDropdown() {
             const selectEl = document.getElementById('accountFilterSelect');
             const accounts = Array.from(new Set([
@@ -2035,6 +2101,7 @@
             }
         }
 
+        // 전체 UI 통합 렌더링
         function renderAll() {
             updateDashboardAccountDropdown();
             updateAccountFilterDropdown();
@@ -2053,6 +2120,7 @@
             }
         }
 
+        // 차트 탭 전환
         function switchChartTab(tab) {
             activeChartTab = tab;
             const mBtn = document.getElementById('tabMonthlyBtn');
@@ -2099,6 +2167,7 @@
             }
         }
 
+        // 대시보드 요약 및 종목 리스트 렌더링
         function renderSummaryAndList() {
             let totalInvestedKRW = 0;
             let totalStockCurrentKRW = 0;
@@ -2414,6 +2483,7 @@
             document.getElementById('monthlyNetDividend').innerText = formatMoney(monthlyNetKRW);
         }
 
+        // 월별 배당 막대 차트 렌더링
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -2484,6 +2554,7 @@
             });
         }
 
+        // 1년 캘린더 타임라인 그리드 뷰 렌더링
         function renderTimelineGrid() {
             const container = document.getElementById('timelineGridContainer');
             container.innerHTML = '';
@@ -2522,6 +2593,7 @@
             }
         }
 
+        // 월별 배당 상세 내역 모달 열기
         function openMonthDetailModal(month) {
             const modal = document.getElementById('monthDetailModal');
             const title = document.getElementById('monthModalTitle');
@@ -2588,10 +2660,12 @@
             modal.classList.remove('hidden');
         }
 
+        // 월별 배당 상세 모달 닫기
         function closeMonthDetailModal() {
             document.getElementById('monthDetailModal').classList.add('hidden');
         }
 
+        // 종목별 비중 도넛 차트 렌더링
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
@@ -2641,6 +2715,7 @@
             });
         }
 
+        // 섹터별 비중 도넛 차트 렌더링
         function renderSectorPieChart() {
             const sectorMap = {};
             const bgColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6'];
@@ -2692,6 +2767,7 @@
             });
         }
 
+        // 계좌별 비중 도넛 차트 렌더링
         function renderAccountPieChart() {
             const accountMap = {};
             const bgColors = ['#14B8A6', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316'];
@@ -2743,15 +2819,18 @@
             });
         }
 
+        // DRIP 복리 시뮬레이터 열기
         function openDripModal() {
             document.getElementById('dripModal').classList.remove('hidden');
             runDripSimulation();
         }
 
+        // DRIP 모달 닫기
         function closeDripModal() {
             document.getElementById('dripModal').classList.add('hidden');
         }
 
+        // DRIP 복리 시뮬레이션 계산
         function runDripSimulation() {
             const years = parseInt(document.getElementById('dripYears').value);
             const priceGrowth = (parseFloat(document.getElementById('dripPriceGrowth').value) || 0) / 100;
@@ -2837,6 +2916,7 @@
             });
         }
 
+        // 종목 추가/수정 모달 열기
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -2870,10 +2950,12 @@
             document.getElementById('stockModal').classList.remove('hidden');
         }
 
+        // 종목 모달 닫기
         function closeModal() {
             document.getElementById('stockModal').classList.add('hidden');
         }
 
+        // 시장 라디오 변경 시 통화 단위 라벨 조정
         function handleMarketChange() {
             const isUS = document.querySelector('input[name="marketType"]:checked').value === 'US';
             document.getElementById('buyPriceLabel').innerText = isUS ? '평균 매수가 ($)' : '평균 매수가 (원)';
@@ -2881,6 +2963,7 @@
             document.getElementById('dpsLabel').innerText = isUS ? '주당 연간 배당금 ($)' : '주당 연간 배당금 (원)';
         }
 
+        // 배당 주기 변경 시 지급월 기본값 세팅
         function handleCycleChange() {
             const cycle = document.getElementById('inputDivCycle').value;
             const checkboxes = document.querySelectorAll('input[name="payoutMonth"]');
@@ -2897,6 +2980,7 @@
             }
         }
 
+        // 종목 저장 (신규 등록 및 수정)
         function saveStock(e) {
             e.preventDefault();
             const editIdx = parseInt(document.getElementById('editIndex').value);
@@ -2925,19 +3009,21 @@
                 portfolio.push(stockData);
             }
 
-            saveToStorage();
+            saveToStorage(true);
             renderAll();
             closeModal();
         }
 
+        // 종목 삭제
         function deleteStock(idx) {
             if (confirm(`'${portfolio[idx].name}' 종목을 삭제하시겠습니까?`)) {
                 portfolio.splice(idx, 1);
-                saveToStorage();
+                saveToStorage(true);
                 renderAll();
             }
         }
 
+        // CSV 엑셀 내보내기
         function exportCSV() {
             if (portfolio.length === 0 && Object.keys(cashBalances).length === 0) {
                 alert('내보낼 데이터가 없습니다.');
@@ -2985,9 +3071,10 @@
             URL.revokeObjectURL(url);
         }
 
+        // JSON 백업 파일 다운로드
         function exportData() {
             const payload = {
-                version: '1.6.4',
+                version: '1.6.6',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
@@ -3001,6 +3088,7 @@
             a.remove();
         }
 
+        // JSON 백업 파일 불러오기
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -3023,7 +3111,7 @@
                         return;
                     }
 
-                    saveToStorage();
+                    saveToStorage(true);
                     renderAll();
                     alert('포트폴리오 및 예수금 데이터를 성공적으로 복원했습니다.');
                 } catch (err) {
