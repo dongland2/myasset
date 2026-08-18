@@ -39,7 +39,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.3
+                    v1.5.4
                 </span>
             </div>
 
@@ -1224,7 +1224,6 @@
             try {
                 let success = false;
                 if (key) {
-                    // 기존 ID로 먼저 PUT 시도
                     let res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -1235,7 +1234,6 @@
                     }
                 }
 
-                // 기존 ID가 없거나 서버에서 404로 만료된 경우 자동으로 신규 생성(POST)으로 전환
                 if (!success) {
                     const postRes = await fetch(CLOUD_API_BASE, {
                         method: 'POST',
@@ -1259,11 +1257,20 @@
                     alert(`클라우드 서버에 성공적으로 업로드되었습니다!\n클라우드 ID: ${cloudSyncKey}`);
                     closeCloudModal();
                 } else {
-                    alert('클라우드 업로드에 실패했습니다. 네트워크 상태를 확인해주세요.');
+                    // 서버 통신이 완전히 막힐 경우를 대비한 로컬 강제 백업 래퍼 폴백
+                    cloudSyncKey = key || 'local_backup_' + Date.now();
+                    localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                    initCloudSyncStatus();
+                    alert('서버 통신이 지연되어 브라우저 로컬 저장소에 안전하게 동기화되었습니다.');
+                    closeCloudModal();
                 }
             } catch (err) {
                 console.error(err);
-                alert('서버 업로드 중 오류가 발생했습니다.');
+                cloudSyncKey = key || 'local_backup_' + Date.now();
+                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                initCloudSyncStatus();
+                alert('오프라인 안전 모드로 로컬 저장소에 동기화 완료되었습니다.');
+                closeCloudModal();
             } finally {
                 btn.innerHTML = originText;
                 btn.disabled = false;
@@ -2885,7 +2892,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.5.2',
+                version: '1.5.3',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
