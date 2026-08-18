@@ -38,9 +38,8 @@
                 <h1 class="text-sm sm:text-base font-bold text-emerald-400 flex items-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
-                <!-- 버전 표시 뱃지 -->
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.1
+                    v1.5.2
                 </span>
             </div>
 
@@ -160,7 +159,7 @@
             </div>
         </section>
 
-        <!-- [개선: 대시보드 계좌 선택 콤보박스 (드롭다운)] -->
+        <!-- 대시보드 계좌 선택 콤보박스 (드롭다운) -->
         <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700/60 flex items-center justify-between gap-2">
             <label class="text-xs font-bold text-gray-300 flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-building-columns text-teal-400"></i> 조회 계좌 선택:
@@ -170,7 +169,7 @@
             </select>
         </div>
 
-        <!-- 총 자산 및 대시보드 요약 카드 (계좌별 독립 반영) -->
+        <!-- 총 자산 및 대시보드 요약 카드 -->
         <section class="bg-gradient-to-br from-gray-800 to-gray-850 p-5 rounded-2xl border border-gray-700/60 shadow-xl space-y-3">
             <div class="flex justify-between items-start">
                 <div>
@@ -338,7 +337,7 @@
         </section>
     </main>
 
-    <!-- [모달: 계좌별 현금성 자산(예수금) 관리 모달] -->
+    <!-- [모달: 계좌별 현금성 자산(예수금) 관리] -->
     <div id="cashModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-700 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-700 pb-3">
@@ -805,7 +804,6 @@
 
     <!-- 핵심 비즈니스 로직 스크립트 -->
     <script>
-        // 한국 및 미국 대표 종목 기본 DB
         const BUILTIN_STOCKS = {
             "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
             "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 34.30, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
@@ -828,7 +826,6 @@
             "VOO": { ticker: "VOO", name: "Vanguard S&P 500 ETF", market: "US", sector: "지수 ETF", account: "일반계좌", price: 510.00, dps: 6.70, cycle: "quarterly", months: [3, 6, 9, 12] },
             "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", sector: "지수 ETF", account: "일반계좌", price: 480.00, dps: 2.70, cycle: "quarterly", months: [4, 7, 10, 12] },
 
-            // 한국 대표 주식
             "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "삼전": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
             "005930": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 274500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
@@ -881,7 +878,6 @@
             renderAll();
         });
 
-        // 0. 통화 전환 토글 엔진
         function initDisplayCurrency() {
             displayCurrency = localStorage.getItem('my_display_currency') || 'KRW';
             updateCurrencyButton();
@@ -908,7 +904,6 @@
             }
         }
 
-        // 계좌별 현금(예수금) 헬퍼
         function getCashForAccount(accName) {
             if (!cashBalances[accName]) {
                 return { krw: 0, usd: 0 };
@@ -1094,7 +1089,6 @@
             document.getElementById('emergencyRecoverBanner').classList.add('hidden');
         }
 
-        // 같은 종목 합쳐보기 토글
         function toggleMergedView() {
             isMergedView = !isMergedView;
             const btn = document.getElementById('mergedViewToggleBtn');
@@ -1110,7 +1104,6 @@
             renderSummaryAndList();
         }
 
-        // 배당락일 D-Day 계산 엔진
         function calculateNextExDividendDate(stock) {
             const now = new Date();
             const currentYear = now.getFullYear();
@@ -1149,7 +1142,6 @@
             return null;
         }
 
-        // 1. 공용 고속 REST API 클라우드 동기화 엔진
         function initCloudSyncStatus() {
             cloudSyncKey = localStorage.getItem('my_cloud_sync_key') || '';
             const statusText = document.getElementById('cloudStatusText');
@@ -1217,12 +1209,11 @@
             }
         }
 
+        // [개선된 클라우드 업로드: ID 오류 시 자동 신규 생성 fallback]
         async function uploadToCloudStorage() {
             let key = document.getElementById('inputSyncKey').value.trim();
             if (!key) {
-                if (confirm('등록된 클라우드 ID가 없습니다. 새로 발급받아 업로드하시겠습니까?')) {
-                    await createNewCloudStorage();
-                }
+                await createNewCloudStorage();
                 return;
             }
 
@@ -1241,11 +1232,28 @@
                     }
                 };
 
-                const res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
+                let res = await fetch(`${CLOUD_API_BASE}/${encodeURIComponent(key)}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                // 키(ID)가 서버에 없어 404가 나는 경우 자동으로 새로 생성
+                if (!res.ok && res.status === 404) {
+                    const postRes = await fetch(CLOUD_API_BASE, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (postRes.ok) {
+                        const postJson = await postRes.json();
+                        if (postJson && postJson.id) {
+                            key = postJson.id;
+                            document.getElementById('inputSyncKey').value = key;
+                            res = { ok: true };
+                        }
+                    }
+                }
 
                 if (res.ok) {
                     cloudSyncKey = key;
@@ -1254,7 +1262,7 @@
                     alert('현재 포트폴리오 및 예수금이 클라우드 서버에 안전하게 업로드되었습니다!');
                     closeCloudModal();
                 } else {
-                    alert('입력된 클라우드 ID를 찾을 수 없습니다. [새 공간 생성]을 눌러 새로 발급받아주세요.');
+                    alert('클라우드 업로드에 실패했습니다. [새 공간 생성]을 이용해 주세요.');
                 }
             } catch (err) {
                 console.error(err);
@@ -1333,7 +1341,6 @@
             }
         }
 
-        // 2. 스냅샷 롤백 엔진
         function createSnapshot(reason = '변경 전 백업') {
             if (!portfolio || portfolio.length === 0) return;
             try {
@@ -1416,7 +1423,6 @@
             }
         }
 
-        // 3. 클립보드 텍스트 백업/복원
         function copyPortfolioToClipboard() {
             if (portfolio.length === 0) {
                 alert('복사할 종목 데이터가 없습니다.');
@@ -1474,7 +1480,6 @@
             }
         }
 
-        // 4. FIRE 은퇴 시뮬레이터 로직
         function initFireSettings() {
             targetMonthlyExpense = parseFloat(localStorage.getItem('my_fire_target_expense')) || 3000000;
             document.getElementById('inputTargetExpense').value = targetMonthlyExpense;
@@ -1520,7 +1525,6 @@
             document.getElementById('fireModalGapText').innerText = gapKRW === 0 ? '🎉 목표 생활비 100% 충당 완료!' : `월 ${formatMoney(gapKRW)} 부족`;
         }
 
-        // 절세 & 세액공제 허브
         function openTaxSavingsModal() {
             document.getElementById('taxSavingsModal').classList.remove('hidden');
             switchTaxTab('pension');
@@ -1621,7 +1625,6 @@
             document.getElementById('isaTotalTaxSaved').innerText = `+${Math.round(totalSaved).toLocaleString()}원`;
         }
 
-        // 5. 통합 데이터 로드
         async function loadPortfolioData() {
             const savedCash = localStorage.getItem('my_cash_balances_v1');
             if (savedCash) {
@@ -1661,7 +1664,7 @@
 
             portfolio = [
                 { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '핵심 배당성장 ETF (100주 달성)', quantity: 100, buyPrice: 32.50, currentPrice: 34.30, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '005930', name: '삼성전자', sector: '배당성장', account: 'ISA', memo: '국내 대표 분기 배당주', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
+                { market: 'KR', ticker: '005930', name: '삼성전자', sector: '배당성장', account: 'ISA', memo: '국내 대표 분기 배당주', quantity: 30, buyPrice: 250000, currentPrice: 274500, dps: 1675, cycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
             ];
             saveToStorage(false);
         }
@@ -1675,7 +1678,6 @@
             pushToCloudQuietly();
         }
 
-        // 6. 실시간 환율 조회
         async function fetchExchangeRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -1689,7 +1691,6 @@
             }
         }
 
-        // 3중 멀티 프록시 실시간 시세 조회 엔진
         async function tryFetchLiveOnline(symbol) {
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
             
@@ -1889,7 +1890,6 @@
             alert(`총 ${updatedCount}개 종목의 실시간 시세가 최신 기준으로 일괄 갱신되었습니다.`);
         }
 
-        // 7. 필터 및 정렬 핸들러
         function setFilter(filterType) {
             currentFilter = filterType;
             ['ALL', 'US', 'KR', 'MONTHLY'].forEach(type => {
@@ -1942,7 +1942,6 @@
             }
         }
 
-        // 8. 화면 렌더링 총괄
         function renderAll() {
             updateDashboardAccountDropdown();
             updateAccountFilterDropdown();
@@ -2042,7 +2041,6 @@
                 totalAnnualGrossKRW += annualDivLocal * rate;
             });
 
-            // 현금 합산
             const targetCashKRW = getTotalCashKRW(selectedDashboardAccount);
             const totalAccountValueKRW = totalStockCurrentKRW + targetCashKRW;
 
@@ -2062,7 +2060,6 @@
             totalUsdAssetUSD += cashUsdSum;
             totalKrwAssetKRW += cashKrwSum;
 
-            // 금융소득종합과세 경고 배너
             const taxBanner = document.getElementById('taxWarningBanner');
             const taxIcon = document.getElementById('taxWarningIcon');
             const taxTitle = document.getElementById('taxWarningTitle');
@@ -2084,7 +2081,6 @@
                 taxBanner.classList.add('hidden');
             }
 
-            // 필터링 적용
             let displayList = portfolio.map((stock, originalIndex) => ({ ...stock, originalIndex }));
 
             if (currentFilter === 'US') {
@@ -2099,7 +2095,6 @@
                 displayList = displayList.filter(s => (s.account || '일반계좌') === currentAccountFilter);
             }
 
-            // 같은 종목 합치기 (Merged View) 로직
             if (isMergedView && currentAccountFilter === 'ALL') {
                 const mergedMap = {};
                 displayList.forEach(stock => {
@@ -2132,7 +2127,6 @@
                 });
             }
 
-            // 정렬 적용
             displayList.sort((a, b) => {
                 const aRate = a.market === 'US' ? usdKrwRate : 1;
                 const bRate = b.market === 'US' ? usdKrwRate : 1;
@@ -2171,7 +2165,6 @@
                 `;
             }
 
-            // 개별 종목 카드 렌더링
             displayList.forEach(stock => {
                 const isUS = stock.market === 'US';
                 const rate = isUS ? usdKrwRate : 1;
@@ -2292,7 +2285,6 @@
                 container.appendChild(card);
             });
 
-            // 대시보드 요약 통계 반영
             const totalStockProfitKRW = totalStockCurrentKRW - totalInvestedKRW;
             const totalProfitRate = totalInvestedKRW > 0 ? (totalStockProfitKRW / totalInvestedKRW) * 100 : 0;
             const monthlyNetKRW = totalAnnualNetKRW / 12;
@@ -2323,7 +2315,6 @@
             document.getElementById('monthlyNetDividend').innerText = formatMoney(monthlyNetKRW);
         }
 
-        // 9. 월별 배당 막대 차트
         function renderMonthlyDividendChart() {
             const monthlySums = new Array(12).fill(0);
             portfolio.forEach(stock => {
@@ -2394,7 +2385,6 @@
             });
         }
 
-        // 1년 배당 타임라인 캘린더 그리드 렌더링
         function renderTimelineGrid() {
             const container = document.getElementById('timelineGridContainer');
             container.innerHTML = '';
@@ -2433,7 +2423,6 @@
             }
         }
 
-        // 특정 월 배당 상세 내역 모달
         function openMonthDetailModal(month) {
             const modal = document.getElementById('monthDetailModal');
             const title = document.getElementById('monthModalTitle');
@@ -2504,7 +2493,6 @@
             document.getElementById('monthDetailModal').classList.add('hidden');
         }
 
-        // 10. 종목별 자산 비중 도넛 차트
         function renderAssetPieChart() {
             const labels = [];
             const values = [];
@@ -2554,7 +2542,6 @@
             });
         }
 
-        // 11. 섹터별 비중 도넛 차트
         function renderSectorPieChart() {
             const sectorMap = {};
             const bgColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6'];
@@ -2606,7 +2593,6 @@
             });
         }
 
-        // 계좌별 비중 도넛 차트
         function renderAccountPieChart() {
             const accountMap = {};
             const bgColors = ['#14B8A6', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316'];
@@ -2658,7 +2644,6 @@
             });
         }
 
-        // 12. DRIP 시뮬레이터
         function openDripModal() {
             document.getElementById('dripModal').classList.remove('hidden');
             runDripSimulation();
@@ -2753,7 +2738,6 @@
             });
         }
 
-        // 13. 모달 팝업 및 종목 폼 제어
         function openModal(editIdx = -1) {
             document.getElementById('stockForm').reset();
             document.getElementById('editIndex').value = editIdx;
@@ -2855,7 +2839,6 @@
             }
         }
 
-        // 14. 파일 내보내기 및 가져오기 (JSON 및 CSV)
         function exportCSV() {
             if (portfolio.length === 0 && Object.keys(cashBalances).length === 0) {
                 alert('내보낼 데이터가 없습니다.');
