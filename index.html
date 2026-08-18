@@ -45,7 +45,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.6.7
+                    v1.6.8
                 </span>
             </div>
 
@@ -674,19 +674,19 @@
                 <div>
                     <label class="block font-bold mb-1">종목명 또는 코드/티커</label>
                     <div class="flex gap-2">
-                        <input type="text" id="inputTicker" required placeholder="예: 161510, PLUS 고배당주, SCHD, AAPL, 삼성전자" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
+                        <input type="text" id="inputTicker" required placeholder="예: 466940, TIGER 은행고배당플러스TOP10, SCHD, AAPL" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 font-bold">
                         <button type="button" id="searchBtn" onclick="fetchLiveStockInfo()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition">
                             <i class="fa-solid fa-magnifying-glass"></i> 조회
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">💡 '161510', 'PLUS 고배당주', 'SCHD', '리얼티인컴', '삼성전자' 등 입력 후 조회</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">💡 '466940', 'TIGER 은행고배당', '161510', 'SCHD', '리얼티인컴', '삼성전자' 등 입력 후 조회</p>
                 </div>
 
                 <!-- 종목명 & 섹터 분류 -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block font-bold mb-1">종목명</label>
-                        <input type="text" id="inputName" required placeholder="예: PLUS 고배당주 / SCHD" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="inputName" required placeholder="예: TIGER 은행고배당플러스TOP10" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block font-bold mb-1">섹터 / 자산군</label>
@@ -834,56 +834,6 @@
 
     <!-- 핵심 비즈니스 로직 스크립트 -->
     <script>
-        // 기본 내장 종목 데이터베이스 (국내 주요 배당 ETF 및 미국 배당주 통합)
-        const BUILTIN_STOCKS = {
-            // [국내 고배당 ETF & 주식]
-            "161510": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 14350, dps: 760, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "PLUS 고배당주": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 14350, dps: 760, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "PLUS고배당주": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 14350, dps: 760, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "ARIRANG 고배당주": { ticker: "161510", name: "PLUS 고배당주", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 14350, dps: 760, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "446720": { ticker: "446720", name: "SOL 미국배당다우존스", market: "KR", sector: "배당성장", account: "ISA", price: 10450, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "SOL 미국배당다우존스": { ticker: "446720", name: "SOL 미국배당다우존스", market: "KR", sector: "배당성장", account: "ISA", price: 10450, dps: 380, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "458730": { ticker: "458730", name: "TIGER 미국배당다우존스", market: "KR", sector: "배당성장", account: "ISA", price: 10500, dps: 385, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "TIGER 미국배당다우존스": { ticker: "458730", name: "TIGER 미국배당다우존스", market: "KR", sector: "배당성장", account: "ISA", price: 10500, dps: 385, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "088980": { ticker: "088980", name: "맥쿼리인프라", market: "KR", sector: "고배당/리츠", account: "연금저축1", price: 11800, dps: 775, cycle: "semiannual", months: [2, 8] },
-            "맥쿼리인프라": { ticker: "088980", name: "맥쿼리인프라", market: "KR", sector: "고배당/리츠", account: "연금저축1", price: 11800, dps: 775, cycle: "semiannual", months: [2, 8] },
-            "005930": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 74500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "삼성전자": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 74500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "삼전": { ticker: "005930", name: "삼성전자", market: "KR", sector: "배당성장", account: "ISA", price: 74500, dps: 1675, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "005935": { ticker: "005935", name: "삼성전자우", market: "KR", sector: "배당성장", account: "ISA", price: 61500, dps: 1676, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "삼성전자우": { ticker: "005935", name: "삼성전자우", market: "KR", sector: "배당성장", account: "ISA", price: 61500, dps: 1676, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "000660": { ticker: "000660", name: "SK하이닉스", market: "KR", sector: "성장/기술주", account: "일반계좌", price: 185000, dps: 1500, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "SK하이닉스": { ticker: "000660", name: "SK하이닉스", market: "KR", sector: "성장/기술주", account: "일반계좌", price: 185000, dps: 1500, cycle: "quarterly", months: [4, 5, 8, 11] },
-            "005380": { ticker: "005380", name: "현대차", market: "KR", sector: "배당성장", account: "일반계좌", price: 245000, dps: 12000, cycle: "quarterly", months: [4, 8, 11] },
-            "현대차": { ticker: "005380", name: "현대차", market: "KR", sector: "배당성장", account: "일반계좌", price: 245000, dps: 12000, cycle: "quarterly", months: [4, 8, 11] },
-            "105560": { ticker: "105560", name: "KB금융", market: "KR", sector: "고배당/리츠", account: "ISA", price: 82000, dps: 3400, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "KB금융": { ticker: "105560", name: "KB금융", market: "KR", sector: "고배당/리츠", account: "ISA", price: 82000, dps: 3400, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "055550": { ticker: "055550", name: "신한지주", market: "KR", sector: "고배당/리츠", account: "ISA", price: 51000, dps: 2400, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "신한지주": { ticker: "055550", name: "신한지주", market: "KR", sector: "고배당/리츠", account: "ISA", price: 51000, dps: 2400, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "033780": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
-            "KT&G": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", account: "일반계좌", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
-
-            // [미국 배당 ETF & 주요 종목]
-            "SCHD": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 28.50, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "슈드": { ticker: "SCHD", name: "Schwab US Dividend Equity ETF", market: "US", sector: "배당성장", account: "일반계좌", price: 28.50, dps: 1.05, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "O": { ticker: "O", name: "Realty Income Corp", market: "US", sector: "고배당/리츠", account: "일반계좌", price: 55.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "리얼티인컴": { ticker: "O", name: "Realty Income Corp", market: "US", sector: "고배당/리츠", account: "일반계좌", price: 55.20, dps: 3.16, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "JEPI": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", sector: "커버드콜", account: "일반계좌", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "제피": { ticker: "JEPI", name: "JPMorgan Equity Premium Income ETF", market: "US", sector: "커버드콜", account: "일반계좌", price: 58.50, dps: 4.25, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "JEPQ": { ticker: "JEPQ", name: "JPMorgan Nasdaq Equity Premium Income ETF", market: "US", sector: "커버드콜", account: "일반계좌", price: 54.80, dps: 5.15, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
-            "AAPL": { ticker: "AAPL", name: "Apple Inc.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 230.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
-            "애플": { ticker: "AAPL", name: "Apple Inc.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 230.00, dps: 1.00, cycle: "quarterly", months: [2, 5, 8, 11] },
-            "MSFT": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 425.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "마이크로소프트": { ticker: "MSFT", name: "Microsoft Corp.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 425.00, dps: 3.30, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "NVDA": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 128.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "엔비디아": { ticker: "NVDA", name: "NVIDIA Corp.", market: "US", sector: "성장/기술주", account: "일반계좌", price: 128.00, dps: 0.16, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "KO": { ticker: "KO", name: "Coca-Cola Co", market: "US", sector: "배당성장", account: "일반계좌", price: 68.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "코카콜라": { ticker: "KO", name: "Coca-Cola Co", market: "US", sector: "배당성장", account: "일반계좌", price: 68.50, dps: 1.94, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "SPY": { ticker: "SPY", name: "SPDR S&P 500 ETF Trust", market: "US", sector: "지수 ETF", account: "일반계좌", price: 560.00, dps: 6.90, cycle: "quarterly", months: [4, 7, 10, 12] },
-            "VOO": { ticker: "VOO", name: "Vanguard S&P 500 ETF", market: "US", sector: "지수 ETF", account: "일반계좌", price: 515.00, dps: 6.70, cycle: "quarterly", months: [3, 6, 9, 12] },
-            "QQQ": { ticker: "QQQ", name: "Invesco QQQ Trust", market: "US", sector: "지수 ETF", account: "일반계좌", price: 485.00, dps: 2.70, cycle: "quarterly", months: [4, 7, 10, 12] }
-        };
-
         // 전역 상태 변수
         let portfolio = [];
         let cashBalances = {};
@@ -1776,9 +1726,8 @@
             }
 
             portfolio = [
-                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '핵심 배당성장 ETF', quantity: 100, buyPrice: 28.00, currentPrice: 28.50, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
-                { market: 'KR', ticker: '161510', name: 'PLUS 고배당주', sector: '고배당/리츠', account: 'ISA', memo: '국내 대표 월배당 고배당 ETF', quantity: 200, buyPrice: 13500, currentPrice: 14350, dps: 760, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] },
-                { market: 'KR', ticker: '005930', name: '삼성전자', sector: '배당성장', account: 'ISA', memo: '국내 대표 분기 배당주', quantity: 30, buyPrice: 70000, currentPrice: 74500, dps: 1675, divCycle: 'quarterly', payoutMonths: [4, 5, 8, 11] }
+                { market: 'US', ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', sector: '배당성장', account: '일반계좌', memo: '미국 핵심 배당성장 ETF', quantity: 100, buyPrice: 28.00, currentPrice: 28.50, dps: 1.05, divCycle: 'quarterly', payoutMonths: [3, 6, 9, 12] },
+                { market: 'KR', ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', sector: '고배당/리츠', account: 'ISA', memo: '국내 대표 은행 고배당 월배당 ETF', quantity: 200, buyPrice: 12000, currentPrice: 12350, dps: 780, divCycle: 'monthly', payoutMonths: [1,2,3,4,5,6,7,8,9,10,11,12] }
             ];
             saveToStorage(false);
         }
@@ -1805,86 +1754,55 @@
             }
         }
 
-        // [핵심] 네이버 증권 API를 통한 국내 주식/ETF 실시간 시세 및 정보 조회
-        async function fetchKoreanStockNaver(code) {
-            const cleanCode = code.replace(/[^0-9]/g, '');
-            if (cleanCode.length !== 6) return null;
-
-            const targetUrl = `https://m.stock.naver.com/api/stock/${cleanCode}/basic`;
-
-            const proxies = [
-                async () => {
-                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-                    if (r.ok) {
-                        const d = await r.json();
-                        return JSON.parse(d.contents);
-                    }
-                },
-                async () => {
-                    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
-                    if (r.ok) return await r.json();
-                },
-                async () => {
-                    const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`);
-                    if (r.ok) return await r.json();
-                }
-            ];
-
-            for (const proxy of proxies) {
-                try {
-                    const data = await proxy();
-                    if (data && (data.nowPrice || data.closePrice)) {
-                        const rawPrice = data.nowPrice || data.closePrice;
-                        const price = typeof rawPrice === 'string' ? parseFloat(rawPrice.replace(/,/g, '')) : rawPrice;
-                        const name = data.stockName || data.itemname || cleanCode;
-                        return {
-                            ticker: cleanCode,
-                            name: name,
-                            price: price,
-                            market: 'KR'
-                        };
-                    }
-                } catch (e) {}
-            }
-            return null;
-        }
-
-        // [핵심] 야후 파이낸스를 통한 미국 주식 실시간 시세 조회
-        async function tryFetchLiveOnline(symbol) {
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d&_=${Date.now()}`;
-            
+        // =========================================================================
+        // [핵심 엔진] 다중 CORS 프록시 경유 JSON 데이터 안전 수신 함수
+        // =========================================================================
+        async function fetchJsonViaProxy(targetUrl) {
             const proxyEngines = [
+                // 1. AllOrigins JSON Wrapper (응답 성공률이 가장 높음)
                 async () => {
-                    const c = new AbortController();
-                    const t = setTimeout(() => c.abort(), 4000);
-                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                    clearTimeout(t);
-                    if (r.ok) {
-                        const d = await r.json();
-                        const json = JSON.parse(d.contents);
-                        return json?.chart?.result?.[0];
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 4000);
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.contents) {
+                            try { return JSON.parse(data.contents); } catch (e) { return null; }
+                        }
                     }
                     return null;
                 },
+                // 2. Corsproxy.io
                 async () => {
-                    const c = new AbortController();
-                    const t = setTimeout(() => c.abort(), 4000);
-                    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                    clearTimeout(t);
-                    if (r.ok) {
-                        const json = await r.json();
-                        return json?.chart?.result?.[0];
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 4000);
+                    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        return await res.json();
                     }
                     return null;
                 },
+                // 3. CodeTabs Proxy
                 async () => {
-                    const c = new AbortController();
-                    const t = setTimeout(() => c.abort(), 4000);
-                    const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                    clearTimeout(t);
-                    if (r.ok) {
-                        const json = await r.json();
-                        return json?.chart?.result?.[0];
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 4000);
+                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        return await res.json();
+                    }
+                    return null;
+                },
+                // 4. AllOrigins Raw Mode
+                async () => {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 4000);
+                    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}&_=${Date.now()}`, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        return await res.json();
                     }
                     return null;
                 }
@@ -1892,14 +1810,115 @@
 
             for (const engine of proxyEngines) {
                 try {
-                    const res = await engine();
-                    if (res && res.meta) return res;
+                    const json = await engine();
+                    if (json) return json;
                 } catch (e) {}
             }
             return null;
         }
 
-        // 종목 조회 버튼 클릭 시 호출되는 통합 종목/시세 검색 함수
+        // =========================================================================
+        // [핵심 엔진] 종목명/코드 기반 실시간 웹 API 동적 정보 추출 (내장 하드코딩 제거)
+        // =========================================================================
+        async function fetchStockInfoLive(query) {
+            if (!query) return null;
+            const cleanQuery = query.trim();
+            const isSixDigit = /^[0-9]{6}$/.test(cleanQuery);
+
+            let resolved = {
+                ticker: cleanQuery.toUpperCase(),
+                name: cleanQuery,
+                market: isSixDigit ? 'KR' : 'US',
+                sector: '고배당/리츠',
+                account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
+                price: 0,
+                dps: 0,
+                cycle: 'monthly',
+                months: [1,2,3,4,5,6,7,8,9,10,11,12]
+            };
+
+            // 1단계: 6자리 숫자가 아닌 텍스트(예: "TIGER 은행고배당플러스TOP10", "리얼티인컴") 입력 시 네이버 자동완성 API로 정식 명칭 및 티커 추출
+            if (!isSixDigit) {
+                const autoUrl = `https://m.stock.naver.com/front-api/search/autoComplete?query=${encodeURIComponent(cleanQuery)}&target=stock,index,marketindicator,coin,ipo`;
+                const autoData = await fetchJsonViaProxy(autoUrl);
+                if (autoData && autoData.result && Array.isArray(autoData.result.items) && autoData.result.items.length > 0) {
+                    const bestMatch = autoData.result.items[0];
+                    resolved.name = bestMatch.name || resolved.name;
+                    if (bestMatch.code && /^[0-9]{6}$/.test(bestMatch.code)) {
+                        resolved.ticker = bestMatch.code;
+                        resolved.market = 'KR';
+                    } else if (bestMatch.reutersCode) {
+                        resolved.ticker = bestMatch.reutersCode.split('.')[0];
+                        resolved.market = 'US';
+                    }
+                }
+            }
+
+            // 2단계: 한국 주식(6자리 코드)인 경우 네이버 증권 Polling API 및 Integration API로 실시간 현재가/배당금 파싱
+            if (resolved.market === 'KR' || /^[0-9]{6}$/.test(resolved.ticker)) {
+                const code = resolved.ticker;
+                
+                // A. 네이버 실시간 시세 (Polling API)
+                const pollUrl = `https://polling.finance.naver.com/api/realtime/domestic/stock/${code}`;
+                const pollData = await fetchJsonViaProxy(pollUrl);
+                if (pollData && pollData.datas && pollData.datas[0]) {
+                    const d = pollData.datas[0];
+                    if (d.stockName) resolved.name = d.stockName;
+                    if (d.closePrice) {
+                        resolved.price = typeof d.closePrice === 'string' ? parseFloat(d.closePrice.replace(/,/g, '')) : d.closePrice;
+                    }
+                }
+
+                // B. 네이버 종목 통합 정보 API (주당 배당금 및 정밀 데이터 파싱)
+                const integUrl = `https://m.stock.naver.com/api/stock/${code}/integration`;
+                const integData = await fetchJsonViaProxy(integUrl);
+                if (integData) {
+                    if (integData.stockName) resolved.name = integData.stockName;
+                    if (Array.isArray(integData.totalInfos)) {
+                        integData.totalInfos.forEach(info => {
+                            if (info.code === 'lastClosePrice' && (!resolved.price || resolved.price === 0)) {
+                                resolved.price = parseFloat(String(info.value).replace(/,/g, '')) || resolved.price;
+                            }
+                            if (info.code === 'dividend') {
+                                resolved.dps = parseFloat(String(info.value).replace(/,/g, '')) || 0;
+                            }
+                        });
+                    }
+                }
+
+                // C. 만약 여전히 가격이 0이면 야후 파이낸스 한국 시장 티커 조회 (.KS / .KQ)
+                if (!resolved.price || resolved.price === 0) {
+                    const yKospi = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.KS?interval=1d&range=1d`);
+                    const meta1 = yKospi?.chart?.result?.[0]?.meta;
+                    if (meta1 && (meta1.regularMarketPrice || meta1.chartPreviousClose)) {
+                        resolved.price = meta1.regularMarketPrice || meta1.chartPreviousClose;
+                    } else {
+                        const yKosdaq = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.KQ?interval=1d&range=1d`);
+                        const meta2 = yKosdaq?.chart?.result?.[0]?.meta;
+                        if (meta2 && (meta2.regularMarketPrice || meta2.chartPreviousClose)) {
+                            resolved.price = meta2.regularMarketPrice || meta2.chartPreviousClose;
+                        }
+                    }
+                }
+            }
+
+            // 3단계: 미국 주식인 경우 야후 파이낸스 차트 API로 실시간 현재가 추출
+            if (resolved.market === 'US') {
+                const symbol = resolved.ticker;
+                const yData = await fetchJsonViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`);
+                const meta = yData?.chart?.result?.[0]?.meta;
+                if (meta && (meta.regularMarketPrice || meta.chartPreviousClose)) {
+                    resolved.price = meta.regularMarketPrice || meta.chartPreviousClose;
+                    if (meta.shortName) resolved.name = meta.shortName;
+                    resolved.cycle = 'quarterly';
+                    resolved.months = [3, 6, 9, 12];
+                }
+            }
+
+            return resolved;
+        }
+
+        // 종목 조회 버튼 클릭 시 호출되는 함수
         async function fetchLiveStockInfo() {
             const inputRaw = document.getElementById('inputTicker').value.trim();
             if (!inputRaw) {
@@ -1909,101 +1928,18 @@
 
             const searchBtn = document.getElementById('searchBtn');
             const originalHtml = searchBtn.innerHTML;
-            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 조회중';
+            searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 실시간 조회중';
             searchBtn.disabled = true;
 
             try {
-                let resolved = null;
-                const upperRaw = inputRaw.toUpperCase().replace(/\s+/g, '');
+                const resolved = await fetchStockInfoLive(inputRaw);
 
-                // 1단계: 내장된 종목 데이터베이스(BUILTIN_STOCKS)에서 먼저 매칭 확인
-                for (const key in BUILTIN_STOCKS) {
-                    const cleanKey = key.toUpperCase().replace(/\s+/g, '');
-                    if (cleanKey === upperRaw || BUILTIN_STOCKS[key].ticker === upperRaw) {
-                        resolved = { ...BUILTIN_STOCKS[key] };
-                        break;
-                    }
-                }
-
-                // 2단계: 한국 6자리 숫자 코드이거나 한국 시장으로 선택된 경우 네이버 증권 API 우선 조회
-                const isKRCode = /^[0-9]{6}$/.test(inputRaw) || (resolved && resolved.market === 'KR');
-                const targetCode = isKRCode ? (resolved ? resolved.ticker : inputRaw) : null;
-
-                if (targetCode && /^[0-9]{6}$/.test(targetCode)) {
-                    const krResult = await fetchKoreanStockNaver(targetCode);
-                    if (krResult && krResult.price > 0) {
-                        if (!resolved) {
-                            resolved = {
-                                ticker: krResult.ticker,
-                                name: krResult.name,
-                                market: 'KR',
-                                sector: '고배당/리츠',
-                                account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
-                                price: krResult.price,
-                                dps: 0,
-                                cycle: 'monthly',
-                                months: [1,2,3,4,5,6,7,8,9,10,11,12]
-                            };
-                        } else {
-                            resolved.price = krResult.price;
-                            if (krResult.name) resolved.name = krResult.name;
-                        }
-                    }
-                }
-
-                // 3단계: 미국 주식이거나 네이버에서 못 찾은 경우 야후 파이낸스 실시간 시세 조회
-                if (!resolved || resolved.price === 0) {
-                    let querySymbol = resolved ? resolved.ticker : inputRaw.toUpperCase();
-                    if (resolved && resolved.market === 'KR') {
-                        querySymbol = `${resolved.ticker}.KS`;
-                    } else if (/^[0-9]{6}$/.test(querySymbol)) {
-                        querySymbol = `${querySymbol}.KS`;
-                    }
-
-                    let onlineResult = await tryFetchLiveOnline(querySymbol);
-                    if (!onlineResult && querySymbol.endsWith('.KS')) {
-                        onlineResult = await tryFetchLiveOnline(querySymbol.replace('.KS', '.KQ'));
-                    }
-
-                    if (onlineResult && onlineResult.meta) {
-                        const livePrice = onlineResult.meta.regularMarketPrice || onlineResult.meta.chartPreviousClose;
-                        if (livePrice && livePrice > 0) {
-                            if (!resolved) {
-                                resolved = {
-                                    ticker: querySymbol.replace('.KS', '').replace('.KQ', ''),
-                                    name: onlineResult.meta.shortName || inputRaw,
-                                    market: (querySymbol.endsWith('.KS') || querySymbol.endsWith('.KQ')) ? 'KR' : 'US',
-                                    sector: '기타',
-                                    account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
-                                    price: livePrice,
-                                    dps: 0,
-                                    cycle: 'quarterly',
-                                    months: [3, 6, 9, 12]
-                                };
-                            } else {
-                                resolved.price = livePrice;
-                            }
-                        }
-                    }
-                }
-
-                // 4단계: 여전히 없는 종목이면 기본 입력 폼 구성
                 if (!resolved) {
-                    const isKR = /^[0-9]{6}$/.test(inputRaw) || document.querySelector('input[name="marketType"]:checked').value === 'KR';
-                    resolved = {
-                        ticker: inputRaw.toUpperCase(),
-                        name: inputRaw,
-                        market: isKR ? 'KR' : 'US',
-                        sector: '기타',
-                        account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
-                        price: 0,
-                        dps: 0,
-                        cycle: 'monthly',
-                        months: [1,2,3,4,5,6,7,8,9,10,11,12]
-                    };
+                    alert('종목 정보를 찾을 수 없습니다. 수동으로 입력해주세요.');
+                    return;
                 }
 
-                // 모달 폼 필드에 값 채워넣기
+                // 모달 필드에 실시간 수신 데이터 자동 세팅
                 document.querySelector(`input[name="marketType"][value="${resolved.market}"]`).checked = true;
                 handleMarketChange();
 
@@ -2025,21 +1961,23 @@
 
                 const unit = resolved.market === 'US' ? '$' : '원';
                 if (resolved.price > 0) {
-                    alert(`[${resolved.name}] 실시간 시세 반영 완료!\n현재가: ${resolved.price.toLocaleString()}${unit} / DPS: ${resolved.dps.toLocaleString()}${unit}`);
+                    alert(`[${resolved.name} (${resolved.ticker})]\n실시간 시세 반영 완료!\n현재가: ${resolved.price.toLocaleString()}${unit} / DPS: ${resolved.dps.toLocaleString()}${unit}`);
                 } else {
-                    alert(`[${resolved.name}] 종목이 확인되었습니다. 현재가와 주당 배당금을 입력해주세요.`);
+                    alert(`[${resolved.name}] 기본 정보가 세팅되었습니다. 현재가와 주당 배당금을 입력해주세요.`);
                 }
 
             } catch (err) {
                 console.error(err);
-                alert('종목 정보를 가져오는 중 오류가 발생했습니다. 수동으로 입력해주세요.');
+                alert('종목 정보 수신 중 오류가 발생했습니다. 직접 입력해주세요.');
             } finally {
                 searchBtn.innerHTML = originalHtml;
                 searchBtn.disabled = false;
             }
         }
 
-        // [핵심] 보유 종목 전체 실시간 시세 일괄 갱신
+        // =========================================================================
+        // [핵심] 보유 종목 전체 실시간 시세 일괄 갱신 (스냅샷 누적 방지 및 자동/수동 대응)
+        // =========================================================================
         async function refreshAllStockData(isSilent = false) {
             if (portfolio.length === 0) {
                 if (!isSilent) alert('갱신할 종목이 없습니다.');
@@ -2051,52 +1989,13 @@
             let updatedCount = 0;
 
             const updatePromises = portfolio.map(async (stock) => {
-                let updated = false;
-
-                // 1. 한국 종목인 경우 네이버 증권 API 실시간 조회
-                if (stock.market === 'KR' || /^[0-9]{6}$/.test(stock.ticker)) {
-                    const cleanCode = stock.ticker.replace(/[^0-9]/g, '');
-                    if (cleanCode.length === 6) {
-                        const krRes = await fetchKoreanStockNaver(cleanCode);
-                        if (krRes && krRes.price > 0) {
-                            stock.currentPrice = krRes.price;
-                            if (krRes.name && !stock.name) stock.name = krRes.name;
-                            updatedCount++;
-                            updated = true;
-                        }
+                const liveInfo = await fetchStockInfoLive(stock.ticker);
+                if (liveInfo && liveInfo.price > 0) {
+                    stock.currentPrice = liveInfo.price;
+                    if (liveInfo.name && (!stock.name || stock.name === stock.ticker)) {
+                        stock.name = liveInfo.name;
                     }
-                }
-
-                // 2. 미국 종목이거나 네이버 실패 시 야후 파이낸스 조회
-                if (!updated) {
-                    let symbol = stock.ticker;
-                    if (stock.market === 'KR' && !symbol.includes('.')) {
-                        symbol = `${symbol}.KS`;
-                    }
-
-                    let onlineResult = await tryFetchLiveOnline(symbol);
-                    if (!onlineResult && symbol.endsWith('.KS')) {
-                        onlineResult = await tryFetchLiveOnline(symbol.replace('.KS', '.KQ'));
-                    }
-
-                    if (onlineResult && onlineResult.meta) {
-                        const livePrice = onlineResult.meta.regularMarketPrice || onlineResult.meta.chartPreviousClose;
-                        if (livePrice && livePrice > 0) {
-                            stock.currentPrice = livePrice;
-                            updatedCount++;
-                            updated = true;
-                        }
-                    }
-                }
-
-                // 3. 통신이 모두 실패했을 경우 내장 데이터베이스 백업 단가 활용
-                if (!updated && stock.currentPrice === 0) {
-                    for (const key in BUILTIN_STOCKS) {
-                        if (BUILTIN_STOCKS[key].ticker === stock.ticker) {
-                            stock.currentPrice = BUILTIN_STOCKS[key].price;
-                            break;
-                        }
-                    }
+                    updatedCount++;
                 }
             });
 
@@ -2685,10 +2584,10 @@
                     item.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[9px] font-bold px-1 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300'}">
                                     ${isUS ? '미국' : '한국'}
                                 </span>
-                                <span class="text-[9px] font-bold px-1 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
                                     ${stock.account || '일반계좌'}
                                 </span>
                                 <span class="font-bold text-gray-900 dark:text-gray-100 text-xs">${stock.name}</span>
@@ -3116,7 +3015,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.6.7',
+                version: '1.6.8',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
