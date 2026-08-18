@@ -39,7 +39,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.5.4
+                    v1.5.5
                 </span>
             </div>
 
@@ -863,6 +863,7 @@
         let displayCurrency = 'KRW';
         let targetMonthlyExpense = 3000000;
         let detectedBackupData = null;
+        let currentBestSnapId = null;
 
         const CLOUD_API_BASE = 'https://api.restful-api.dev/objects';
 
@@ -1031,6 +1032,7 @@
             renderAll();
         }
 
+        // [개선: 사용자 닫기 기억 기능 추가]
         function checkAndPromptDataRecovery() {
             if (portfolio.length <= 2) {
                 const backupKeys = [
@@ -1048,11 +1050,19 @@
                             if (key === 'my_portfolio_snapshots_v1' && Array.isArray(parsed) && parsed.length > 0) {
                                 const bestSnap = parsed.reduce((prev, curr) => (curr.data && curr.data.length > (prev?.data?.length || 0)) ? curr : prev, null);
                                 if (bestSnap && bestSnap.data && bestSnap.data.length > portfolio.length) {
+                                    currentBestSnapId = 'snap_' + bestSnap.id;
+                                    if (localStorage.getItem('dismissed_recovery_' + currentBestSnapId) === 'true') {
+                                        return;
+                                    }
                                     detectedBackupData = bestSnap.data;
                                     showEmergencyRecoveryBanner(bestSnap.data.length);
                                     return;
                                 }
                             } else if (Array.isArray(parsed) && parsed.length > portfolio.length) {
+                                currentBestSnapId = 'legacy_' + parsed.length;
+                                if (localStorage.getItem('dismissed_recovery_' + currentBestSnapId) === 'true') {
+                                    return;
+                                }
                                 detectedBackupData = parsed;
                                 showEmergencyRecoveryBanner(parsed.length);
                                 return;
@@ -1082,6 +1092,9 @@
         }
 
         function dismissEmergencyRecovery() {
+            if (currentBestSnapId) {
+                localStorage.setItem('dismissed_recovery_' + currentBestSnapId, 'true');
+            }
             document.getElementById('emergencyRecoverBanner').classList.add('hidden');
         }
 
@@ -1198,7 +1211,12 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert('클라우드 공간 생성 중 오류가 발생했습니다.');
+                // 서버 통신 불가 시 로컬 고유 ID 생성 보완
+                cloudSyncKey = 'local_space_' + Math.random().toString(36).substring(2, 8);
+                localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
+                document.getElementById('inputSyncKey').value = cloudSyncKey;
+                initCloudSyncStatus();
+                alert(`오프라인 안전 모드로 로컬 동기화 ID(${cloudSyncKey})가 생성되었습니다.`);
             } finally {
                 btn.innerHTML = originText;
                 btn.disabled = false;
@@ -1257,7 +1275,6 @@
                     alert(`클라우드 서버에 성공적으로 업로드되었습니다!\n클라우드 ID: ${cloudSyncKey}`);
                     closeCloudModal();
                 } else {
-                    // 서버 통신이 완전히 막힐 경우를 대비한 로컬 강제 백업 래퍼 폴백
                     cloudSyncKey = key || 'local_backup_' + Date.now();
                     localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                     initCloudSyncStatus();
@@ -2892,7 +2909,7 @@
 
         function exportData() {
             const payload = {
-                version: '1.5.3',
+                version: '1.5.5',
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances
