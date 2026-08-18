@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.9.0
+                    v1.9.1
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -528,6 +528,10 @@
             "055550": { ticker: "055550", name: "신한지주", market: "KR", sector: "고배당/리츠", price: 51000, dps: 2400, cycle: "quarterly", months: [3, 6, 9, 12] },
             "KT&G": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
             "033780": { ticker: "033780", name: "KT&G", market: "KR", sector: "고배당/리츠", price: 98000, dps: 5400, cycle: "semiannual", months: [4, 8] },
+            // 강원랜드: 온라인 조회 실패 시에도 이름/코드 검색이 되도록 로컬 폴백 제공
+            // price는 폴백 값이며 온라인 조회 성공 시 최신 시세로 덮어쓴다.
+            "강원랜드": { ticker: "035250", name: "강원랜드", market: "KR", sector: "고배당/리츠", price: 14390, dps: 950, cycle: "annual", months: [4] },
+            "035250": { ticker: "035250", name: "강원랜드", market: "KR", sector: "고배당/리츠", price: 14390, dps: 950, cycle: "annual", months: [4] },
 
             // 국내 대표 월배당 & 고배당 ETF
             "466940": { ticker: "466940", name: "TIGER 은행고배당플러스TOP10", market: "KR", sector: "고배당/리츠", price: 26365, dps: 1040, cycle: "monthly", months: [1,2,3,4,5,6,7,8,9,10,11,12] },
@@ -566,7 +570,7 @@
         var portfolio = [];
         var cashBalances = {};
         var selectedDashboardAccount = 'ALL';
-        var usdKrwRate = 1350;
+        var usdKrwRate = parseFloat(localStorage.getItem('my_usd_krw_rate')) || 1350;
         var monthlyChart = null;
         var pieChart = null;
         var sectorChart = null;
@@ -711,9 +715,26 @@
         }
 
         async function fetchJsonViaFastRace(targetUrl, timeoutMs) {
-            if (timeoutMs === undefined) timeoutMs = 1500;
+            if (timeoutMs === undefined) timeoutMs = 3000;
             var cacheBusterUrl = targetUrl + (targetUrl.indexOf('?') !== -1 ? '&' : '?') + '_nc=' + Date.now();
             var encoded = encodeURIComponent(cacheBusterUrl);
+
+            function normalizeAndValidate(data) {
+                if (data && data.contents !== undefined && typeof data.contents === 'string') {
+                    try { data = JSON.parse(data.contents); } catch(e) {}
+                }
+                if (Array.isArray(data)) return data;
+                if (data && (data.quotes || data.totalInfos || data.datas || data.chart || data.quoteSummary || data.items || data.result || data.stockName || data.rates)) {
+                    return data;
+                }
+                throw new Error('Invalid format');
+            }
+
+            // GitHub Pages에서는 대상 서버의 CORS 정책에 따라 직접 요청이 성공할 수도,
+            // 실패할 수도 있으므로 직접 요청을 먼저 시도하고 프록시들을 동시에 폴백으로 사용한다.
+            var requests = [
+                fetchWithTimeout(cacheBusterUrl, timeoutMs).then(normalizeAndValidate)
+            ];
 
             var proxies = [
                 'https://api.allorigins.win/get?url=' + encoded + '&disableCache=true',
@@ -721,29 +742,24 @@
                 'https://api.codetabs.com/v1/proxy?quest=' + encoded
             ];
 
-            var promises = proxies.map(function(url) {
-                return fetchWithTimeout(url, timeoutMs).then(function(data) {
-                    if (data && data.contents !== undefined && typeof data.contents === 'string') {
-                        try { return JSON.parse(data.contents); } catch(e) {}
-                    }
-                    if (data && (data.quotes || data.totalInfos || data.datas || data.chart || data.quoteSummary || data.items || data.result)) {
-                        return data;
-                    }
-                    throw new Error('Invalid format');
-                });
+            proxies.forEach(function(url) {
+                requests.push(fetchWithTimeout(url, timeoutMs).then(normalizeAndValidate));
             });
 
-            return customPromiseAny(promises).catch(function() { return null; });
+            return customPromiseAny(requests).catch(function() { return null; });
         }
 
         // =========================================================================
         // [2] 하이브리드 종목 해석 엔진 (마스터 사전 1순위 + 실시간 시세 보정)
         // =========================================================================
         async function resolveStockData(rawInput) {
-            var clean = rawInput.trim();
+            var clean = String(rawInput || '').trim();
             if (!clean) return null;
+
             var upper = clean.toUpperCase().replace(/\s+/g, '');
             var isSixDigit = /^[0-9]{6}$/.test(clean);
+            var containsKorean = /[가-힣]/.test(clean);
+            var matchedMaster = false;
 
             var result = {
                 ticker: upper, name: clean, market: isSixDigit ? 'KR' : 'US',
@@ -751,9 +767,10 @@
                 price: 0, dps: 0, cycle: 'quarterly', months: [3, 6, 9, 12]
             };
 
-            // 1. 마스터 사전에서 즉시 매칭
+            // 1) 로컬 마스터 사전: 네트워크가 완전히 막혀도 대표 종목은 즉시 검색
             if (MASTER_STOCKS[upper] || MASTER_STOCKS[clean]) {
                 var match = MASTER_STOCKS[upper] || MASTER_STOCKS[clean];
+                matchedMaster = true;
                 result.ticker = match.ticker;
                 result.name = match.name;
                 result.market = match.market;
@@ -762,28 +779,66 @@
                 result.dps = match.dps;
                 result.cycle = match.cycle;
                 result.months = match.months;
+                isSixDigit = result.market === 'KR' && /^[0-9]{6}$/.test(result.ticker);
             }
 
-            // 2. 사전에 없지만 6자리 숫자가 아닐 경우 네이버 검색 시도
-            if (!isSixDigit && result.price === 0 && /[가-힣]/.test(clean)) {
+            // 2) 사전에 없는 한국 종목명 -> 네이버 모바일 자동완성으로 종목코드 해석
+            // 신형 endpoint 우선, 실패하면 레거시 endpoint까지 폴백한다.
+            if (!matchedMaster && containsKorean && !isSixDigit) {
+                var searchData = null;
                 try {
-                    var searchUrl = 'https://ac.finance.naver.com/ac?q=' + encodeURIComponent(clean) + '&q_enc=utf-8&st=111&r_format=json&r_enc=utf-8';
-                    var searchData = await fetchJsonViaFastRace(searchUrl, 1500);
-                    if (searchData && searchData.items && searchData.items[0] && searchData.items[0][0]) {
-                        result.ticker = searchData.items[0][0][0];
-                        result.name = searchData.items[0][0][1];
-                        result.market = 'KR';
-                        isSixDigit = true;
-                    }
+                    var searchUrl = 'https://m.stock.naver.com/front-api/search/autoComplete?query=' + encodeURIComponent(clean) + '&target=stock';
+                    searchData = await fetchJsonViaFastRace(searchUrl, 3500);
                 } catch(e) {}
+
+                var item = null;
+                if (searchData && searchData.result && Array.isArray(searchData.result.items) && searchData.result.items.length > 0) {
+                    item = searchData.result.items[0];
+                    if (item && item.code) {
+                        result.ticker = String(item.code).replace(/^A/, '');
+                        result.name = item.name || clean;
+                        result.market = 'KR';
+                        isSixDigit = /^[0-9]{6}$/.test(result.ticker);
+                    }
+                }
+
+                // 레거시 자동완성 응답 형식까지 호환
+                if (!isSixDigit) {
+                    try {
+                        var legacyUrl = 'https://ac.finance.naver.com/ac?q=' + encodeURIComponent(clean) + '&q_enc=utf-8&st=111&r_format=json&r_enc=utf-8';
+                        var legacyData = await fetchJsonViaFastRace(legacyUrl, 3000);
+                        if (legacyData && legacyData.items && legacyData.items[0] && legacyData.items[0][0]) {
+                            result.ticker = legacyData.items[0][0][0];
+                            result.name = legacyData.items[0][0][1] || clean;
+                            result.market = 'KR';
+                            isSixDigit = /^[0-9]{6}$/.test(result.ticker);
+                        }
+                    } catch(e) {}
+                }
+
+                // 한글 이름을 코드로 해석하지 못했으면 미국 티커로 오인하지 않고 명확히 실패 처리
+                if (!isSixDigit) return null;
             }
 
-            // 3. 온라인 실시간 가격 조회 (실패 시 마스터 사전의 단가를 그대로 유지)
+            // 3) 국내 종목 현재가: 네이버 실시간 polling endpoint 우선
             if (result.market === 'KR' || isSixDigit || /^[0-9]{6}$/.test(result.ticker)) {
                 var code = result.ticker;
+
+                try {
+                    var quoteUrl = 'https://polling.finance.naver.com/api/realtime/domestic/stock/' + code;
+                    var quoteData = await fetchJsonViaFastRace(quoteUrl, 3500);
+                    if (quoteData && Array.isArray(quoteData.datas) && quoteData.datas[0]) {
+                        var q = quoteData.datas[0];
+                        var qp = parseFloat(String(q.closePrice || q.currentPrice || '').replace(/,/g, ''));
+                        if (qp > 0) result.price = qp;
+                        if (q.stockName) result.name = q.stockName;
+                    }
+                } catch(e) {}
+
+                // 상세 endpoint에서 종목명/DPS 보강
                 try {
                     var integUrl = 'https://m.stock.naver.com/api/stock/' + code + '/integration';
-                    var integData = await fetchJsonViaFastRace(integUrl, 1500);
+                    var integData = await fetchJsonViaFastRace(integUrl, 3500);
                     if (integData) {
                         if (integData.stockName) result.name = integData.stockName;
                         if (Array.isArray(integData.totalInfos)) {
@@ -801,14 +856,33 @@
                     }
                 } catch(e) {}
 
+                // 네이버가 막힌 경우 Yahoo의 한국 종목 심볼(.KS/.KQ)로 가격 최종 폴백
+                if (!(result.price > 0) && /^[0-9]{6}$/.test(code)) {
+                    var suffixes = ['.KS', '.KQ'];
+                    for (var si = 0; si < suffixes.length && !(result.price > 0); si++) {
+                        try {
+                            var kyUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + code + suffixes[si] + '?interval=1d&range=1d';
+                            var kyData = await fetchJsonViaFastRace(kyUrl, 3000);
+                            if (kyData && kyData.chart && kyData.chart.result && kyData.chart.result[0]) {
+                                var kmeta = kyData.chart.result[0].meta || {};
+                                var kp = kmeta.regularMarketPrice || kmeta.chartPreviousClose;
+                                if (kp > 0) result.price = kp;
+                                if (kmeta.shortName && (!result.name || result.name === code)) result.name = kmeta.shortName;
+                            }
+                        } catch(e) {}
+                    }
+                }
+
                 if (/고배당|TOP10|월배당|커버드콜|리츠|인프라/i.test(result.name) || /TIGER|KODEX|SOL|ACE|PLUS/i.test(result.name)) {
-                    result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
+                    result.cycle = 'monthly';
+                    result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
                 }
             } else {
+                // 4) 미국 종목
                 var symbol = result.ticker;
                 try {
                     var yUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d';
-                    var yData = await fetchJsonViaFastRace(yUrl, 1500);
+                    var yData = await fetchJsonViaFastRace(yUrl, 3000);
                     if (yData && yData.chart && yData.chart.result && yData.chart.result[0]) {
                         var meta = yData.chart.result[0].meta;
                         if (meta && (meta.regularMarketPrice || meta.chartPreviousClose)) {
@@ -818,8 +892,9 @@
                     }
                 } catch(e) {}
 
-                if (/O|JEPI|JEPQ|SVOL/i.test(result.ticker)) {
-                    result.cycle = 'monthly'; result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
+                if (/^(O|JEPI|JEPQ|SVOL)$/i.test(result.ticker)) {
+                    result.cycle = 'monthly';
+                    result.months = [1,2,3,4,5,6,7,8,9,10,11,12];
                 }
             }
 
@@ -967,16 +1042,54 @@
         }
 
         async function fetchExchangeRate() {
+            var header = document.getElementById('headerExchangeRate');
+            if (header) header.innerText = '환율: 조회중...';
+
+            var savedRate = parseFloat(localStorage.getItem('my_usd_krw_rate')) || usdKrwRate || 1350;
+            var rate = 0;
+            var source = '';
+
+            // 1차: ExchangeRate-API Open Access
             try {
-                var res = await fetch('https://open.er-api.com/v6/latest/USD');
-                var data = await res.json();
-                if (data && data.rates && data.rates.KRW) {
-                    usdKrwRate = data.rates.KRW;
-                    document.getElementById('headerExchangeRate').innerText = '환율: 1$ = ' + usdKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '원';
+                var data1 = await fetchWithTimeout('https://open.er-api.com/v6/latest/USD', 4000);
+                if (data1 && data1.rates && parseFloat(data1.rates.KRW) > 0) {
+                    rate = parseFloat(data1.rates.KRW);
+                    source = 'ER';
                 }
-            } catch (err) {
-                document.getElementById('headerExchangeRate').innerText = '환율: 1$ = ' + usdKrwRate.toLocaleString() + '원';
+            } catch (e) {}
+
+            // 2차: Frankfurter 공개 API (API key 불필요)
+            if (!(rate > 0)) {
+                try {
+                    var data2 = await fetchWithTimeout('https://api.frankfurter.dev/v2/rates?base=USD&quotes=KRW', 4000);
+                    if (Array.isArray(data2)) {
+                        for (var i = 0; i < data2.length; i++) {
+                            if (data2[i] && data2[i].quote === 'KRW' && parseFloat(data2[i].rate) > 0) {
+                                rate = parseFloat(data2[i].rate);
+                                source = 'Frankfurter';
+                                break;
+                            }
+                        }
+                    } else if (data2 && data2.rates && parseFloat(data2.rates.KRW) > 0) {
+                        rate = parseFloat(data2.rates.KRW);
+                        source = 'Frankfurter';
+                    }
+                } catch (e) {}
             }
+
+            // 비정상 응답 방어
+            if (rate > 500 && rate < 3000) {
+                usdKrwRate = rate;
+                localStorage.setItem('my_usd_krw_rate', String(rate));
+                localStorage.setItem('my_usd_krw_rate_updated_at', new Date().toISOString());
+                if (header) header.innerText = '환율: 1$ = ' + usdKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '원';
+            } else {
+                // 네트워크가 막혀도 "조회중"에 영구 고정되지 않도록 마지막 성공값/기본값을 표시
+                usdKrwRate = savedRate;
+                if (header) header.innerText = '환율: 1$ = ' + usdKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '원 (저장값)';
+            }
+
+            return usdKrwRate;
         }
 
         function renderAll() {
@@ -989,6 +1102,22 @@
             else if (activeChartTab === 'sector') renderSectorPieChart();
             else if (activeChartTab === 'account') renderAccountPieChart();
             else renderTimelineGrid();
+        }
+
+        // 지급월 정보만 가지고 정확한 배당락일을 계산할 수는 없으므로,
+        // 존재하지 않는 calculateNextExDividendDate()를 호출하지 않고 "다음 배당 지급월"만 표시한다.
+        function getNextPayoutMonth(stock) {
+            var months = Array.isArray(stock && stock.payoutMonths) ? stock.payoutMonths.slice() : [];
+            months = months.map(function(m) { return parseInt(m, 10); })
+                           .filter(function(m) { return m >= 1 && m <= 12; })
+                           .sort(function(a, b) { return a - b; });
+            if (months.length === 0) return null;
+
+            var currentMonth = new Date().getMonth() + 1;
+            for (var i = 0; i < months.length; i++) {
+                if (months[i] >= currentMonth) return { payoutMonth: months[i] };
+            }
+            return { payoutMonth: months[0] };
         }
 
         function renderSummaryAndList() {
@@ -1051,6 +1180,33 @@
             document.getElementById('fxRateBenchmark').innerText = '기준: ' + Math.round(usdKrwRate).toLocaleString() + '원';
             document.getElementById('fxImpactPlus50').innerText = formatMoney(fxImpact50KRW);
             document.getElementById('fxImpactMinus50').innerText = formatMoney(fxImpactMinus50KRW);
+
+            // 핵심 요약 값은 종목 카드 렌더링보다 먼저 화면에 반영한다.
+            // 이후 개별 카드 UI에서 예외가 발생하더라도 총자산이 0원에 고정되지 않는다.
+            var earlyStockProfitKRW = totalStockCurrentKRW - totalInvestedKRW;
+            var earlyProfitRate = totalInvestedKRW > 0 ? (earlyStockProfitKRW / totalInvestedKRW) * 100 : 0;
+            var earlyMonthlyNetKRW = totalAnnualNetKRW / 12;
+            var earlyAccTitle = (selectedDashboardAccount === 'ALL') ? '전체 계좌 통합' : selectedDashboardAccount + ' 계좌';
+
+            document.getElementById('dashboardActiveAccountName').innerText = '🏦 ' + earlyAccTitle;
+            document.getElementById('totalAssetTitle').innerText = '총 평가 자산 (주식+현금 ' + (displayCurrency === 'USD' ? 'USD' : 'KRW') + ')';
+            document.getElementById('totalAssetValue').innerText = formatMoney(totalAccountValueKRW);
+            document.getElementById('dashboardCashSummary').innerText = formatMoney(targetCashKRW) + ' (원화 ' + Math.round(cashKrwSum).toLocaleString() + '원 + $' + cashUsdSum.toLocaleString() + ')';
+            document.getElementById('totalUsdAssetValue').innerText = '$' + totalUsdAssetUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalUsdAssetSubValue').innerText = '(' + formatMoney(totalUsdAssetUSD * usdKrwRate) + ')';
+            document.getElementById('totalKrwAssetValue').innerText = Math.round(totalKrwAssetKRW).toLocaleString() + '원';
+            document.getElementById('totalKrwAssetSubValue').innerText = displayCurrency === 'USD' ? '($' + (totalKrwAssetKRW / usdKrwRate).toFixed(2) + ')' : '국내 자산 총액';
+            document.getElementById('totalInvested').innerText = formatMoney(totalInvestedKRW);
+            document.getElementById('totalAnnualDividend').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('monthlyNetDividend').innerText = formatMoney(earlyMonthlyNetKRW);
+
+            var earlyProfitEl = document.getElementById('totalProfitLoss');
+            earlyProfitEl.innerText = (earlyStockProfitKRW >= 0 ? '+' : '') + formatMoney(earlyStockProfitKRW);
+            earlyProfitEl.className = 'font-black mt-0.5 ' + (earlyStockProfitKRW >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400');
+
+            var earlyBadgeEl = document.getElementById('totalProfitBadge');
+            earlyBadgeEl.innerText = (earlyProfitRate >= 0 ? '+' : '') + earlyProfitRate.toFixed(2) + '%';
+            earlyBadgeEl.className = 'text-xs px-2 py-0.5 rounded-full font-bold ' + (earlyProfitRate >= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400');
 
             var taxBanner = document.getElementById('taxWarningBanner');
             var taxIcon = document.getElementById('taxWarningIcon');
@@ -1183,13 +1339,10 @@
                 var profitColor = profitLossLocal >= 0 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold';
                 var profitBadge = profitLossLocal >= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400';
 
-                var exInfo = calculateNextExDividendDate(stock);
+                var exInfo = getNextPayoutMonth(stock);
                 var dDayBadge = '';
                 if (exInfo) {
-                    if (exInfo.dDay <= 0) { dDayBadge = '<span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white animate-pulse">🚨 D-Day 오늘 배당락</span>'; }
-                    else if (exInfo.dDay <= 7) { dDayBadge = '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/40">🚨 D-' + exInfo.dDay + ' (이번주)</span>'; }
-                    else if (exInfo.dDay <= 30) { dDayBadge = '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">⏰ D-' + exInfo.dDay + '</span>'; }
-                    else { dDayBadge = '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 D-' + exInfo.dDay + ' (' + exInfo.payoutMonth + '월 지급)</span>'; }
+                    dDayBadge = '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700/60 text-gray-800 dark:text-gray-200">📅 다음 배당 ' + exInfo.payoutMonth + '월</span>';
                 }
 
                 var memoHtml = stock.memo ? '<div class="bg-gray-100 dark:bg-gray-900/40 px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700/40 flex items-center gap-1.5 text-[11px] text-gray-800 dark:text-gray-200 font-medium"><i class="fa-regular fa-note-sticky text-amber-500 dark:text-amber-400 text-[10px]"></i><span class="truncate">' + stock.memo + '</span></div>' : '';
@@ -2288,7 +2441,7 @@
         }
 
         function exportData() {
-            var payload = { version: '1.9.0', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
+            var payload = { version: '1.9.1', updatedAt: new Date().toISOString(), portfolio: portfolio, cashBalances: cashBalances };
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             var a = document.createElement('a');
             a.setAttribute("href", dataStr); a.setAttribute("download", 'dividend_portfolio_' + new Date().toISOString().slice(0,10) + '.json');
