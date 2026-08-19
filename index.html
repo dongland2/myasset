@@ -486,7 +486,7 @@
                 <div class="bg-gray-100 dark:bg-gray-900/70 p-3.5 rounded-xl space-y-2.5">
                     <div class="flex justify-between"><label class="font-bold"><i class="fa-solid fa-server text-indigo-500 dark:text-indigo-400"></i> 클라우드 ID</label><span id="cloudIdBadge" class="text-[10px] font-semibold opacity-80">미연결</span></div>
                     <div class="flex gap-1.5">
-                        <input type="text" id="inputSyncKey" placeholder="예: dongland22" class="flex-1 bg-white dark:bg-gray-800 rounded-lg px-2.5 py-2 font-mono text-xs font-bold">
+                        <input type="text" id="inputSyncKey" placeholder="예: 임의 ID" class="flex-1 bg-white dark:bg-gray-800 rounded-lg px-2.5 py-2 font-mono text-xs font-bold">
                         <button id="btnCreateCloud" onclick="createNewCloudStorage()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">공간 생성</button>
                     </div>
                     <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">입력한 ID가 그대로 클라우드 ID로 사용됩니다. <b>자동 업로드는 하지 않으며 [업로드] 버튼을 눌렀을 때만 클라우드 데이터가 변경됩니다.</b> 다른 기기에서는 같은 ID로 [복원]을 누르세요.</p>
@@ -4043,9 +4043,35 @@
             } catch (e) { return ''; }
         }
 
+        function makeRandomCloudIdExample() {
+            var alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+            var length = 10;
+            var out = '';
+            try {
+                if (window.crypto && window.crypto.getRandomValues) {
+                    var buf = new Uint32Array(length);
+                    window.crypto.getRandomValues(buf);
+                    for (var i = 0; i < length; i++) out += alphabet[buf[i] % alphabet.length];
+                    return out;
+                }
+            } catch (e) {}
+            for (var j = 0; j < length; j++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+            return out;
+        }
+
+        function refreshRandomCloudIdExample() {
+            var input = document.getElementById('inputSyncKey');
+            if (!input) return '';
+            var example = makeRandomCloudIdExample();
+            input.placeholder = '예: ' + example;
+            input.setAttribute('data-random-example', example);
+            return example;
+        }
+
         function openCloudModal() {
             var saved = localStorage.getItem('my_cloud_sync_key') || '';
             if (/^local_space_/i.test(saved)) saved = '';
+            refreshRandomCloudIdExample();
             document.getElementById('inputSyncKey').value = saved;
             updateCloudTransferInfo();
             document.getElementById('cloudModal').classList.remove('hidden');
@@ -4057,7 +4083,8 @@
         async function createNewCloudStorage() {
             var key = normalizeCloudId(document.getElementById('inputSyncKey').value);
             if (!isValidCloudId(key)) {
-                alert('클라우드 ID는 6~64자의 영문, 숫자, 점(.), 밑줄(_), 하이픈(-)만 사용할 수 있습니다.\n예: dongland22');
+                var randomExample = (document.getElementById('inputSyncKey').getAttribute('data-random-example') || refreshRandomCloudIdExample());
+                alert('클라우드 ID는 6~64자의 영문, 숫자, 점(.), 밑줄(_), 하이픈(-)만 사용할 수 있습니다.\n예: ' + randomExample);
                 return;
             }
 
