@@ -85,7 +85,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.13.0
+                    v1.13.0a
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -653,7 +653,7 @@
                 <button onclick="closeDataDiagnosticModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-3 rounded-xl border border-cyan-500/25 bg-cyan-500/5 space-y-2">
-                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.13.0 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
+                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.13.0a · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
                 <div id="systemHealthGrid" class="grid grid-cols-2 gap-1.5"></div>
             </div>
             <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-[10px] font-bold">
@@ -1390,10 +1390,12 @@
         var etfUniverseCache = null;
         var etfUniverseError = '';
         var currentFormDistributionData = null;
+        var currentFormMarketData = null;
         var cloudSyncKey = '';
         var currentFilter = 'ALL';
         var currentAccountFilter = 'ALL';
         var APP_VERSION = '1.13.0';
+        var APP_BUILD_VERSION = '1.13.0a';
         var currentSort = 'VALUE_DESC';
         var isMergedView = false;
         var displayCurrency = 'KRW';
@@ -1412,6 +1414,7 @@
         var lastWorkerVersion = '';
 
         // -------------------------------------------------------------------------
+        // v1.13.0a: 메인 종목카드에 전일종가 대비 당일 등락률(▲/▼) 표시
         // v1.13.0 PWA: iPhone / Android 공통 설치, standalone, service worker
         // -------------------------------------------------------------------------
         var deferredPwaInstallPrompt = null;
@@ -2076,6 +2079,80 @@
             return items[0];
         }
 
+
+        function normalizeDayChangeRate(value) {
+            var n = parseFloat(String(value === undefined || value === null ? '' : value).replace(/,/g, '').replace('%','').trim());
+            return isFinite(n) ? n : null;
+        }
+
+        function normalizeDayChangeAmount(value) {
+            var n = parseFloat(String(value === undefined || value === null ? '' : value).replace(/,/g, '').trim());
+            return isFinite(n) ? n : null;
+        }
+
+        function getUsQuoteSnapshot(yData) {
+            try {
+                var result = yData && yData.chart && yData.chart.result && yData.chart.result[0];
+                if (!result) return null;
+                var meta = result.meta || {};
+                var price = parseFloat(meta.regularMarketPrice || meta.chartPreviousClose || meta.previousClose || 0);
+                var previousClose = parseFloat(meta.chartPreviousClose || meta.previousClose || 0);
+                var amount = (price > 0 && previousClose > 0) ? (price - previousClose) : null;
+                var rate = (price > 0 && previousClose > 0) ? ((price - previousClose) / previousClose) * 100 : null;
+                var unix = parseInt(meta.regularMarketTime || 0, 10);
+                return {
+                    price: price,
+                    previousClose: previousClose > 0 ? previousClose : null,
+                    dayChangeAmount: isFinite(amount) ? amount : null,
+                    dayChangeRate: isFinite(rate) ? rate : null,
+                    dayChangeDirection: isFinite(rate) ? (rate > 0 ? 'UP' : (rate < 0 ? 'DOWN' : 'FLAT')) : '',
+                    marketStatus: String(meta.marketState || ''),
+                    tradedAt: unix > 0 ? new Date(unix * 1000).toISOString() : '',
+                    name: meta.shortName || meta.longName || ''
+                };
+            } catch (e) { return null; }
+        }
+
+        function applyMarketDayChange(stock, quote) {
+            if (!stock || !quote) return false;
+            var rate = normalizeDayChangeRate(quote.dayChangeRate);
+            var amount = normalizeDayChangeAmount(quote.dayChangeAmount);
+            var previousClose = parseFloat(quote.previousClose || 0);
+            if (rate === null && previousClose > 0) {
+                var cp = parseFloat(stock.currentPrice || quote.price || 0);
+                if (cp > 0) rate = ((cp - previousClose) / previousClose) * 100;
+            }
+            if (rate === null || !isFinite(rate)) return false;
+            stock.dayChangeRate = rate;
+            stock.dayChangeAmount = amount !== null ? amount : ((previousClose > 0 && parseFloat(stock.currentPrice || 0) > 0) ? parseFloat(stock.currentPrice) - previousClose : 0);
+            stock.previousClose = previousClose > 0 ? previousClose : (parseFloat(stock.currentPrice || 0) - (parseFloat(stock.dayChangeAmount) || 0));
+            stock.dayChangeDirection = rate > 0 ? 'UP' : (rate < 0 ? 'DOWN' : 'FLAT');
+            stock.marketStatus = quote.marketStatus || stock.marketStatus || '';
+            stock.dayChangeUpdatedAt = quote.tradedAt || quote.dayChangeUpdatedAt || stock.lastPriceUpdatedAt || new Date().toISOString();
+            return true;
+        }
+
+        function getDayChangeBadgeHtml(stock) {
+            if (!stock) return '';
+            var rate = normalizeDayChangeRate(stock.dayChangeRate);
+            if (rate === null) return '';
+            var amount = normalizeDayChangeAmount(stock.dayChangeAmount);
+            var previousClose = parseFloat(stock.previousClose || 0);
+            var isUp = rate > 0.00001, isDown = rate < -0.00001;
+            var arrow = isUp ? '▲' : (isDown ? '▼' : '―');
+            var cls = isUp
+                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                : (isDown ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                          : 'bg-gray-500/15 text-gray-600 dark:text-gray-300 border-gray-500/30');
+            var status = String(stock.marketStatus || '').toUpperCase();
+            var isLive = /OPEN|TRADING|REGULAR/.test(status) && !/CLOSE|CLOSED/.test(status);
+            var title = (isLive ? '장중' : '최근 거래일') + ' · 전일 종가 대비';
+            if (amount !== null) title += ' ' + (amount > 0 ? '+' : '') + amount.toLocaleString(undefined, {maximumFractionDigits: 2});
+            if (previousClose > 0) title += ' · 전일종가 ' + previousClose.toLocaleString(undefined, {maximumFractionDigits: 2});
+            if (stock.dayChangeUpdatedAt) title += ' · ' + formatCloudLocalTime(stock.dayChangeUpdatedAt);
+            return '<span title="' + escapeHtml(title) + '" class="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-md border font-black whitespace-nowrap ' + cls + '">' + arrow + ' ' + (rate > 0 ? '+' : '') + rate.toFixed(2) + '%</span>';
+        }
+
         async function fetchKoreanRealtimeBatch(codes) {
             var cleanCodes = [];
             var seen = {};
@@ -2092,13 +2169,20 @@
                     var code = String(q.itemCode || q.stockCode || q.code || q.symbolCode || '').replace(/^A/, '');
                     if (!code && cleanCodes.length === 1) code = cleanCodes[0];
                     var price = parseFloat(String(q.closePriceRaw || q.closePrice || q.currentPrice || '').replace(/,/g, ''));
+                    var dayChangeRate = normalizeDayChangeRate(q.fluctuationsRatioRaw !== undefined ? q.fluctuationsRatioRaw : q.fluctuationsRatio);
+                    var dayChangeAmount = normalizeDayChangeAmount(q.compareToPreviousClosePriceRaw !== undefined ? q.compareToPreviousClosePriceRaw : q.compareToPreviousClosePrice);
+                    var previousClose = (price > 0 && dayChangeAmount !== null) ? (price - dayChangeAmount) : 0;
                     if (code && price > 0) {
                         map[code] = {
                             price: price,
                             name: q.stockName || '',
                             marketStatus: q.marketStatus || '',
                             tradedAt: q.localTradedAt || data.time || '',
-                            source: 'NAVER realtime'
+                            source: 'NAVER realtime',
+                            dayChangeRate: dayChangeRate,
+                            dayChangeAmount: dayChangeAmount,
+                            previousClose: previousClose > 0 ? previousClose : null,
+                            dayChangeDirection: dayChangeRate === null ? '' : (dayChangeRate > 0 ? 'UP' : (dayChangeRate < 0 ? 'DOWN' : 'FLAT'))
                         };
                     }
                 });
@@ -2123,7 +2207,8 @@
                 ticker: upper, name: clean, market: isSixDigit ? 'KR' : 'US',
                 sector: '기타', account: (selectedDashboardAccount !== 'ALL') ? selectedDashboardAccount : '일반계좌',
                 price: 0, dps: 0, cycle: 'unknown', months: [],
-                priceIsLive: false, priceSource: '', dividendSource: '', dividendAsOf: '', dividendMethod: '',
+                priceIsLive: false, priceSource: '', previousClose: 0, dayChangeRate: null, dayChangeAmount: null, dayChangeDirection: '', marketStatus: '', dayChangeUpdatedAt: '',
+                dividendSource: '', dividendAsOf: '', dividendMethod: '',
                 payoutMonthsNoGuess: true, payoutMonthsComplete: false, payoutMonthBasis: ''
             };
 
@@ -2175,6 +2260,12 @@
                     if (liveMap[code].name) result.name = liveMap[code].name;
                     result.priceIsLive = true;
                     result.priceSource = 'NAVER realtime';
+                    result.previousClose = liveMap[code].previousClose || 0;
+                    result.dayChangeRate = liveMap[code].dayChangeRate;
+                    result.dayChangeAmount = liveMap[code].dayChangeAmount;
+                    result.dayChangeDirection = liveMap[code].dayChangeDirection || '';
+                    result.marketStatus = liveMap[code].marketStatus || '';
+                    result.dayChangeUpdatedAt = liveMap[code].tradedAt || '';
                 }
 
                 // 종목명/DPS 보강. lastClosePrice는 전일종가이므로 현재가를 덮어쓰지 않는다.
@@ -2252,13 +2343,22 @@
             var yData = await fetchUsQuoteFromProxy(result.ticker);
             if (yData && yData.chart && yData.chart.result && yData.chart.result[0]) {
                 var meta = yData.chart.result[0].meta || {};
-                var price = parseFloat(meta.regularMarketPrice || meta.chartPreviousClose || 0);
+                var usSnap = getUsQuoteSnapshot(yData);
+                var price = usSnap ? usSnap.price : parseFloat(meta.regularMarketPrice || meta.chartPreviousClose || 0);
                 if (price > 0) {
                     result.price = price;
                     result.priceIsLive = !!meta.regularMarketPrice;
                     result.priceSource = 'Yahoo';
                 }
-                if (meta.shortName) result.name = meta.shortName;
+                if (usSnap) {
+                    result.previousClose = usSnap.previousClose || 0;
+                    result.dayChangeRate = usSnap.dayChangeRate;
+                    result.dayChangeAmount = usSnap.dayChangeAmount;
+                    result.dayChangeDirection = usSnap.dayChangeDirection || '';
+                    result.marketStatus = usSnap.marketStatus || '';
+                    result.dayChangeUpdatedAt = usSnap.tradedAt || '';
+                }
+                if ((usSnap && usSnap.name) || meta.shortName) result.name = (usSnap && usSnap.name) || meta.shortName;
             }
             try {
                 var usDiv = await fetchUsStockDividendInfo(result.ticker);
@@ -2318,6 +2418,16 @@
                         payoutMonthsComplete: resolved.payoutMonthsComplete === true,
                         payoutMonthBasis: resolved.payoutMonthBasis || '',
                         cycleSource: resolved.dividendCycleSource || ''
+                    };
+                    currentFormMarketData = {
+                        ticker: String(resolved.ticker || '').toUpperCase(),
+                        previousClose: Number(resolved.previousClose || 0),
+                        dayChangeRate: resolved.dayChangeRate,
+                        dayChangeAmount: resolved.dayChangeAmount,
+                        dayChangeDirection: resolved.dayChangeDirection || '',
+                        marketStatus: resolved.marketStatus || '',
+                        dayChangeUpdatedAt: resolved.dayChangeUpdatedAt || '',
+                        priceSource: resolved.priceSource || ''
                     };
                     var knownPayout = getKnownPayoutDateSchedule(resolved.ticker);
                     if (knownPayout) {
@@ -2430,6 +2540,7 @@
                         var q = krMap[code];
                         if (q && q.price > 0) {
                             if (applySafeMarketPrice(stock, q.price, q.source || 'NAVER realtime', q.tradedAt || new Date().toISOString())) {
+                                applyMarketDayChange(stock, q);
                                 if (q.name) stock.name = q.name;
                                 updatedCount++;
                             } else {
@@ -2476,7 +2587,8 @@
                     try {
                         var info = await resolveStockData(stock.ticker);
                         if (info && info.price > 0 && info.priceSource) {
-                            if (applySafeMarketPrice(stock, info.price, info.priceSource, new Date().toISOString())) {
+                            if (applySafeMarketPrice(stock, info.price, info.priceSource, info.dayChangeUpdatedAt || new Date().toISOString())) {
+                                applyMarketDayChange(stock, info);
                                 if (info.name) stock.name = info.name;
                                 updatedCount++;
                             } else {
@@ -3050,6 +3162,7 @@
 
                 var profitColor = profitLossLocal >= 0 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold';
                 var profitBadge = profitLossLocal >= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400';
+                var dayChangeHtml = getDayChangeBadgeHtml(stock);
 
                 var exInfo = getNextPayoutMonth(stock);
                 var dDayBadge = '';
@@ -3075,7 +3188,7 @@
 
                 var card = document.createElement('div');
                 card.className = currentThemeMode === 'light' ? 'bg-white border border-gray-300 p-4 rounded-xl shadow-md space-y-2.5 text-gray-900 font-semibold' : 'bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md space-y-2.5 text-gray-100 font-semibold';
-                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + trustBadge + staleBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + formatLocalAmount(currentValLocal, isUS) + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + formatLocalAmount(profitLossLocal, isUS) + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>' + dividendMetaHtml + developerHtml;
+                card.innerHTML = '<div class="flex justify-between items-start"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ' + (isUS ? 'bg-indigo-900/60 text-indigo-300' : 'bg-rose-900/60 text-rose-300') + '">' + (isUS ? '미국' : '한국') + '</span>' + accountBadge + dDayBadge + trustBadge + staleBadge + '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">' + (stock.sector || '기타') + '</span></div><div class="flex items-center gap-1 mt-1"><h3 class="font-bold text-sm text-gray-900 dark:text-white">' + stock.name + '</h3><span class="text-xs text-gray-600 dark:text-gray-300 font-mono">(' + stock.ticker + ')</span></div><p class="text-xs text-gray-700 dark:text-gray-200 mt-0.5">보유: <b class="text-gray-900 dark:text-white font-bold">' + qty + '주</b> · 평단: ' + buyPrice.toLocaleString(undefined, {maximumFractionDigits: 2}) + currSymbol + '</p></div><div class="flex gap-1.5">' + actionButtons + '</div></div>' + memoHtml + '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-300 dark:border-gray-700 text-xs"><div><span class="text-gray-600 dark:text-gray-300 font-bold">현재가 / 평가액</span><div class="flex items-center gap-1.5 mt-0.5 flex-wrap"><p class="font-bold text-gray-900 dark:text-white">' + currentPrice.toLocaleString() + currSymbol + '</p>' + dayChangeHtml + '</div><p class="text-[11px] text-gray-700 dark:text-gray-200 font-bold">' + formatLocalAmount(currentValLocal, isUS) + currSymbol + ' (' + formatMoney(currentValLocal * rate) + ')</p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 font-bold">평가 손익</span><p class="font-bold ' + profitColor + '">' + (profitLossLocal >= 0 ? '+' : '') + formatLocalAmount(profitLossLocal, isUS) + currSymbol + '</p><span class="text-[10px] px-1.5 py-0.2 rounded font-bold ' + profitBadge + '">' + (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%</span></div></div><div class="bg-gray-100 dark:bg-gray-900/80 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 flex justify-between items-center text-xs"><div><span class="text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-coins text-[10px]"></i> 연간 배당금 (세후 ' + ((1-taxRate)*100).toFixed(1) + '%)</span><p class="font-black text-gray-900 dark:text-white mt-0.5">' + annualDivLocal.toLocaleString('ko-KR', {maximumFractionDigits: 2}) + currSymbol + ' <span class="text-gray-700 dark:text-gray-300 font-bold text-[11px]">(' + formatMoney(annualDivLocal * (1 - taxRate) * rate) + ')</span></p></div><div class="text-right"><span class="text-gray-600 dark:text-gray-300 text-[11px] font-bold">시가 / 투자배당률(YoC)</span><p class="font-black text-emerald-700 dark:text-emerald-300">' + yieldRate.toFixed(2) + '% <span class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">/ ' + yocRate.toFixed(2) + '%</span></p><p class="text-[10px] text-gray-600 dark:text-gray-300 font-bold">주당 ' + dps.toLocaleString() + currSymbol + '</p></div></div>' + dividendMetaHtml + developerHtml;
                 container.appendChild(card);
             });
 
@@ -3660,6 +3773,7 @@
             if (editIdx === undefined) editIdx = -1;
             payoutMonthEditMode = false;
             currentFormDistributionData = null;
+            currentFormMarketData = null;
             hidePayoutMonthTooltip();
             document.getElementById('stockForm').reset();
             document.getElementById('inputDividendSource').value = '';
@@ -3710,6 +3824,16 @@
                     payoutMonthsComplete: item.payoutMonthsComplete === true,
                     payoutMonthBasis: item.payoutMonthBasis || '',
                     cycleSource: item.dividendCycleSource || ''
+                };
+                currentFormMarketData = {
+                    ticker: String(item.ticker || '').toUpperCase(),
+                    previousClose: Number(item.previousClose || 0),
+                    dayChangeRate: item.dayChangeRate,
+                    dayChangeAmount: item.dayChangeAmount,
+                    dayChangeDirection: item.dayChangeDirection || '',
+                    marketStatus: item.marketStatus || '',
+                    dayChangeUpdatedAt: item.dayChangeUpdatedAt || '',
+                    priceSource: item.lastPriceSource || item.priceSource || ''
                 };
                 updatePayoutMonthTooltips(item);
             } else {
@@ -3783,6 +3907,21 @@
                 payoutMonths = noGuessMonths ? cleanPayoutMonths(payoutMonths) : normalizePayoutMonths(divCycle, payoutMonths, ticker);
 
                 var stockData = { market: market, ticker: ticker, name: name, sector: sector, account: account, memo: memo, quantity: quantity, buyPrice: buyPrice, currentPrice: currentPrice, dps: dps, divCycle: divCycle, payoutMonths: payoutMonths, payoutMonthsNoGuess:noGuessMonths, payoutMonthsComplete:!!(currentFormDistributionData && currentFormDistributionData.payoutMonthsComplete), payoutMonthBasis:(currentFormDistributionData && currentFormDistributionData.payoutMonthBasis)||'', dividendCycleSource:(currentFormDistributionData && currentFormDistributionData.cycleSource)||'', dividendSource: document.getElementById('inputDividendSource').value || '', dividendAsOf: document.getElementById('inputDividendAsOf').value || '', dividendMethod: document.getElementById('inputDividendMethod').value || '' };
+                if (editIdx >= 0 && portfolio[editIdx] && String(portfolio[editIdx].ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
+                    ['previousClose','dayChangeRate','dayChangeAmount','dayChangeDirection','marketStatus','dayChangeUpdatedAt','lastPriceUpdatedAt','lastPriceSource'].forEach(function(k){
+                        if (portfolio[editIdx][k] !== undefined) stockData[k] = portfolio[editIdx][k];
+                    });
+                }
+                if (currentFormMarketData && String(currentFormMarketData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
+                    stockData.previousClose = Number(currentFormMarketData.previousClose || 0);
+                    stockData.dayChangeRate = currentFormMarketData.dayChangeRate;
+                    stockData.dayChangeAmount = currentFormMarketData.dayChangeAmount;
+                    stockData.dayChangeDirection = currentFormMarketData.dayChangeDirection || '';
+                    stockData.marketStatus = currentFormMarketData.marketStatus || '';
+                    stockData.dayChangeUpdatedAt = currentFormMarketData.dayChangeUpdatedAt || '';
+                    if (currentFormMarketData.priceSource) stockData.lastPriceSource = currentFormMarketData.priceSource;
+                    if (currentFormMarketData.dayChangeUpdatedAt) stockData.lastPriceUpdatedAt = currentFormMarketData.dayChangeUpdatedAt;
+                }
                 if (currentFormDistributionData && String(currentFormDistributionData.ticker || '').toUpperCase() === String(ticker || '').toUpperCase()) {
                     stockData.payoutDates = Array.isArray(currentFormDistributionData.payoutDates) ? currentFormDistributionData.payoutDates.slice() : [];
                     stockData.recordDates = Array.isArray(currentFormDistributionData.recordDates) ? currentFormDistributionData.recordDates.slice() : [];
@@ -5175,7 +5314,7 @@
         }
 
         function stockDebugPayload(stock) {
-            return {appVersion:APP_VERSION,ticker:stock.ticker,name:stock.name,market:stock.market,account:stock.account,price:{value:stock.currentPrice,source:stock.lastPriceSource||stock.priceSource||'',updatedAt:stock.lastPriceUpdatedAt||''},dividend:{dps:stock.dps,cycle:stock.divCycle,payoutMonths:stock.payoutMonths,payoutDates:stock.payoutDates,exDividendDates:stock.exDividendDates,legalPaymentDeadlines:stock.legalPaymentDeadlines,source:stock.payoutDateSource||stock.dividendSource||'',basis:stock.payoutMonthBasis||'',updatedAt:stock.lastDividendUpdatedAt||stock.dividendAsOf||''},confidence:getDividendConfidence(stock)};
+            return {appVersion:APP_VERSION,appBuild:APP_BUILD_VERSION,ticker:stock.ticker,name:stock.name,market:stock.market,account:stock.account,price:{value:stock.currentPrice,previousClose:stock.previousClose,dayChangeRate:stock.dayChangeRate,dayChangeAmount:stock.dayChangeAmount,marketStatus:stock.marketStatus||'',source:stock.lastPriceSource||stock.priceSource||'',updatedAt:stock.lastPriceUpdatedAt||'',dayChangeUpdatedAt:stock.dayChangeUpdatedAt||''},dividend:{dps:stock.dps,cycle:stock.divCycle,payoutMonths:stock.payoutMonths,payoutDates:stock.payoutDates,exDividendDates:stock.exDividendDates,legalPaymentDeadlines:stock.legalPaymentDeadlines,source:stock.payoutDateSource||stock.dividendSource||'',basis:stock.payoutMonthBasis||'',updatedAt:stock.lastDividendUpdatedAt||stock.dividendAsOf||''},confidence:getDividendConfidence(stock)};
         }
         function copyStockDiagnostic(index) {
             var stock=portfolio[index]; if(!stock)return; var text=JSON.stringify(stockDebugPayload(stock),null,2);
@@ -5210,9 +5349,9 @@
 
         function updateVersionMismatchBanner(workerVersion) {
             lastWorkerVersion=String(workerVersion||''); var b=document.getElementById('versionMismatchBanner'),txt=document.getElementById('versionMismatchText'); if(!b||!txt)return;
-            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION){txt.innerText='웹앱 v'+APP_VERSION+' / Worker v'+lastWorkerVersion+' · ZIP의 deploy_worker_update.bat 실행이 필요합니다.';b.classList.remove('hidden');}
+            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION){txt.innerText='웹앱 v'+APP_BUILD_VERSION+' / Worker v'+lastWorkerVersion+' · ZIP의 deploy_worker_update.bat 실행이 필요합니다.';b.classList.remove('hidden');}
             else b.classList.add('hidden');
-            var line=document.getElementById('diagnosticVersionLine'); if(line)line.innerText='HTML v'+APP_VERSION+' · Worker '+(lastWorkerVersion?('v'+lastWorkerVersion):'확인 전');
+            var line=document.getElementById('diagnosticVersionLine'); if(line)line.innerText='HTML v'+APP_BUILD_VERSION+' · Worker '+(lastWorkerVersion?('v'+lastWorkerVersion):'확인 전');
         }
         async function checkWorkerVersionCompatibility(silent) {
             try{var h=await marketProxyFetch('/health',8000); updateVersionMismatchBanner(h&&h.version); return h;}catch(e){if(!silent){var b=document.getElementById('versionMismatchBanner'),txt=document.getElementById('versionMismatchText');if(b&&txt){txt.innerText='Worker 연결을 확인할 수 없습니다. 시스템 진단 센터에서 연결 테스트를 실행하세요.';b.classList.remove('hidden');}}return null;}
@@ -5255,11 +5394,11 @@
             try{
                 if(stock.market==='KR'){
                     var code=normalizeKoreanTicker(stock.ticker), map=await fetchKoreanRealtimeBatch([code]), q=map[code];
-                    if(q&&q.price>0)priceOk=applySafeMarketPrice(stock,q.price,q.source||'NAVER realtime',q.tradedAt||new Date().toISOString());
+                    if(q&&q.price>0){priceOk=applySafeMarketPrice(stock,q.price,q.source||'NAVER realtime',q.tradedAt||new Date().toISOString());if(priceOk)applyMarketDayChange(stock,q);}
                     if(looksLikeKoreanEtf(stock.name,code)){var ei=await fetchEtfDistributionInfo(code,stock.name,true);if(ei){if(Number(ei.annualDistribution)>0){stock.dps=Number(ei.annualDistribution);stock.dividendMethod=ei.annualEstimated?'최근 분배금 연환산(추정)':'최근 한 주기 ETF 실제 분배금 합계';}stock.divCycle=ei.cycle||stock.divCycle;if(Array.isArray(ei.months))stock.payoutMonths=ei.months.slice();stock.payoutDates=ei.payoutDates||[];stock.recordDates=ei.recordDates||[];stock.distributionHistory=ei.history||[];stock.payoutDateSource=ei.source||'';stock.dividendSource=ei.source||stock.dividendSource||'';stock.lastDividendUpdatedAt=ei.updatedAt||new Date().toISOString();divOk=true;}}
                     else {var ki=await fetchKoreanStockDividendInfo(code,stock.name,true);if(ki)divOk=applyKoreanStockDividendInfo(stock,ki)||true;}
                 } else {
-                    var y=await fetchUsQuoteFromProxy(stock.ticker);if(y&&y.chart&&y.chart.result&&y.chart.result[0]){var meta=y.chart.result[0].meta||{},p=parseFloat(meta.regularMarketPrice||meta.chartPreviousClose||0);if(p>0)priceOk=applySafeMarketPrice(stock,p,'Yahoo',new Date().toISOString());if(meta.shortName)stock.name=meta.shortName;}
+                    var y=await fetchUsQuoteFromProxy(stock.ticker);if(y&&y.chart&&y.chart.result&&y.chart.result[0]){var meta=y.chart.result[0].meta||{},usSnap=getUsQuoteSnapshot(y),p=usSnap?usSnap.price:parseFloat(meta.regularMarketPrice||meta.chartPreviousClose||0);if(p>0){priceOk=applySafeMarketPrice(stock,p,'Yahoo',(usSnap&&usSnap.tradedAt)||new Date().toISOString());if(priceOk&&usSnap)applyMarketDayChange(stock,usSnap);}if((usSnap&&usSnap.name)||meta.shortName)stock.name=(usSnap&&usSnap.name)||meta.shortName;}
                     var ui=await fetchUsStockDividendInfo(stock.ticker,true);if(ui)divOk=applyUsStockDividendInfo(stock,ui)||true;
                 }
                 if(priceOk||divOk){localStorage.setItem('my_last_market_refresh_at',new Date().toISOString());saveToStorage(false);recordDailyAssetSnapshot();renderAllSafely('single stock refresh');runDataDiagnostics();}
@@ -5384,7 +5523,7 @@
                     else{var dage=now-new Date(s.lastDividendUpdatedAt).getTime();if(isFinite(dage)&&dage>60*24*3600*1000)issues.push({level:'info',text:'ETF 분배금 데이터가 60일 이상 오래됨: '+label});}
                 }
             });
-            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION) issues.push({level:'error',text:'웹앱/Worker 버전 불일치: HTML v'+APP_VERSION+' / Worker v'+lastWorkerVersion});
+            if(lastWorkerVersion && lastWorkerVersion!==APP_VERSION) issues.push({level:'error',text:'웹앱/Worker 버전 불일치: HTML v'+APP_BUILD_VERSION+' / Worker v'+lastWorkerVersion});
             var fxAt=localStorage.getItem('my_usd_krw_rate_updated_at'); if(fxAt&&isoAgeHours(fxAt)>24)issues.push({level:'warn',text:'환율 데이터가 24시간 이상 오래됨'});
             var universe=loadCachedEtfUniverse();
             if(!universe) issues.push({level:'warn',text:'전체 ETF 목록 캐시가 아직 없습니다. [전체 ETF 목록 갱신]을 실행하면 시장 전체 운용사 통계를 확인할 수 있습니다.'});
@@ -5413,7 +5552,7 @@
         }
 
         function copyDiagnosticRawData(){
-            var payload={version:APP_VERSION,workerVersion:lastWorkerVersion,generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),systemHealth:systemHealthState,issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
+            var payload={version:APP_VERSION,appBuild:APP_BUILD_VERSION,workerVersion:lastWorkerVersion,generatedAt:new Date().toISOString(),summary:getEtfDiagnosticSnapshot(),systemHealth:systemHealthState,issues:lastDiagnosticIssues,etfUniverse:loadCachedEtfUniverse(),quarantinedMarketUpdates:quarantinedMarketUpdates,portfolio:portfolio};
             var text=JSON.stringify(payload,null,2);
             if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){alert('진단 원본 JSON을 클립보드에 복사했습니다.');}).catch(function(){prompt('아래 JSON을 복사하세요:',text);});else prompt('아래 JSON을 복사하세요:',text);
         }
