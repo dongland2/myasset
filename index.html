@@ -85,7 +85,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.13.0a
+                    v1.13.1
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -115,9 +115,6 @@
                 </button>
                 <button onclick="openSnapshotModal()" class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-700 px-1.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 transition">
                     <i class="fa-solid fa-clock-rotate-left text-[9px]"></i> 롤백
-                </button>
-                <button onclick="openDividendReceiptModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-1.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition" title="실제 받은 배당금 기록">
-                    <i class="fa-solid fa-receipt text-[9px]"></i> 배당실적
                 </button>
                 <button onclick="openDataDiagnosticModal()" class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-700 px-1.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 transition" title="도구 → 데이터 검사">
                     <i class="fa-solid fa-stethoscope text-[9px]"></i> 도구
@@ -259,27 +256,14 @@
                     <p class="font-black mt-0.5" id="totalProfitLoss">0원</p>
                 </div>
                 <div>
-                    <p class="text-emerald-600 dark:text-emerald-400 font-bold">연간 세전 배당금</p>
-                    <p class="font-black text-emerald-700 dark:text-emerald-300 mt-0.5" id="totalAnnualDividend">0원</p>
+                    <p class="text-emerald-600 dark:text-emerald-400 font-bold">배당금</p>
+                    <p class="font-black text-emerald-700 dark:text-emerald-300 mt-0.5"><span class="text-[10px] text-gray-600 dark:text-gray-400 font-bold mr-1">연간 세전</span><span id="totalAnnualDividendGross">0원</span></p>
+                    <p class="font-black text-emerald-700 dark:text-emerald-300 mt-0.5"><span class="text-[10px] text-gray-600 dark:text-gray-400 font-bold mr-1">연간 세후</span><span id="totalAnnualDividendNet">0원</span></p>
                 </div>
                 <div>
                     <p class="text-emerald-600 dark:text-emerald-400 font-bold">월평균 세후 배당금 <span class="text-[10px] text-gray-600 dark:text-gray-400">(US 15%/KR 15.4%)</span></p>
                     <p class="font-black text-emerald-700 dark:text-emerald-300 mt-0.5" id="monthlyNetDividend">0원</p>
                 </div>
-            </div>
-
-            <!-- 올해 예상 vs 실제 수령 배당 -->
-            <div class="pt-3 border-t border-gray-300 dark:border-gray-700/50">
-                <div class="flex justify-between items-center mb-2">
-                    <p class="text-[11px] font-black text-gray-800 dark:text-gray-200"><i class="fa-solid fa-receipt text-emerald-500 mr-1"></i><span id="dividendProgressYearLabel">올해 배당 실적</span></p>
-                    <button onclick="openDividendReceiptModal()" class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline">수령 내역 관리</button>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-center">
-                    <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-900/70 border border-gray-300 dark:border-gray-700"><p class="text-[9px] font-bold text-gray-500 dark:text-gray-400">예상 세후</p><p id="yearExpectedNetDividend" class="text-[11px] font-black text-gray-900 dark:text-white mt-0.5">0원</p></div>
-                    <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30"><p class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300">실제 수령</p><p id="yearActualNetDividend" class="text-[11px] font-black text-emerald-700 dark:text-emerald-300 mt-0.5">0원</p></div>
-                    <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30"><p class="text-[9px] font-bold text-amber-700 dark:text-amber-300">남은 예상</p><p id="yearRemainingNetDividend" class="text-[11px] font-black text-amber-700 dark:text-amber-300 mt-0.5">0원</p></div>
-                </div>
-                <div class="mt-2 w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden"><div id="yearDividendProgressBar" class="h-full bg-emerald-500 rounded-full" style="width:0%"></div></div>
             </div>
         </section>
 
@@ -325,12 +309,11 @@
             <div id="calendarWrapper" class="hidden space-y-2">
                 <div class="flex justify-between items-center">
                     <button onclick="changeDividendCalendarMonth(-1)" class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 font-bold"><i class="fa-solid fa-chevron-left"></i></button>
-                    <div class="text-center"><p id="dividendCalendarTitle" class="text-sm font-black"></p><p class="text-[9px] opacity-70">🟠 배당락일 · 🟢 실 수령 · 🟦 확인 지급 · 🟣 공시 지급 · 🔵 지급 예정</p></div>
+                    <div class="text-center"><p id="dividendCalendarTitle" class="text-sm font-black"></p><p class="text-[9px] opacity-70">🟠 배당락일 · 🟢 실 지급 · 🟦 확인 지급 · 🟣 공시 지급 · 🔵 지급 예정</p></div>
                     <button onclick="changeDividendCalendarMonth(1)" class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 font-bold"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div class="flex gap-1 overflow-x-auto pb-0.5" id="dividendCalendarFilters">
                     <button data-calendar-filter="ALL" onclick="setDividendCalendarFilter('ALL')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/30">전체</button>
-                    <button data-calendar-filter="receipt" onclick="setDividendCalendarFilter('receipt')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">실제수령</button>
                     <button data-calendar-filter="official" onclick="setDividendCalendarFilter('official')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">공식지급</button>
                     <button data-calendar-filter="observed" onclick="setDividendCalendarFilter('observed')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">확인지급</button>
                     <button data-calendar-filter="ex" onclick="setDividendCalendarFilter('ex')" class="px-2 py-1 rounded-md text-[9px] font-bold whitespace-nowrap bg-gray-200 dark:bg-gray-700">배당락</button>
@@ -503,7 +486,7 @@
                 <button onclick="closeDividendCalendarDayModal()" class="text-gray-500 text-lg shrink-0"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="calendarDayModalList" class="space-y-2.5 text-xs"></div>
-            <p class="text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">※ ‘공시 지급’은 거래소 공시의 지급예정일을 뜻하며 실제 계좌 입금 확인과는 구분됩니다. ‘실 수령’은 직접 기록한 입금 내역입니다.</p>
+            <p class="text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">※ ‘공시 지급’은 거래소 공시의 지급예정일이며, ‘실 지급/확인 지급’은 수집된 지급 이력의 상태를 뜻합니다.</p>
             <button onclick="closeDividendCalendarDayModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
         </div>
     </div>
@@ -577,13 +560,13 @@
             <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
                 <div>
                     <h3 class="text-base font-bold flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish text-blue-500"></i> 실시간 시세 서버</h3>
-                    <p class="text-[10px] opacity-70 mt-1">GitHub Pages의 CORS 차단을 피하기 위한 내 Cloudflare Worker 주소</p>
+                    <p class="text-[10px] opacity-70 mt-1">GitHub Pages의 CORS 차단을 피하기 위한 Cloudflare Worker 주소</p>
                 </div>
                 <button onclick="closeMarketServerModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-2 text-xs">
                 <label class="block font-bold">Worker URL</label>
-                <input type="url" id="inputMarketProxyBase" placeholder="https://asset-stock-proxy.dongland.workers.dev" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-mono text-[11px] focus:outline-none focus:border-blue-500">
+                <input type="url" id="inputMarketProxyBase" placeholder="https://<worker-name>.<workers-subdomain>.workers.dev" class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 font-mono text-[11px] focus:outline-none focus:border-blue-500">
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">끝의 / 는 없어도 됩니다. 한 번 저장하면 이 기기에 기억됩니다.</p>
                 <div id="marketServerTestResult" class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[11px] font-bold">아직 연결 테스트하지 않았습니다.</div>
             </div>
@@ -653,7 +636,7 @@
                 <button onclick="closeDataDiagnosticModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-3 rounded-xl border border-cyan-500/25 bg-cyan-500/5 space-y-2">
-                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.13.0a · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
+                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.13.1 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
                 <div id="systemHealthGrid" class="grid grid-cols-2 gap-1.5"></div>
             </div>
             <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-[10px] font-bold">
@@ -682,27 +665,6 @@
                 <button id="btnRefreshEtfOnly" onclick="refreshEtfDistributionDataOnly()" class="bg-emerald-600 text-white py-2.5 rounded-lg font-bold text-[11px]">보유 ETF 분배금 갱신</button>
                 <button onclick="closeDataDiagnosticModal()" class="bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold text-[11px]">닫기</button>
             </div>
-        </div>
-    </div>
-
-    <!-- [모달: 실제 수령 배당 관리] -->
-    <div id="dividendReceiptModal" class="fixed inset-0 z-[85] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-3 max-h-[92vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                <div><h3 class="text-base font-bold"><i class="fa-solid fa-receipt text-emerald-500"></i> 실제 수령 배당</h3><p class="text-[10px] opacity-70 mt-0.5">증권계좌에 실제 입금된 세후 금액을 기록합니다.</p></div>
-                <button onclick="closeDividendReceiptModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="receiptYearSummary" class="grid grid-cols-3 gap-2 text-center"></div>
-            <form onsubmit="saveDividendReceipt(event)" class="p-3 rounded-xl bg-gray-100 dark:bg-gray-900 space-y-2 text-xs">
-                <input type="hidden" id="receiptEditId">
-                <div class="grid grid-cols-2 gap-2"><div><label class="block font-bold mb-1">입금일</label><input id="receiptDate" type="date" required class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-2 font-bold"></div><div><label class="block font-bold mb-1">종목</label><select id="receiptStockKey" required onchange="syncReceiptStockFields()" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-2 font-bold"></select></div></div>
-                <div class="grid grid-cols-2 gap-2"><div><label class="block font-bold mb-1">실수령액</label><input id="receiptAmount" type="number" min="0" step="0.01" required placeholder="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-2 font-bold"></div><div><label class="block font-bold mb-1">통화</label><select id="receiptCurrency" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-2 font-bold"><option value="KRW">KRW 원화</option><option value="USD">USD 달러</option></select></div></div>
-                <div><label class="block font-bold mb-1">메모</label><input id="receiptMemo" type="text" maxlength="120" placeholder="예: 세후 입금액" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-2"></div>
-                <div class="grid grid-cols-2 gap-2"><button type="submit" class="bg-emerald-600 text-white py-2 rounded-lg font-bold">저장</button><button type="button" onclick="resetDividendReceiptForm()" class="bg-gray-200 dark:bg-gray-700 py-2 rounded-lg font-bold">입력 초기화</button></div>
-            </form>
-            <div class="flex items-center justify-between"><p class="text-[10px] font-black">최근 수령 내역</p><select id="receiptYearFilter" onchange="renderDividendReceipts()" class="bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1 text-[10px] font-bold"></select></div>
-            <div id="dividendReceiptList" class="space-y-2 text-xs"></div>
-            <button onclick="closeDividendReceiptModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">닫기</button>
         </div>
     </div>
 
@@ -1384,7 +1346,6 @@
         var dividendCalendarCursor = new Date();
         dividendCalendarCursor = new Date(dividendCalendarCursor.getFullYear(), dividendCalendarCursor.getMonth(), 1);
         var stockSearchSelectionState = null;
-        var dividendReceipts = [];
         var quarantinedMarketUpdates = [];
         var lastDiagnosticIssues = [];
         var etfUniverseCache = null;
@@ -1394,8 +1355,8 @@
         var cloudSyncKey = '';
         var currentFilter = 'ALL';
         var currentAccountFilter = 'ALL';
-        var APP_VERSION = '1.13.0';
-        var APP_BUILD_VERSION = '1.13.0a';
+        var APP_VERSION = '1.13.1';
+        var APP_BUILD_VERSION = '1.13.1';
         var currentSort = 'VALUE_DESC';
         var isMergedView = false;
         var displayCurrency = 'KRW';
@@ -1405,7 +1366,7 @@
         var currentThemeMode = 'dark';
         var CLOUD_SYNC_VERSION = APP_VERSION;
         var MARKET_PROXY_STORAGE_KEY = 'market_proxy_base_v1';
-        var MARKET_PROXY_DEFAULT = 'https://asset-stock-proxy.dongland.workers.dev';
+        var MARKET_PROXY_DEFAULT = ''; // 개인 Worker URL은 id.cfg/브라우저 설정으로 분리
         var MARKET_PROXY_MIGRATION_KEY = 'market_proxy_default_v194';
         var marketProxyLastOk = false;
         var dividendCalendarFilter = localStorage.getItem('my_dividend_calendar_filter_v1') || 'ALL';
@@ -1414,7 +1375,7 @@
         var lastWorkerVersion = '';
 
         // -------------------------------------------------------------------------
-        // v1.13.0a: 메인 종목카드에 전일종가 대비 당일 등락률(▲/▼) 표시
+        // v1.13.1: 메인 종목카드에 전일종가 대비 당일 등락률(▲/▼) 표시
         // v1.13.0 PWA: iPhone / Android 공통 설치, standalone, service worker
         // -------------------------------------------------------------------------
         var deferredPwaInstallPrompt = null;
@@ -1554,7 +1515,6 @@
             ensureDefaultMarketServer();
             initMarketServerStatus();
             initFinalStabilityFeatures();
-            loadDividendReceipts();
             loadCachedEtfUniverse();
             // 전체 ETF 목록은 앱 시작을 막지 않고 뒤에서 갱신한다. 실패해도 마지막 정상 캐시를 그대로 쓴다.
             setTimeout(function() { fetchEtfUniverse(false).catch(function() {}); }, 1200);
@@ -1812,12 +1772,13 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.13.0: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
-            // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
-            if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
+            // v1.13.1: 배포자의 Worker URL을 소스에 하드코딩하지 않는다.
+            // 기존 브라우저에 저장된 정상 URL은 그대로 보존하고, 새 사용자는 [서버]에서 한 번 입력한다.
+            var saved = String(localStorage.getItem(MARKET_PROXY_STORAGE_KEY) || '').trim().replace(/\/+$/, '');
+            if (!/^https:\/\//i.test(saved) && /^https:\/\//i.test(MARKET_PROXY_DEFAULT)) {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
-                localStorage.setItem(MARKET_PROXY_MIGRATION_KEY, '1');
             }
+            localStorage.setItem(MARKET_PROXY_MIGRATION_KEY, '1');
         }
 
         function getMarketProxyBase() {
@@ -2871,7 +2832,6 @@
             updateAccountFilterDropdown();
             renderSummaryAndList();
             renderTodayChange();
-            renderDividendProgress();
             updateFireCalculations();
             if (activeChartTab === 'monthly') renderMonthlyDividendChart();
             else if (activeChartTab === 'pie') renderAssetPieChart();
@@ -2897,7 +2857,6 @@
             safeRun('account filter', updateAccountFilterDropdown);
             safeRun('summary/list', renderSummaryAndList);
             safeRun('today change', renderTodayChange);
-            safeRun('dividend progress', renderDividendProgress);
             safeRun('FIRE', updateFireCalculations);
             safeRun('chart', function() {
                 if (activeChartTab === 'monthly') renderMonthlyDividendChart();
@@ -3021,7 +2980,8 @@
             document.getElementById('totalKrwAssetValue').innerText = Math.round(totalKrwAssetKRW).toLocaleString() + '원';
             document.getElementById('totalKrwAssetSubValue').innerText = displayCurrency === 'USD' ? '($' + (totalKrwAssetKRW / usdKrwRate).toFixed(2) + ')' : '국내 자산 총액';
             document.getElementById('totalInvested').innerText = formatMoney(totalInvestedKRW);
-            document.getElementById('totalAnnualDividend').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('totalAnnualDividendGross').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('totalAnnualDividendNet').innerText = formatMoney(totalAnnualNetKRW);
             document.getElementById('monthlyNetDividend').innerText = formatMoney(earlyMonthlyNetKRW);
 
             var earlyProfitEl = document.getElementById('totalProfitLoss');
@@ -3218,7 +3178,8 @@
             badgeEl.innerText = (totalProfitRate >= 0 ? '+' : '') + totalProfitRate.toFixed(2) + '%';
             badgeEl.className = 'text-xs px-2 py-0.5 rounded-full font-bold ' + (totalProfitRate >= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400');
 
-            document.getElementById('totalAnnualDividend').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('totalAnnualDividendGross').innerText = formatMoney(totalAnnualGrossKRW);
+            document.getElementById('totalAnnualDividendNet').innerText = formatMoney(totalAnnualNetKRW);
             document.getElementById('monthlyNetDividend').innerText = formatMoney(monthlyNetKRW);
         }
 
@@ -3569,17 +3530,8 @@
                 list.appendChild(item);
             });
 
-            var actualRows = dividendReceipts.filter(function(r){
-                if (selectedDashboardAccount !== 'ALL' && (r.account || '일반계좌') !== selectedDashboardAccount) return false;
-                var d=new Date(String(r.date||'')+'T12:00:00'); return !isNaN(d.getTime())&&d.getFullYear()===year&&d.getMonth()+1===month;
-            });
-            var actualKRW=actualRows.reduce(function(sum,r){return sum+receiptAmountKRW(r);},0);
-            if (actualRows.length) {
-                var sep=document.createElement('div');sep.className='pt-2 border-t border-emerald-500/30';sep.innerHTML='<p class="text-[10px] font-black text-emerald-700 dark:text-emerald-300 mb-1.5">실제 수령 '+actualRows.length+'건 · '+formatMoney(actualKRW)+'</p>';list.appendChild(sep);
-                actualRows.sort(function(a,b){return String(b.date).localeCompare(String(a.date));}).forEach(function(r){var row=document.createElement('div');row.className='p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex justify-between text-[10px]';row.innerHTML='<div><b>'+escapeHtml(r.name||r.ticker)+'</b><p class="opacity-70">'+escapeHtml(r.date)+' · '+escapeHtml(r.account||'일반계좌')+'</p></div><b class="text-emerald-700 dark:text-emerald-300">'+formatMoney(receiptAmountKRW(r))+'</b>';list.appendChild(row);});
-            }
-            if (matchCount === 0 && !actualRows.length) list.innerHTML='<div class="text-center py-6 text-gray-500 font-bold"><p>'+month+'월에는 예상/수령 배당금이 없습니다.</p></div>';
-            summary.innerText='예상 세전: '+formatMoney(totalMonthGrossKRW)+' / 예상 세후: '+formatMoney(totalMonthNetKRW)+' / 실제 수령: '+formatMoney(actualKRW);
+            if (matchCount === 0) list.innerHTML='<div class="text-center py-6 text-gray-500 font-bold"><p>'+month+'월에는 예상 배당금이 없습니다.</p></div>';
+            summary.innerText='예상 세전: '+formatMoney(totalMonthGrossKRW)+' / 예상 세후: '+formatMoney(totalMonthNetKRW);
             modal.classList.remove('hidden');
         }
 
@@ -4154,10 +4106,8 @@
                     id: Date.now(), dayKey:getLocalDateKey(now),
                     dateStr: now.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                     reason: reason, stockCount: Array.isArray(portfolio) ? portfolio.length : 0,
-                    receiptCount: Array.isArray(dividendReceipts) ? dividendReceipts.length : 0,
                     data: JSON.parse(JSON.stringify(portfolio || [])),
-                    cashData: JSON.parse(JSON.stringify(cashBalances || {})),
-                    receiptData: JSON.parse(JSON.stringify(dividendReceipts || []))
+                    cashData: JSON.parse(JSON.stringify(cashBalances || {}))
                 };
                 snapshots.unshift(newSnap);
                 localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(pruneSnapshotsGenerational(snapshots)));
@@ -4186,7 +4136,7 @@
             if(!target||!box)return;
             var names=(target.data||[]).slice(0,6).map(function(x){return escapeHtml((x.name||x.ticker||'종목')+' ['+(x.account||'일반계좌')+']');});
             var cash=target.cashData||{}, cashAccounts=Object.keys(cash).length;
-            box.innerHTML='<div class="flex justify-between gap-2"><p class="font-black text-blue-700 dark:text-blue-300">'+escapeHtml(target.dateStr||'백업')+' · '+escapeHtml(target.reason||'')+'</p><button onclick="document.getElementById(\'snapshotPreviewBox\').classList.add(\'hidden\')" class="opacity-60"><i class="fa-solid fa-xmark"></i></button></div><p class="mt-1">종목 '+Number(target.stockCount||0)+'개 · 배당기록 '+Number(target.receiptCount||0)+'건 · 예수금 계좌 '+cashAccounts+'개</p><p class="mt-1 opacity-80">'+(names.length?names.join(' · '):'보유 종목 없음')+((target.data||[]).length>6?' 외 '+((target.data||[]).length-6)+'개':'')+'</p>';
+            box.innerHTML='<div class="flex justify-between gap-2"><p class="font-black text-blue-700 dark:text-blue-300">'+escapeHtml(target.dateStr||'백업')+' · '+escapeHtml(target.reason||'')+'</p><button onclick="document.getElementById(\'snapshotPreviewBox\').classList.add(\'hidden\')" class="opacity-60"><i class="fa-solid fa-xmark"></i></button></div><p class="mt-1">종목 '+Number(target.stockCount||0)+'개 · 예수금 계좌 '+cashAccounts+'개</p><p class="mt-1 opacity-80">'+(names.length?names.join(' · '):'보유 종목 없음')+((target.data||[]).length>6?' 외 '+((target.data||[]).length-6)+'개':'')+'</p>';
             box.classList.remove('hidden');
         }
 
@@ -4198,7 +4148,7 @@
             else snapshots.forEach(function(snap, idx) {
                 var item = document.createElement('div');
                 item.className = currentThemeMode === 'light' ? 'bg-gray-100 p-3 rounded-xl border border-gray-300 font-semibold' : 'bg-gray-900/80 p-3 rounded-xl border border-gray-700 font-semibold';
-                item.innerHTML = '<div class="flex justify-between items-start gap-2"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">'+escapeHtml(getSnapshotGenerationLabel(snap))+'</span><span class="text-xs">'+escapeHtml(snap.dateStr||'')+'</span></div><p class="text-[11px] opacity-80 mt-1">'+escapeHtml(snap.reason||'')+' (종목 <b>'+(snap.stockCount||0)+'개</b> · 배당기록 <b>'+(snap.receiptCount||0)+'건</b>)</p></div><div class="flex gap-1"><button onclick="previewSnapshot('+Number(snap.id)+')" class="bg-gray-200 dark:bg-gray-700 px-2 py-1.5 rounded-lg text-[10px] font-bold">미리보기</button><button onclick="rollbackToSnapshot('+Number(snap.id)+')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1.5 rounded-lg text-[10px] font-bold">복원</button></div></div>';
+                item.innerHTML = '<div class="flex justify-between items-start gap-2"><div><div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300">'+escapeHtml(getSnapshotGenerationLabel(snap))+'</span><span class="text-xs">'+escapeHtml(snap.dateStr||'')+'</span></div><p class="text-[11px] opacity-80 mt-1">'+escapeHtml(snap.reason||'')+' (종목 <b>'+(snap.stockCount||0)+'개</b>)</p></div><div class="flex gap-1"><button onclick="previewSnapshot('+Number(snap.id)+')" class="bg-gray-200 dark:bg-gray-700 px-2 py-1.5 rounded-lg text-[10px] font-bold">미리보기</button><button onclick="rollbackToSnapshot('+Number(snap.id)+')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1.5 rounded-lg text-[10px] font-bold">복원</button></div></div>';
                 listContainer.appendChild(item);
             });
             document.getElementById('snapshotModal').classList.remove('hidden');
@@ -4224,10 +4174,6 @@
                     if (target.cashData) {
                         cashBalances = JSON.parse(JSON.stringify(target.cashData));
                         localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                    }
-                    if (Array.isArray(target.receiptData)) {
-                        dividendReceipts = normalizeImportedReceipts(target.receiptData);
-                        saveDividendReceiptsStorage();
                     }
                     saveToStorage(false); renderAll();
                     alert('선택한 시점의 데이터로 롤백되었습니다!');
@@ -4274,24 +4220,13 @@
             return deduplicatePortfolioByStockAccount(mapped);
         }
 
-        function normalizeReceiptId(value, idx) {
-            var v = String(value || '').trim();
-            if (/^[A-Za-z0-9_-]{1,80}$/.test(v)) return v;
-            return 'r_import_' + Date.now() + '_' + (idx || 0) + '_' + Math.random().toString(36).slice(2, 7);
-        }
-
-        function normalizeImportedReceipts(rows) {
-            return (Array.isArray(rows)?rows:[]).map(function(src,idx){var r=Object.assign({},src||{});r.id=normalizeReceiptId(r.id,idx);r.date=/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))?String(r.date):localDateIso(new Date());r.amount=Math.max(0,parseFloat(r.amount)||0);r.currency=String(r.currency||'KRW').toUpperCase()==='USD'?'USD':'KRW';r.fxRate=parseFloat(r.fxRate)||(r.currency==='USD'?usdKrwRate:1);r.account=r.account||'일반계좌';r.memo=String(r.memo||'').slice(0,500);r.name=String(r.name||'').slice(0,200);r.ticker=String(r.ticker||'').slice(0,32);return r;}).filter(function(r){return r.amount>0;});
-        }
-
         function buildCloudPayload() {
             return {
                 version: CLOUD_SYNC_VERSION,
-                schemaVersion: 2,
+                schemaVersion: 3,
                 updatedAt: new Date().toISOString(),
                 portfolio: portfolio,
                 cashBalances: cashBalances,
-                dividendReceipts: dividendReceipts,
                 settings: getPortableAppSettings()
             };
         }
@@ -4557,14 +4492,12 @@
                 // 빈 배열도 권위 있는 클라우드 상태로 그대로 적용한다.
                 portfolio = deduplicatePortfolioByStockAccount(mapped);
                 cashBalances = (result.data.cashBalances && typeof result.data.cashBalances === 'object') ? result.data.cashBalances : {};
-                dividendReceipts = normalizeImportedReceipts(result.data.dividendReceipts || []);
                 applyPortableAppSettings(result.data.settings || {});
 
                 cloudSyncKey = key;
                 localStorage.setItem('my_cloud_sync_key', cloudSyncKey);
                 localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
                 localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                saveDividendReceiptsStorage();
                 localStorage.setItem('my_cloud_restored_signature', getPortfolioRecoverySignature());
                 localStorage.setItem('my_last_cloud_download_at', new Date().toISOString());
                 localStorage.setItem('my_last_cloud_download_count', String(portfolio.length));
@@ -4572,7 +4505,7 @@
                 initCloudSyncStatus();
                 updateCloudTransferInfo({ count: portfolio.length, updatedAt: cloudUpdatedAt });
                 renderAll();
-                alert('클라우드 데이터를 복원했습니다!\nID: ' + key + '\n종목: ' + portfolio.length + '개\n실제 배당 기록: ' + dividendReceipts.length + '건' +
+                alert('클라우드 데이터를 복원했습니다!\nID: ' + key + '\n종목: ' + portfolio.length + '개' +
                       (cloudUpdatedAt ? '\n클라우드 저장 시각: ' + formatCloudLocalTime(cloudUpdatedAt) : ''));
                 closeCloudModal();
             } catch (err) {
@@ -4617,15 +4550,13 @@
                 } else if (parsed && Array.isArray(parsed.portfolio)) {
                     portfolio = normalizeImportedPortfolioRows(parsed.portfolio);
                     if (parsed.cashBalances && typeof parsed.cashBalances === 'object') cashBalances = parsed.cashBalances;
-                    dividendReceipts = normalizeImportedReceipts(parsed.dividendReceipts || []);
                     applyPortableAppSettings(parsed.settings || {});
                 } else {
                     alert('지원하지 않는 데이터 형식입니다.'); return;
                 }
                 localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                saveDividendReceiptsStorage();
                 saveToStorage(false); renderAllSafely('clipboard restore');
-                alert('복원 성공!\n종목 ' + portfolio.length + '개 · 실제 배당 기록 ' + dividendReceipts.length + '건'); closeCloudModal();
+                alert('복원 성공!\n종목 ' + portfolio.length + '개'); closeCloudModal();
             } catch (e) { console.error('clipboard restore failed', e); alert('데이터 해석에 실패했습니다.'); }
         }
 
@@ -4850,15 +4781,6 @@
 
                 if (!exactMonth && (stock.payoutMonths || []).indexOf(month) >= 0) unscheduled.push({stock:stock,basis:stock.payoutMonthBasis||'payment'});
             });
-            dividendReceipts.forEach(function(r) {
-                if (selectedDashboardAccount !== 'ALL' && (r.account || '일반계좌') !== selectedDashboardAccount) return;
-                var iso = String(r.date || '');
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-                var d = new Date(iso + 'T12:00:00');
-                if (isNaN(d.getTime()) || d.getFullYear() !== year || d.getMonth() + 1 !== month) return;
-                var stock = portfolio.find(function(s){ return String(s.ticker||'').toUpperCase() === String(r.ticker||'').toUpperCase() && (s.account||'일반계좌') === (r.account||'일반계좌'); }) || {ticker:r.ticker||'',name:r.name||r.ticker||'배당',account:r.account||'일반계좌'};
-                exact.push({ day:d.getDate(), type:'receipt', stock:stock, date:iso, record:null, receipt:r });
-            });
             return { exact:exact, unscheduled:unscheduled };
         }
 
@@ -4890,7 +4812,6 @@
         function calendarEventPresentation(e) {
             if (e.type === 'deadline') return { cls:'bg-amber-500/15 text-amber-700 dark:text-amber-300', tag:'지급기한', icon:'🟡' };
             if (e.type === 'ex') return { cls:'bg-orange-500/15 text-orange-700 dark:text-orange-300', tag:'배당락', icon:'🟠' };
-            if (e.type === 'receipt') return { cls:'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', tag:'실 수령', icon:'🟢' };
             if (e.type === 'scheduled') return { cls:'bg-blue-500/15 text-blue-700 dark:text-blue-300', tag:'지급 예정', icon:'🔵' };
             if (e.record && String(e.record.status || '').toLowerCase() === 'actual') return { cls:'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', tag:'실 지급', icon:'🟢' };
             if (e.record && String(e.record.status || '').toLowerCase() === 'observed-payment') return { cls:'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300', tag:'확인 지급', icon:'🟦' };
@@ -4903,7 +4824,6 @@
             if (e.stock.account) parts.push(e.stock.account);
             if (e.record && e.record.recordDate) parts.push('배당기준일 ' + e.record.recordDate);
             if (e.record && Number(e.record.amount) > 0) parts.push('주당 ' + (e.stock.market==='US'||e.record.currency==='USD' ? ('$'+Number(e.record.amount).toLocaleString('en-US',{maximumFractionDigits:6})) : (Number(e.record.amount).toLocaleString()+'원')));
-            if (e.receipt) parts.push('실수령 ' + (e.receipt.currency === 'USD' ? ('$' + Number(e.receipt.amount).toLocaleString('en-US',{maximumFractionDigits:2})) : (Number(e.receipt.amount).toLocaleString('ko-KR') + '원')));
             var src = (e.record && e.record.source) || e.stock.payoutDateSource || '';
             if (src) parts.push('출처 ' + src);
             return parts.join(' · ');
@@ -4953,7 +4873,7 @@
                 list.innerHTML = '<div class="text-center py-8 text-gray-500 font-bold">등록된 배당 일정이 없습니다.</div>';
             } else {
                 rows.sort(function(a,b){
-                    var order={receipt:0,pay:1,scheduled:2,deadline:3,ex:4};
+                    var order={pay:0,scheduled:1,deadline:2,ex:3};
                     return (order[a.type]===undefined?9:order[a.type])-(order[b.type]===undefined?9:order[b.type]);
                 });
                 list.innerHTML = rows.map(function(e) {
@@ -4965,11 +4885,10 @@
                     var source = escapeHtml(rec.source || e.stock.payoutDateSource || e.stock.dividendSource || '출처 미기록');
                     var recordLine = rec.recordDate ? '<div class="flex justify-between gap-3"><span class="opacity-60">배당기준일</span><b>' + escapeHtml(rec.recordDate) + '</b></div>' : '';
                     var amountLine = Number(rec.amount)>0 ? '<div class="flex justify-between gap-3"><span class="opacity-60">주당 배당/분배금</span><b>' + ((e.stock.market==='US'||rec.currency==='USD') ? ('$'+Number(rec.amount).toLocaleString('en-US',{maximumFractionDigits:6})) : (Number(rec.amount).toLocaleString()+'원')) + '</b></div>' : '';
-                    var receiptLine = e.receipt ? '<div class="flex justify-between gap-3"><span class="opacity-60">실제 수령액</span><b class="text-emerald-600 dark:text-emerald-300">' + (e.receipt.currency==='USD' ? ('$'+Number(e.receipt.amount).toLocaleString('en-US',{maximumFractionDigits:2})) : (Number(e.receipt.amount).toLocaleString('ko-KR')+'원')) + '</b></div>' : '';
                     var note = (p.tag === '공시 지급') ? '<p class="mt-2 text-[9px] text-violet-600 dark:text-violet-300">거래소 공시에 기재된 지급예정일입니다. 실제 입금 확인과는 구분합니다.</p>' : (p.tag === '확인 지급' ? '<p class="mt-2 text-[9px] text-cyan-600 dark:text-cyan-300">공개 배당 지급이력에서 확인된 과거 지급일입니다. 거래소 공시 직접확인 값과 구분합니다.</p>' : (e.type==='deadline' ? '<p class="mt-2 text-[9px] text-amber-600 dark:text-amber-300">주주총회에서 배당이 확정된 뒤 상법상 일반 지급기한을 표시합니다. 정확한 입금일이 아닙니다.</p>' : ''));
                     return '<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/70 p-3">' +
                         '<div class="flex justify-between items-start gap-2"><div class="min-w-0"><p class="font-black text-sm break-words">'+stockName+'</p><p class="text-[10px] opacity-60 mt-0.5">'+ticker+' · '+account+'</p></div><span class="shrink-0 rounded-full px-2 py-1 text-[10px] font-black '+p.cls+'">'+p.icon+' '+p.tag+'</span></div>' +
-                        '<div class="mt-2.5 space-y-1 text-[11px]"><div class="flex justify-between gap-3"><span class="opacity-60">일자</span><b>'+escapeHtml(e.date)+'</b></div>'+recordLine+amountLine+receiptLine+'<div class="flex justify-between gap-3"><span class="opacity-60">출처</span><b class="text-right break-words">'+source+'</b></div></div>'+note+'</div>';
+                        '<div class="mt-2.5 space-y-1 text-[11px]"><div class="flex justify-between gap-3"><span class="opacity-60">일자</span><b>'+escapeHtml(e.date)+'</b></div>'+recordLine+amountLine+'<div class="flex justify-between gap-3"><span class="opacity-60">출처</span><b class="text-right break-words">'+source+'</b></div></div>'+note+'</div>';
                 }).join('');
             }
             modal.classList.remove('hidden');
@@ -5041,202 +4960,12 @@
         }
 
         // =========================================================================
-        // v1.13.0: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.13.1: 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
             var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
             return y + '-' + m + '-' + day;
-        }
-
-        function loadDividendReceipts() {
-            try {
-                var raw = JSON.parse(localStorage.getItem('my_dividend_receipts_v1') || '[]');
-                dividendReceipts = normalizeImportedReceipts(raw);
-            } catch (e) { dividendReceipts = []; }
-        }
-
-        function saveDividendReceiptsStorage() {
-            localStorage.setItem('my_dividend_receipts_v1', JSON.stringify(dividendReceipts));
-        }
-
-        function receiptAmountKRW(receipt) {
-            var amount = Math.max(0, parseFloat(receipt && receipt.amount) || 0);
-            if (receipt && String(receipt.currency || '').toUpperCase() === 'USD') return amount * (parseFloat(receipt.fxRate) || usdKrwRate || 1350);
-            return amount;
-        }
-
-        function getActualDividendNetKRW(year, account) {
-            var total = 0;
-            dividendReceipts.forEach(function(r) {
-                var ry = parseInt(String(r.date || '').slice(0,4));
-                if (ry !== year) return;
-                if (account && account !== 'ALL' && (r.account || '일반계좌') !== account) return;
-                total += receiptAmountKRW(r);
-            });
-            return total;
-        }
-
-        function getExpectedAnnualNetKRW(account) {
-            var total = 0;
-            portfolio.forEach(function(stock) {
-                if (account && account !== 'ALL' && (stock.account || '일반계좌') !== account) return;
-                var qty = Math.max(0, parseFloat(stock.quantity) || 0);
-                var dps = Math.max(0, parseFloat(stock.dps) || 0);
-                var rate = stock.market === 'US' ? usdKrwRate : 1;
-                var taxRate = stock.market === 'US' ? 0.15 : 0.154;
-                total += qty * dps * rate * (1 - taxRate);
-            });
-            return total;
-        }
-
-        function renderDividendProgress() {
-            var year = new Date().getFullYear();
-            var expected = getExpectedAnnualNetKRW(selectedDashboardAccount);
-            var actual = getActualDividendNetKRW(year, selectedDashboardAccount);
-            var remaining = Math.max(0, expected - actual);
-            var progress = expected > 0 ? Math.max(0, Math.min(100, actual / expected * 100)) : (actual > 0 ? 100 : 0);
-            var label = document.getElementById('dividendProgressYearLabel');
-            if (label) label.innerText = year + '년 배당 실적 · 현재 보유 기준';
-            var e = document.getElementById('yearExpectedNetDividend'); if (e) e.innerText = formatMoney(expected);
-            var a = document.getElementById('yearActualNetDividend'); if (a) a.innerText = formatMoney(actual);
-            var r = document.getElementById('yearRemainingNetDividend'); if (r) r.innerText = formatMoney(remaining);
-            var bar = document.getElementById('yearDividendProgressBar'); if (bar) bar.style.width = progress.toFixed(1) + '%';
-        }
-
-        function populateReceiptStockSelect(selectedIndex, fallbackReceipt) {
-            var sel = document.getElementById('receiptStockKey');
-            if (!sel) return;
-            sel.innerHTML = '';
-            portfolio.forEach(function(stock, idx) {
-                var opt = document.createElement('option');
-                opt.value = String(idx);
-                opt.innerText = (stock.market === 'US' ? '🇺🇸 ' : '🇰🇷 ') + (stock.name || stock.ticker) + ' · ' + (stock.account || '일반계좌');
-                sel.appendChild(opt);
-            });
-            if (fallbackReceipt && selectedIndex < 0) {
-                var legacy = document.createElement('option');
-                legacy.value = 'legacy';
-                legacy.innerText = (fallbackReceipt.name || fallbackReceipt.ticker || '삭제된 종목') + ' · ' + (fallbackReceipt.account || '일반계좌') + ' (과거 기록)';
-                sel.appendChild(legacy);
-                sel.value = 'legacy';
-            } else if (selectedIndex >= 0 && selectedIndex < portfolio.length) sel.value = String(selectedIndex);
-            if (!portfolio.length && !fallbackReceipt) {
-                var none = document.createElement('option'); none.value = ''; none.innerText = '먼저 종목을 추가하세요'; sel.appendChild(none);
-            }
-            syncReceiptStockFields();
-        }
-
-        function syncReceiptStockFields() {
-            var sel = document.getElementById('receiptStockKey');
-            var cur = document.getElementById('receiptCurrency');
-            if (!sel || !cur) return;
-            var idx = parseInt(sel.value);
-            if (isFinite(idx) && portfolio[idx]) cur.value = portfolio[idx].market === 'US' ? 'USD' : 'KRW';
-        }
-
-        function resetDividendReceiptForm() {
-            var id = document.getElementById('receiptEditId'); if (id) id.value = '';
-            var dt = document.getElementById('receiptDate'); if (dt) dt.value = localDateIso(new Date());
-            var amt = document.getElementById('receiptAmount'); if (amt) amt.value = '';
-            var memo = document.getElementById('receiptMemo'); if (memo) memo.value = '';
-            populateReceiptStockSelect(portfolio.length ? 0 : -1, null);
-        }
-
-        function openDividendReceiptModal() {
-            loadDividendReceipts();
-            var modal = document.getElementById('dividendReceiptModal'); if (!modal) return;
-            resetDividendReceiptForm();
-            var yf = document.getElementById('receiptYearFilter');
-            if (yf) {
-                var years = {}; years[new Date().getFullYear()] = true;
-                dividendReceipts.forEach(function(r){ var y=parseInt(String(r.date||'').slice(0,4)); if(y>2000) years[y]=true; });
-                yf.innerHTML = '';
-                Object.keys(years).map(Number).sort(function(a,b){return b-a;}).forEach(function(y){ var o=document.createElement('option');o.value=String(y);o.innerText=y+'년';yf.appendChild(o); });
-                yf.value = String(new Date().getFullYear());
-            }
-            renderDividendReceipts();
-            modal.classList.remove('hidden');
-        }
-
-        function closeDividendReceiptModal() { var m=document.getElementById('dividendReceiptModal'); if(m)m.classList.add('hidden'); }
-
-        function saveDividendReceipt(event) {
-            event.preventDefault();
-            var editId = document.getElementById('receiptEditId').value || '';
-            var sel = document.getElementById('receiptStockKey');
-            var idx = parseInt(sel ? sel.value : '');
-            var old = editId ? dividendReceipts.find(function(r){ return r.id === editId; }) : null;
-            var stock = isFinite(idx) && portfolio[idx] ? portfolio[idx] : null;
-            if (!stock && !old) { alert('배당금을 받은 종목을 선택해주세요.'); return; }
-            var amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
-            if (!(amount > 0)) { alert('실수령액은 0보다 커야 합니다.'); return; }
-            var currency = document.getElementById('receiptCurrency').value === 'USD' ? 'USD' : 'KRW';
-            createSnapshot(editId ? '실제 배당 수령 기록 수정 전' : '실제 배당 수령 기록 추가 전');
-            var row = {
-                id: editId || ('r_' + Date.now() + '_' + Math.random().toString(36).slice(2,8)),
-                date: document.getElementById('receiptDate').value || localDateIso(new Date()),
-                ticker: stock ? stock.ticker : old.ticker,
-                name: stock ? stock.name : old.name,
-                account: stock ? (stock.account || '일반계좌') : (old.account || '일반계좌'),
-                market: stock ? stock.market : old.market,
-                amount: amount,
-                currency: currency,
-                fxRate: currency === 'USD' ? (usdKrwRate || 1350) : 1,
-                memo: document.getElementById('receiptMemo').value.trim(),
-                updatedAt: new Date().toISOString()
-            };
-            if (editId) {
-                var pos = dividendReceipts.findIndex(function(r){ return r.id === editId; });
-                if (pos >= 0) dividendReceipts[pos] = row; else dividendReceipts.push(row);
-            } else dividendReceipts.push(row);
-            saveDividendReceiptsStorage();
-            renderDividendProgress();
-            resetDividendReceiptForm();
-            var yf=document.getElementById('receiptYearFilter'); if(yf) yf.value=String(parseInt(row.date.slice(0,4))||new Date().getFullYear());
-            renderDividendReceipts();
-            if (activeChartTab === 'calendar') renderDividendCalendar();
-        }
-
-        function editDividendReceipt(id) {
-            var r = dividendReceipts.find(function(x){ return x.id === id; }); if (!r) return;
-            document.getElementById('receiptEditId').value = r.id;
-            document.getElementById('receiptDate').value = r.date;
-            document.getElementById('receiptAmount').value = r.amount;
-            document.getElementById('receiptCurrency').value = r.currency;
-            document.getElementById('receiptMemo').value = r.memo || '';
-            var idx = portfolio.findIndex(function(s){ return String(s.ticker||'').toUpperCase()===String(r.ticker||'').toUpperCase() && (s.account||'일반계좌')===(r.account||'일반계좌'); });
-            populateReceiptStockSelect(idx, r);
-            document.getElementById('receiptCurrency').value = r.currency;
-            var form=document.getElementById('receiptDate'); if(form) form.scrollIntoView({behavior:'smooth',block:'center'});
-        }
-
-        function deleteDividendReceipt(id) {
-            var r = dividendReceipts.find(function(x){ return x.id === id; }); if (!r) return;
-            if (!confirm((r.name || r.ticker) + '의 ' + r.date + ' 수령 기록을 삭제하시겠습니까?')) return;
-            createSnapshot('실제 배당 수령 기록 삭제 전');
-            dividendReceipts = dividendReceipts.filter(function(x){ return x.id !== id; });
-            saveDividendReceiptsStorage(); renderDividendProgress(); renderDividendReceipts();
-            if (activeChartTab === 'calendar') renderDividendCalendar();
-        }
-
-        function renderDividendReceipts() {
-            var yf = document.getElementById('receiptYearFilter');
-            var year = parseInt(yf && yf.value) || new Date().getFullYear();
-            var rows = dividendReceipts.filter(function(r){ return parseInt(String(r.date||'').slice(0,4)) === year; }).sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); });
-            var actual = rows.reduce(function(sum,r){ return sum + receiptAmountKRW(r); },0);
-            var expected = getExpectedAnnualNetKRW('ALL');
-            var remain = Math.max(0, expected - actual);
-            var summary = document.getElementById('receiptYearSummary');
-            if (summary) summary.innerHTML = '<div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-900"><p class="text-[9px] font-bold opacity-70">'+year+' 현재보유 예상</p><p class="font-black text-[11px]">'+formatMoney(expected)+'</p></div><div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30"><p class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300">실제 '+rows.length+'건</p><p class="font-black text-[11px] text-emerald-700 dark:text-emerald-300">'+formatMoney(actual)+'</p></div><div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30"><p class="text-[9px] font-bold text-amber-700 dark:text-amber-300">남은 예상</p><p class="font-black text-[11px] text-amber-700 dark:text-amber-300">'+formatMoney(remain)+'</p></div>';
-            var list = document.getElementById('dividendReceiptList'); if (!list) return; list.innerHTML='';
-            if (!rows.length) { list.innerHTML='<div class="text-center py-6 text-gray-500 font-bold">'+year+'년 실제 수령 기록이 없습니다.</div>'; return; }
-            rows.forEach(function(r){
-                var item=document.createElement('div'); item.className='p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between gap-2';
-                var local = r.currency==='USD' ? ('$'+Number(r.amount).toLocaleString('en-US',{maximumFractionDigits:2})+' · '+formatMoney(receiptAmountKRW(r))) : (Number(r.amount).toLocaleString('ko-KR',{maximumFractionDigits:0})+'원');
-                item.innerHTML='<div class="min-w-0"><div class="flex items-center gap-1 flex-wrap"><span class="font-black text-xs truncate">'+escapeHtml(r.name||r.ticker)+'</span><span class="text-[9px] font-bold px-1 rounded bg-gray-200 dark:bg-gray-700">'+escapeHtml(r.account||'일반계좌')+'</span></div><p class="text-[10px] opacity-70 mt-0.5">'+escapeHtml(r.date)+' · '+escapeHtml(r.ticker||'')+(r.memo?' · '+escapeHtml(r.memo):'')+'</p><p class="font-black text-emerald-700 dark:text-emerald-300 mt-1">'+local+'</p></div><div class="shrink-0"><button onclick="editDividendReceipt(\''+r.id+'\')" class="p-1.5 text-blue-600" title="수정"><i class="fa-solid fa-pen"></i></button><button onclick="deleteDividendReceipt(\''+r.id+'\')" class="p-1.5 text-rose-600" title="삭제"><i class="fa-solid fa-trash"></i></button></div>';
-                list.appendChild(item);
-            });
         }
 
         function openDistributionHistoryModal(index) {
@@ -5326,7 +5055,6 @@
         }
         function calendarFilterMatches(e) {
             if(dividendCalendarFilter==='ALL')return true;
-            if(dividendCalendarFilter==='receipt')return e.type==='receipt'||(e.record&&String(e.record.status||'').toLowerCase()==='actual');
             if(dividendCalendarFilter==='observed')return !!(e.record&&String(e.record.status||'').toLowerCase()==='observed-payment');
             if(dividendCalendarFilter==='ex')return e.type==='ex';
             if(dividendCalendarFilter==='deadline')return e.type==='deadline';
@@ -5603,7 +5331,6 @@
                     } else if (imported && Array.isArray(imported.portfolio)) {
                         portfolio = normalizeImportedPortfolioRows(imported.portfolio);
                         cashBalances = (imported.cashBalances && typeof imported.cashBalances === 'object') ? imported.cashBalances : {};
-                        dividendReceipts = normalizeImportedReceipts(imported.dividendReceipts || []);
                         applyPortableAppSettings(imported.settings || {});
                         if (Array.isArray(imported.portfolioSnapshots)) localStorage.setItem('my_portfolio_snapshots_v1', JSON.stringify(imported.portfolioSnapshots.slice(0, 20)));
                         if (Array.isArray(imported.dailyAssetSnapshots)) localStorage.setItem('my_daily_asset_snapshots_v1', JSON.stringify(imported.dailyAssetSnapshots.slice(-60)));
@@ -5612,10 +5339,9 @@
                         alert('지원하지 않는 백업 형식입니다.'); return;
                     }
                     localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-                    saveDividendReceiptsStorage();
-                    saveToStorage(false);
+                        saveToStorage(false);
                     renderAllSafely('JSON restore');
-                    alert('복원했습니다.\n종목 ' + portfolio.length + '개 · 실제 배당 기록 ' + dividendReceipts.length + '건');
+                    alert('복원했습니다.\n종목 ' + portfolio.length + '개');
                 } catch (err) {
                     console.error('JSON restore failed', err);
                     alert('올바른 백업 파일이 아닙니다.');
