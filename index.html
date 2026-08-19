@@ -2,14 +2,20 @@
 <html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>배당 자산 관리 포트폴리오</title>
 
-    <!-- iOS 사파리 PWA 지원 태그 -->
+    <!-- v1.13.0: iPhone / Android 공통 PWA -->
+    <meta name="theme-color" id="pwaThemeColor" content="#111827">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="배당포트폴리오">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2454/2454282.png">
+    <meta name="application-name" content="배당포트폴리오">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon-180.png">
 
     <!-- Tailwind CSS CDN 및 다크모드 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,6 +49,30 @@
         .payout-month-chip.is-view-only { cursor: help !important; }
         .health-dot { width: 8px; height: 8px; border-radius: 9999px; display: inline-block; flex: 0 0 auto; }
         .debug-stock-panel { word-break: break-word; }
+
+        /* v1.13.0: iPhone notch / Dynamic Island / Android gesture area 대응 */
+        html, body { min-height: 100%; min-height: 100dvh; }
+        body {
+            -webkit-text-size-adjust: 100%;
+            overscroll-behavior-y: contain;
+            padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #appHeader {
+            padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+            padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+            padding-right: max(0.75rem, env(safe-area-inset-right, 0px)) !important;
+        }
+        main {
+            padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+            padding-right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+        }
+        div.fixed.inset-0 > div {
+            padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+        }
+        button, a, input, select, textarea { touch-action: manipulation; }
+        .pwa-step { border: 1px solid rgb(75 85 99 / 0.45); border-radius: 0.75rem; padding: 0.75rem; }
+        .pwa-step-num { width: 1.5rem; height: 1.5rem; border-radius: 9999px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; font-size:0.7rem; font-weight:900; }
+        .pwa-installed #pwaInstallToolbarBtn { display:none !important; }
     </style>
 </head>
 <body id="appBody" class="bg-gray-900 text-gray-100 min-h-screen pb-24">
@@ -55,7 +85,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.12.3
+                    v1.13.0
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -91,6 +121,9 @@
                 </button>
                 <button onclick="openDataDiagnosticModal()" class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-700 px-1.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 transition" title="도구 → 데이터 검사">
                     <i class="fa-solid fa-stethoscope text-[9px]"></i> 도구
+                </button>
+                <button id="pwaInstallToolbarBtn" onclick="openPwaInstallModal()" class="hidden bg-violet-600 hover:bg-violet-700 text-white px-1.5 py-1 rounded-md text-[11px] font-bold items-center gap-1 shadow-sm active:scale-95 transition" title="iPhone / Android 홈 화면에 앱 설치">
+                    <i class="fa-solid fa-mobile-screen-button text-[9px]"></i> 앱
                 </button>
                 <button onclick="openCloudModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-1.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition">
                     <i class="fa-solid fa-cloud text-[9px]"></i>
@@ -150,7 +183,7 @@
             </div>
         </div>
 
-        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.12.3에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.13.0에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -590,6 +623,28 @@
         </div>
     </div>
 
+    <!-- [모달: iPhone / Android 앱 설치] -->
+    <div id="pwaInstallModal" class="fixed inset-0 z-[96] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-3">
+                <div><h3 class="text-base font-bold"><i class="fa-solid fa-mobile-screen-button text-violet-500 mr-1"></i> 앱으로 설치</h3><p id="pwaInstallPlatformText" class="text-[10px] opacity-70 mt-0.5">기기 확인 중...</p></div>
+                <button onclick="closePwaInstallModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="pwaInstallStateBox" class="p-3 rounded-xl border border-violet-500/25 bg-violet-500/5 text-[11px] font-bold leading-relaxed"></div>
+            <div id="pwaInstallSteps" class="space-y-2 text-[11px]"></div>
+            <div class="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20 text-[10px] leading-relaxed">
+                <p class="font-black text-blue-600 dark:text-blue-300"><i class="fa-solid fa-cloud mr-1"></i>기기 변경 / 다른 사용자 사용</p>
+                <p class="mt-1 opacity-80">포트폴리오 로컬 데이터는 기기/브라우저 앱별로 저장될 수 있습니다. <b>처음 홈 화면 앱을 설치하거나 새 폰으로 바꾸기 전에는 [클라우드] 업로드 또는 JSON 백업</b>을 해두세요. 설치 후에는 같은 클라우드 ID로 복원하면 됩니다.</p>
+            </div>
+            <div class="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-[10px] leading-relaxed">
+                <p class="font-black text-amber-700 dark:text-amber-300"><i class="fa-solid fa-shield-halved mr-1"></i>오프라인 동작</p>
+                <p class="mt-1 opacity-80">앱 화면과 마지막 로컬 데이터는 오프라인에서도 열 수 있습니다. 시세·환율·배당 최신값 갱신은 인터넷 연결이 필요합니다.</p>
+            </div>
+            <button id="pwaNativeInstallBtn" onclick="triggerPwaInstall()" class="hidden w-full bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl font-black text-sm"><i class="fa-solid fa-download mr-1"></i>이 기기에 설치</button>
+            <button onclick="closePwaInstallModal()" class="w-full bg-gray-200 dark:bg-gray-700 py-2.5 rounded-xl font-bold text-xs">닫기</button>
+        </div>
+    </div>
+
     <!-- [모달: 도구 · 데이터 검사] -->
     <div id="dataDiagnosticModal" class="fixed inset-0 z-[80] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
         <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-300 dark:border-gray-700 p-5 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -598,7 +653,7 @@
                 <button onclick="closeDataDiagnosticModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-3 rounded-xl border border-cyan-500/25 bg-cyan-500/5 space-y-2">
-                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.12.3 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
+                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.13.0 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
                 <div id="systemHealthGrid" class="grid grid-cols-2 gap-1.5"></div>
             </div>
             <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-[10px] font-bold">
@@ -621,6 +676,7 @@
             </div>
             <div id="diagnosticList" class="space-y-2 text-xs"></div>
             <div class="grid grid-cols-2 gap-2">
+                <button onclick="openPwaInstallModal()" class="bg-violet-600 text-white py-2.5 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-mobile-screen-button mr-1"></i>앱 설치/상태</button>
                 <button onclick="runDataDiagnostics()" class="bg-cyan-600 text-white py-2.5 rounded-lg font-bold text-[11px]">다시 검사</button>
                 <button id="btnRefreshEtfUniverse" onclick="refreshEtfUniverseFromServer()" class="bg-blue-600 text-white py-2.5 rounded-lg font-bold text-[11px]">전체 ETF 목록 갱신</button>
                 <button id="btnRefreshEtfOnly" onclick="refreshEtfDistributionDataOnly()" class="bg-emerald-600 text-white py-2.5 rounded-lg font-bold text-[11px]">보유 ETF 분배금 갱신</button>
@@ -795,7 +851,7 @@
         // [1-1] 배당 지급일 일정
         // 월 정보만으로 임의의 '몇 일'을 만들어내지 않는다. 확인된 일정만 정확한 날짜로 표시한다.
         // =========================================================================
-        // v1.12.3: 종목별 지급일 하드코딩은 사용하지 않는다.
+        // v1.13.0: 종목별 지급일 하드코딩은 사용하지 않는다.
         // 한국은 /krdiv 또는 /etfdiv, 미국은 /usdiv 검색 결과만 사용한다.
         var PAYOUT_DATE_SCHEDULES = {};
 
@@ -860,7 +916,7 @@
             return 0;
         }
 
-        // v1.12.3: 과거 수년의 지급월 합집합을 일정월로 쓰지 않는다.
+        // v1.13.0: 과거 수년의 지급월 합집합을 일정월로 쓰지 않는다.
         // 가장 최근의 한 배당주기만 사용해 정책/지급월 변경이 과거 이력과 섞이는 문제를 막는다.
         function deriveRecentRecurringMonthsFromHistory(history, cycle) {
             var expected = expectedPayoutCountForCycle(cycle);
@@ -1337,7 +1393,7 @@
         var cloudSyncKey = '';
         var currentFilter = 'ALL';
         var currentAccountFilter = 'ALL';
-        var APP_VERSION = '1.12.3';
+        var APP_VERSION = '1.13.0';
         var currentSort = 'VALUE_DESC';
         var isMergedView = false;
         var displayCurrency = 'KRW';
@@ -1355,8 +1411,139 @@
         var systemHealthState = {};
         var lastWorkerVersion = '';
 
+        // -------------------------------------------------------------------------
+        // v1.13.0 PWA: iPhone / Android 공통 설치, standalone, service worker
+        // -------------------------------------------------------------------------
+        var deferredPwaInstallPrompt = null;
+        var pwaInstallPlatform = 'other';
+
+        function detectPwaPlatform() {
+            var ua = navigator.userAgent || '';
+            var isiOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isiOS) return 'ios';
+            if (/Android/i.test(ua)) return 'android';
+            return 'desktop';
+        }
+
+        function isPwaStandalone() {
+            return !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+        }
+
+        function updatePwaThemeColor(mode) {
+            var meta = document.getElementById('pwaThemeColor');
+            if (meta) meta.setAttribute('content', mode === 'light' ? '#f3f4f6' : '#111827');
+        }
+
+        function updatePwaInstallUi() {
+            pwaInstallPlatform = detectPwaPlatform();
+            var installed = isPwaStandalone();
+            document.documentElement.classList.toggle('pwa-installed', installed);
+            document.documentElement.classList.toggle('pwa-standalone', installed);
+            var toolbar = document.getElementById('pwaInstallToolbarBtn');
+            if (toolbar) {
+                if (!installed) { toolbar.classList.remove('hidden'); toolbar.classList.add('flex'); }
+                else { toolbar.classList.add('hidden'); toolbar.classList.remove('flex'); }
+            }
+            var btn = document.getElementById('pwaNativeInstallBtn');
+            if (btn) {
+                var canNativePrompt = !installed && !!deferredPwaInstallPrompt;
+                btn.classList.toggle('hidden', !canNativePrompt);
+            }
+            renderPwaInstallModalContents();
+        }
+
+        function pwaStep(n, title, body, icon) {
+            return '<div class="pwa-step flex gap-2.5 items-start"><span class="pwa-step-num bg-violet-600 text-white">'+n+'</span><div class="min-w-0"><p class="font-black">'+(icon?'<i class="'+icon+' mr-1 opacity-75"></i>':'')+escapeHtml(title)+'</p><p class="mt-1 opacity-75 leading-relaxed">'+body+'</p></div></div>';
+        }
+
+        function renderPwaInstallModalContents() {
+            var platformText = document.getElementById('pwaInstallPlatformText');
+            var state = document.getElementById('pwaInstallStateBox');
+            var steps = document.getElementById('pwaInstallSteps');
+            if (!platformText || !state || !steps) return;
+            var installed = isPwaStandalone();
+            var platform = pwaInstallPlatform || detectPwaPlatform();
+            var label = platform === 'ios' ? 'iPhone / iPad' : platform === 'android' ? 'Android' : 'PC / 기타 브라우저';
+            platformText.textContent = label + ' · ' + (installed ? '홈 화면 앱으로 실행 중' : '브라우저에서 실행 중');
+            if (installed) {
+                state.innerHTML = '<span class="text-emerald-600 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>설치 완료</span> · 현재 독립 앱 모드로 실행 중입니다.';
+                steps.innerHTML = '<div class="pwa-step text-[11px]"><p class="font-black">✅ iPhone / Android 공통 기능 사용 가능</p><p class="mt-1 opacity-75">홈 화면 아이콘, 전체화면형 standalone 실행, Safe Area 대응, 오프라인 기본 화면 캐시가 활성화되어 있습니다.</p></div>';
+                return;
+            }
+            if (platform === 'ios') {
+                state.innerHTML = '<span class="text-blue-600 dark:text-blue-300"><i class="fa-brands fa-apple mr-1"></i>iPhone 설치 방법</span> · Safari에서 홈 화면에 추가하세요.';
+                steps.innerHTML = pwaStep(1,'Safari에서 이 페이지 열기','현재 다른 브라우저라면 Safari에서 사이트를 열어주세요.','fa-brands fa-safari')+
+                    pwaStep(2,'공유 버튼 누르기','Safari 하단/상단의 <b>공유</b> 버튼을 누릅니다.','fa-solid fa-arrow-up-from-bracket')+
+                    pwaStep(3,'홈 화면에 추가','공유 메뉴에서 <b>홈 화면에 추가</b>를 선택한 뒤 추가합니다.','fa-solid fa-square-plus');
+            } else if (platform === 'android') {
+                if (deferredPwaInstallPrompt) {
+                    state.innerHTML = '<span class="text-emerald-600 dark:text-emerald-300"><i class="fa-brands fa-android mr-1"></i>Android 설치 가능</span> · 아래 <b>이 기기에 설치</b> 버튼을 누르면 됩니다.';
+                    steps.innerHTML = pwaStep(1,'설치 버튼 누르기','아래 보라색 <b>이 기기에 설치</b> 버튼을 누릅니다.','fa-solid fa-download')+
+                        pwaStep(2,'설치 확인','브라우저 설치 확인창에서 설치를 승인합니다.','fa-solid fa-circle-check');
+                } else {
+                    state.innerHTML = '<span class="text-blue-600 dark:text-blue-300"><i class="fa-brands fa-android mr-1"></i>Android</span> · 브라우저 메뉴에서 앱 설치/홈 화면 추가를 사용할 수 있습니다.';
+                    steps.innerHTML = pwaStep(1,'Chrome 또는 기본 브라우저 메뉴','오른쪽 위 <b>⋮</b> 메뉴를 엽니다.','fa-solid fa-ellipsis-vertical')+
+                        pwaStep(2,'앱 설치 / 홈 화면에 추가','메뉴에서 <b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 선택합니다.','fa-solid fa-mobile-screen-button');
+                }
+            } else {
+                state.innerHTML = '<span class="text-violet-600 dark:text-violet-300"><i class="fa-solid fa-display mr-1"></i>설치 지원 브라우저</span>에서는 주소창의 설치 아이콘 또는 브라우저 메뉴를 사용할 수 있습니다.';
+                steps.innerHTML = pwaStep(1,'브라우저 설치 메뉴 확인','Chrome/Edge 주소창의 설치 아이콘 또는 메뉴의 <b>앱 설치</b>를 사용하세요.','fa-solid fa-download');
+            }
+        }
+
+        function openPwaInstallModal() {
+            updatePwaInstallUi();
+            var m = document.getElementById('pwaInstallModal');
+            if (m) m.classList.remove('hidden');
+        }
+        function closePwaInstallModal() { var m=document.getElementById('pwaInstallModal'); if(m)m.classList.add('hidden'); }
+
+        async function triggerPwaInstall() {
+            if (!deferredPwaInstallPrompt) { renderPwaInstallModalContents(); return; }
+            var promptEvent = deferredPwaInstallPrompt;
+            deferredPwaInstallPrompt = null;
+            try {
+                promptEvent.prompt();
+                await promptEvent.userChoice;
+            } catch (e) { console.warn('PWA install prompt failed', e); }
+            updatePwaInstallUi();
+        }
+
+        async function requestPersistentStorageIfAvailable() {
+            try {
+                if (!navigator.storage || !navigator.storage.persist) return false;
+                if (navigator.storage.persisted && await navigator.storage.persisted()) return true;
+                return await navigator.storage.persist();
+            } catch (e) { return false; }
+        }
+
+        async function registerAssetManagerServiceWorker() {
+            if (!('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+            try {
+                var reg = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
+                setTimeout(function(){ try { reg.update(); } catch(e){} }, 3000);
+                if (isPwaStandalone()) requestPersistentStorageIfAvailable();
+            } catch (e) { console.warn('service worker register failed', e); }
+        }
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPwaInstallPrompt = e;
+            updatePwaInstallUi();
+        });
+        window.addEventListener('appinstalled', function() {
+            deferredPwaInstallPrompt = null;
+            requestPersistentStorageIfAvailable();
+            updatePwaInstallUi();
+        });
+        if (window.matchMedia) {
+            try { window.matchMedia('(display-mode: standalone)').addEventListener('change', updatePwaInstallUi); } catch(e) {}
+        }
+
         // 앱 초기화 구동
         window.addEventListener('DOMContentLoaded', function() {
+            updatePwaInstallUi();
+            registerAssetManagerServiceWorker();
             initThemeMode();
             initDisplayCurrency();
             initFireSettings();
@@ -1402,6 +1589,7 @@
         }
 
         function applyThemeModeStyles() {
+            updatePwaThemeColor(currentThemeMode);
             var body = document.getElementById('appBody');
             var header = document.getElementById('appHeader');
             var icon = document.getElementById('themeIcon');
@@ -1621,7 +1809,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.12.3: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.13.0: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -2194,7 +2382,7 @@
             var networkError = null;
 
             try {
-                // v1.12.3: 전체 시세 갱신(F5)에는 환율 갱신도 포함한다.
+                // v1.13.0: 전체 시세 갱신(F5)에는 환율 갱신도 포함한다.
                 try { await fetchExchangeRate(true); } catch (fxErr) { console.warn('환율 갱신 실패 - 마지막 정상값 사용', fxErr); }
                 // 예전 저장 데이터에서 한국 종목 코드가 이름으로 남은 경우 자동 복구
                 for (var pi = 0; pi < portfolio.length; pi++) {
@@ -2465,7 +2653,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.12.3: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.13.0: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2581,7 +2769,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.12.3: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.13.0: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -4258,7 +4446,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.12.3부터 비활성화.
+            // v1.13.0부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -4357,7 +4545,7 @@
         }
 
         // =========================================================================
-        // v1.12.3 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.13.0 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4714,7 +4902,7 @@
         }
 
         // =========================================================================
-        // v1.12.3: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.13.0: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -5035,14 +5223,17 @@
         function setHealthResult(key,label,status,detail){var now=new Date().toISOString(),prev=systemHealthState[key]||{};systemHealthState[key]={label:label,status:status,detail:String(detail||''),at:now,lastOkAt:status==='ok'?now:(prev.lastOkAt||''),lastIssue:(status==='error'||status==='warn')?String(detail||''):(prev.lastIssue||'')};saveSystemHealthState();renderSystemHealthGrid();}
         function renderSystemHealthGrid(){
             var grid=document.getElementById('systemHealthGrid');if(!grid)return;loadSystemHealthState();grid.innerHTML='';
-            var keys=['worker','krquote','fx','etflist','kind','krdiv','usquote','usdiv'];
-            keys.forEach(function(k){var x=systemHealthState[k]||{label:{worker:'Worker',krquote:'국내시세',fx:'환율',etflist:'ETF목록',kind:'KIND',krdiv:'국내배당',usquote:'미국시세',usdiv:'미국배당'}[k],status:'unknown',detail:'확인 전'};var cls=x.status==='ok'?'bg-emerald-500':x.status==='warn'?'bg-amber-500':x.status==='error'?'bg-rose-500':'bg-gray-400';var row=document.createElement('div');row.className='p-2 rounded-lg bg-white/60 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 min-w-0';row.innerHTML='<div class="flex items-center gap-1.5"><span class="health-dot '+cls+'"></span><span class="text-[10px] font-black">'+escapeHtml(x.label||k)+'</span></div><p class="text-[8px] mt-1 opacity-70 truncate" title="'+escapeHtml(x.detail||'')+'">'+escapeHtml(x.detail||'')+'</p><p class="text-[7px] mt-0.5 opacity-45">정상 '+(x.lastOkAt?escapeHtml(formatCloudLocalTime(x.lastOkAt)):'기록 없음')+'</p>'+(x.lastIssue?'<p class="text-[7px] mt-0.5 text-amber-600 dark:text-amber-300 truncate" title="'+escapeHtml(x.lastIssue)+'">최근 이슈: '+escapeHtml(x.lastIssue)+'</p>':'');grid.appendChild(row);});
+            var keys=['pwa','worker','krquote','fx','etflist','kind','krdiv','usquote','usdiv'];
+            keys.forEach(function(k){var x=systemHealthState[k]||{label:{pwa:'앱/PWA',worker:'Worker',krquote:'국내시세',fx:'환율',etflist:'ETF목록',kind:'KIND',krdiv:'국내배당',usquote:'미국시세',usdiv:'미국배당'}[k],status:'unknown',detail:'확인 전'};var cls=x.status==='ok'?'bg-emerald-500':x.status==='warn'?'bg-amber-500':x.status==='error'?'bg-rose-500':'bg-gray-400';var row=document.createElement('div');row.className='p-2 rounded-lg bg-white/60 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 min-w-0';row.innerHTML='<div class="flex items-center gap-1.5"><span class="health-dot '+cls+'"></span><span class="text-[10px] font-black">'+escapeHtml(x.label||k)+'</span></div><p class="text-[8px] mt-1 opacity-70 truncate" title="'+escapeHtml(x.detail||'')+'">'+escapeHtml(x.detail||'')+'</p><p class="text-[7px] mt-0.5 opacity-45">정상 '+(x.lastOkAt?escapeHtml(formatCloudLocalTime(x.lastOkAt)):'기록 없음')+'</p>'+(x.lastIssue?'<p class="text-[7px] mt-0.5 text-amber-600 dark:text-amber-300 truncate" title="'+escapeHtml(x.lastIssue)+'">최근 이슈: '+escapeHtml(x.lastIssue)+'</p>':'');grid.appendChild(row);});
         }
         async function runSystemHealthChecks(silent) {
             var btn=document.getElementById('btnRunSystemHealth');if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>검사중';}
             loadSystemHealthState();
             async function check(key,label,fn){try{var r=await fn();setHealthResult(key,label,'ok',r||'정상');return true;}catch(e){setHealthResult(key,label,'error',(e&&e.message)||'실패');return false;}}
             try{
+                var swState='미지원';
+                if('serviceWorker' in navigator){try{var reg=await navigator.serviceWorker.getRegistration('./');swState=reg?'등록됨':'등록 대기';}catch(e){swState='확인 실패';}}
+                setHealthResult('pwa','앱/PWA',isPwaStandalone()?'ok':('serviceWorker' in navigator?'ok':'warn'),(isPwaStandalone()?'설치됨 · ':'브라우저 실행 · ')+swState+' · '+(detectPwaPlatform()==='ios'?'iOS':detectPwaPlatform()==='android'?'Android':'Desktop'));
                 var health=null; await check('worker','Worker',async function(){health=await marketProxyFetch('/health',8000);updateVersionMismatchBanner(health&&health.version);return 'v'+(health&&health.version||'?')+' · KV '+(health&&health.kvConfigured?'정상':'미설정');});
                 var kr=portfolio.find(function(x){return x.market==='KR'&&isKoreanTicker(normalizeKoreanTicker(x.ticker));});
                 if(kr) await check('krquote','국내시세',async function(){var code=normalizeKoreanTicker(kr.ticker),q=await marketProxyFetch('/quote?codes='+encodeURIComponent(code),9000);if(!(q&&Array.isArray(q.datas)&&q.datas.length))throw new Error('NAVER 응답 형식 이상');return 'NAVER 응답 정상 · '+code;}); else setHealthResult('krquote','국내시세','warn','보유 국내주식 없음 · 실조회 생략');
