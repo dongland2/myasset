@@ -55,7 +55,7 @@
                     <i class="fa-solid fa-chart-pie"></i> 내 배당 포트폴리오
                 </h1>
                 <span class="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-                    v1.12.2
+                    v1.12.3
                 </span>
             </div>
             <div class="flex items-center gap-1.5 whitespace-nowrap text-right">
@@ -150,7 +150,7 @@
             </div>
         </div>
 
-        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.12.2에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
+        <!-- 상단 FIRE 생활비 충당률 대형 위젯은 v1.12.3에서 제거됨 (툴바 FIRE 버튼/시뮬레이터는 유지) -->
 
         <!-- 대시보드 계좌 선택 콤보박스 -->
         <div id="dashboardAccountSelectBox" class="p-2.5 rounded-xl border flex items-center justify-between gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 shadow-sm">
@@ -598,7 +598,7 @@
                 <button onclick="closeDataDiagnosticModal()" class="text-gray-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-3 rounded-xl border border-cyan-500/25 bg-cyan-500/5 space-y-2">
-                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.12.2 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
+                <div class="flex items-center justify-between"><div><p class="text-[11px] font-black">연결 상태</p><p id="diagnosticVersionLine" class="text-[9px] opacity-70">HTML v1.12.3 · Worker 확인 전</p></div><button id="btnRunSystemHealth" onclick="runSystemHealthChecks(false)" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] font-bold"><i class="fa-solid fa-plug-circle-check mr-1"></i>전체 연결 테스트</button></div>
                 <div id="systemHealthGrid" class="grid grid-cols-2 gap-1.5"></div>
             </div>
             <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-[10px] font-bold">
@@ -795,7 +795,7 @@
         // [1-1] 배당 지급일 일정
         // 월 정보만으로 임의의 '몇 일'을 만들어내지 않는다. 확인된 일정만 정확한 날짜로 표시한다.
         // =========================================================================
-        // v1.12.2: 종목별 지급일 하드코딩은 사용하지 않는다.
+        // v1.12.3: 종목별 지급일 하드코딩은 사용하지 않는다.
         // 한국은 /krdiv 또는 /etfdiv, 미국은 /usdiv 검색 결과만 사용한다.
         var PAYOUT_DATE_SCHEDULES = {};
 
@@ -860,7 +860,7 @@
             return 0;
         }
 
-        // v1.12.2: 과거 수년의 지급월 합집합을 일정월로 쓰지 않는다.
+        // v1.12.3: 과거 수년의 지급월 합집합을 일정월로 쓰지 않는다.
         // 가장 최근의 한 배당주기만 사용해 정책/지급월 변경이 과거 이력과 섞이는 문제를 막는다.
         function deriveRecentRecurringMonthsFromHistory(history, cycle) {
             var expected = expectedPayoutCountForCycle(cycle);
@@ -1229,6 +1229,8 @@
                 return {
                     annualDistribution: Number(data.annualDistribution || 0),
                     annualComplete: data.annualComplete === true,
+                    annualEstimated: data.annualEstimated === true,
+                    annualBasis: data.annualBasis || '',
                     latestDistribution: Number(data.latestDistribution || 0),
                     cycle: data.cycle || '',
                     months: Array.isArray(data.months) ? data.months.slice() : [],
@@ -1241,6 +1243,8 @@
                     payoutDates: Array.isArray(data.payoutDates) ? data.payoutDates.slice() : [],
                     recordDates: Array.isArray(data.recordDates) ? data.recordDates.slice() : [],
                     history: Array.isArray(data.history) ? data.history.map(function(x) { return Object.assign({}, x); }) : [],
+                    observedHistory: Array.isArray(data.observedHistory) ? data.observedHistory.map(function(x) { return Object.assign({}, x); }) : [],
+                    exDividendDates: Array.isArray(data.exDividendDates) ? data.exDividendDates.slice() : [],
                     sources: data.sources || {},
                     updatedAt: data.updatedAt || new Date().toISOString()
                 };
@@ -1333,7 +1337,7 @@
         var cloudSyncKey = '';
         var currentFilter = 'ALL';
         var currentAccountFilter = 'ALL';
-        var APP_VERSION = '1.12.2';
+        var APP_VERSION = '1.12.3';
         var currentSort = 'VALUE_DESC';
         var isMergedView = false;
         var displayCurrency = 'KRW';
@@ -1617,7 +1621,7 @@
         }
 
         function ensureDefaultMarketServer() {
-            // v1.12.2: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
+            // v1.12.3: 전용 Worker 자동 등록 + 종목/계좌 중복 저장 방지.
             // 예전 버전에서 빈 값/잘못된 테스트 주소가 남아 자동 갱신이 건너뛰어지는 문제를 제거한다.
             if (localStorage.getItem(MARKET_PROXY_MIGRATION_KEY) !== '1') {
                 localStorage.setItem(MARKET_PROXY_STORAGE_KEY, MARKET_PROXY_DEFAULT);
@@ -2011,12 +2015,12 @@
                     try {
                         var etfDiv = await fetchEtfDistributionInfo(code, result.name);
                         if (etfDiv) {
-                            if (etfDiv.annualComplete && Number(etfDiv.annualDistribution) > 0) result.dps = Number(etfDiv.annualDistribution);
+                            if (Number(etfDiv.annualDistribution) > 0) result.dps = Number(etfDiv.annualDistribution);
                             result.cycle = etfDiv.cycle || result.cycle;
                             if (Array.isArray(etfDiv.months) && etfDiv.months.length) result.months = etfDiv.months.slice();
                             result.dividendSource = etfDiv.source || result.dividendSource || '';
                             result.dividendAsOf = etfDiv.asOf || result.dividendAsOf || '';
-                            result.dividendMethod = (etfDiv.annualComplete && Number(etfDiv.annualDistribution) > 0) ? '최근 12개월 ETF 분배금 합계' : (result.dividendMethod || 'ETF KIND 분배 일정');
+                            result.dividendMethod = Number(etfDiv.annualDistribution) > 0 ? (etfDiv.annualEstimated ? '최근 분배금 연환산(추정)' : '최근 한 주기 ETF 실제 분배금 합계') : (result.dividendMethod || 'ETF 분배 일정');
                             result.latestDistribution = Number(etfDiv.latestDistribution || 0);
                             result.payoutDates = Array.isArray(etfDiv.payoutDates) ? etfDiv.payoutDates.slice() : [];
                             result.recordDates = Array.isArray(etfDiv.recordDates) ? etfDiv.recordDates.slice() : [];
@@ -2190,7 +2194,7 @@
             var networkError = null;
 
             try {
-                // v1.12.2: 전체 시세 갱신(F5)에는 환율 갱신도 포함한다.
+                // v1.12.3: 전체 시세 갱신(F5)에는 환율 갱신도 포함한다.
                 try { await fetchExchangeRate(true); } catch (fxErr) { console.warn('환율 갱신 실패 - 마지막 정상값 사용', fxErr); }
                 // 예전 저장 데이터에서 한국 종목 코드가 이름으로 남은 경우 자동 복구
                 for (var pi = 0; pi < portfolio.length; pi++) {
@@ -2253,13 +2257,13 @@
                                 var divInfo = await fetchEtfDistributionInfo(code, stock.name);
                                 if (divInfo) {
                                     var beforeDiv = JSON.stringify({dps:stock.dps, dates:stock.payoutDates||[], history:stock.distributionHistory||[]});
-                                    if (divInfo.annualComplete && Number(divInfo.annualDistribution) > 0) stock.dps = Number(divInfo.annualDistribution);
+                                    if (Number(divInfo.annualDistribution) > 0) stock.dps = Number(divInfo.annualDistribution);
                                     stock.divCycle = divInfo.cycle || stock.divCycle || 'quarterly';
                                     if (Array.isArray(divInfo.months) && divInfo.months.length) stock.payoutMonths = divInfo.months.slice();
                                     stock.dividendSource = divInfo.source || stock.dividendSource || '';
                                     stock.dividendAsOf = divInfo.asOf || stock.dividendAsOf || '';
-                                    if (divInfo.annualComplete && Number(divInfo.annualDistribution) > 0) stock.dividendMethod = '최근 12개월 ETF 분배금 합계';
-                                    else if (!stock.dividendMethod) stock.dividendMethod = 'ETF 공식 분배 일정';
+                                    if (Number(divInfo.annualDistribution) > 0) stock.dividendMethod = divInfo.annualEstimated ? '최근 분배금 연환산(추정)' : '최근 한 주기 ETF 실제 분배금 합계';
+                                    else if (!stock.dividendMethod) stock.dividendMethod = 'ETF 분배 일정';
                                     stock.payoutDates = Array.isArray(divInfo.payoutDates) ? divInfo.payoutDates.slice() : (stock.payoutDates || []);
                                     stock.recordDates = Array.isArray(divInfo.recordDates) ? divInfo.recordDates.slice() : (stock.recordDates || []);
                                     stock.distributionHistory = Array.isArray(divInfo.history) ? divInfo.history.map(function(x) { return Object.assign({}, x); }) : (stock.distributionHistory || []);
@@ -2461,7 +2465,7 @@
             if (recordSnapshot) createSnapshot('데이터 변경');
             localStorage.setItem('my_dividend_portfolio_v9', JSON.stringify(portfolio));
             localStorage.setItem('my_cash_balances_v1', JSON.stringify(cashBalances));
-            // v1.12.2: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
+            // v1.12.3: 로컬 저장/시세갱신 때 클라우드를 자동으로 덮어쓰지 않는다.
             // 클라우드 데이터 변경은 사용자가 [업로드]를 눌렀을 때만 수행한다.
         }
 
@@ -2577,7 +2581,7 @@
             else renderTimelineGrid();
         }
 
-        // v1.12.2: 시세 통신 성공과 화면 렌더 오류를 분리한다.
+        // v1.12.3: 시세 통신 성공과 화면 렌더 오류를 분리한다.
         // 한 보조 위젯에서 오류가 나더라도 현재가 갱신 자체를 실패로 처리하지 않는다.
         function renderAllSafely(context) {
             var errors = [];
@@ -4254,7 +4258,7 @@
         }
 
         async function pushToCloudQuietly() {
-            // v1.12.2부터 비활성화.
+            // v1.12.3부터 비활성화.
             // 여러 삭제/시세 갱신 요청이 비동기로 뒤섞여 오래된 데이터가 최신 업로드를 덮어쓰는 문제를 막는다.
             return false;
         }
@@ -4353,7 +4357,7 @@
         }
 
         // =========================================================================
-        // v1.12.2 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
+        // v1.12.3 추가 기능: 오늘의 변화 / 배당 캘린더 / 배당 출처 / 데이터 진단
         // =========================================================================
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
@@ -4710,7 +4714,7 @@
         }
 
         // =========================================================================
-        // v1.12.2: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
+        // v1.12.3: 실제 수령 배당 / 분배금 이력 / 안전한 시세 반영 / ETF 진단
         // =========================================================================
         function localDateIso(dateObj) {
             var d = dateObj || new Date();
@@ -5061,7 +5065,7 @@
                 if(stock.market==='KR'){
                     var code=normalizeKoreanTicker(stock.ticker), map=await fetchKoreanRealtimeBatch([code]), q=map[code];
                     if(q&&q.price>0)priceOk=applySafeMarketPrice(stock,q.price,q.source||'NAVER realtime',q.tradedAt||new Date().toISOString());
-                    if(looksLikeKoreanEtf(stock.name,code)){var ei=await fetchEtfDistributionInfo(code,stock.name,true);if(ei){if(ei.annualComplete&&Number(ei.annualDistribution)>0)stock.dps=Number(ei.annualDistribution);stock.divCycle=ei.cycle||stock.divCycle;if(Array.isArray(ei.months))stock.payoutMonths=ei.months.slice();stock.payoutDates=ei.payoutDates||[];stock.recordDates=ei.recordDates||[];stock.distributionHistory=ei.history||[];stock.payoutDateSource=ei.source||'';stock.dividendSource=ei.source||stock.dividendSource||'';stock.lastDividendUpdatedAt=ei.updatedAt||new Date().toISOString();divOk=true;}}
+                    if(looksLikeKoreanEtf(stock.name,code)){var ei=await fetchEtfDistributionInfo(code,stock.name,true);if(ei){if(Number(ei.annualDistribution)>0){stock.dps=Number(ei.annualDistribution);stock.dividendMethod=ei.annualEstimated?'최근 분배금 연환산(추정)':'최근 한 주기 ETF 실제 분배금 합계';}stock.divCycle=ei.cycle||stock.divCycle;if(Array.isArray(ei.months))stock.payoutMonths=ei.months.slice();stock.payoutDates=ei.payoutDates||[];stock.recordDates=ei.recordDates||[];stock.distributionHistory=ei.history||[];stock.payoutDateSource=ei.source||'';stock.dividendSource=ei.source||stock.dividendSource||'';stock.lastDividendUpdatedAt=ei.updatedAt||new Date().toISOString();divOk=true;}}
                     else {var ki=await fetchKoreanStockDividendInfo(code,stock.name,true);if(ki)divOk=applyKoreanStockDividendInfo(stock,ki)||true;}
                 } else {
                     var y=await fetchUsQuoteFromProxy(stock.ticker);if(y&&y.chart&&y.chart.result&&y.chart.result[0]){var meta=y.chart.result[0].meta||{},p=parseFloat(meta.regularMarketPrice||meta.chartPreviousClose||0);if(p>0)priceOk=applySafeMarketPrice(stock,p,'Yahoo',new Date().toISOString());if(meta.shortName)stock.name=meta.shortName;}
@@ -5213,7 +5217,7 @@
             if(!targets.length){alert('갱신할 국내 ETF가 없습니다.');return;}
             var btn=document.getElementById('btnRefreshEtfOnly'),old=btn?btn.innerHTML:''; if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> 갱신중';}
             var ok=0,fail=0,cursor=0;
-            async function worker(){while(true){var pos=cursor++;if(pos>=targets.length)return;var stock=targets[pos];try{var info=await fetchEtfDistributionInfo(stock.ticker,stock.name,true);if(!info){fail++;continue;}if(info.annualComplete&&Number(info.annualDistribution)>0)stock.dps=Number(info.annualDistribution);stock.divCycle=info.cycle||stock.divCycle||'quarterly';if(Array.isArray(info.months)&&info.months.length)stock.payoutMonths=info.months.slice();stock.dividendSource=info.source||stock.dividendSource||'';stock.dividendAsOf=info.asOf||stock.dividendAsOf||'';stock.dividendMethod=(info.annualComplete&&Number(info.annualDistribution)>0)?'최근 12개월 ETF 분배금 합계':(stock.dividendMethod||'ETF 공식 분배 일정');stock.payoutDates=Array.isArray(info.payoutDates)?info.payoutDates.slice():[];stock.recordDates=Array.isArray(info.recordDates)?info.recordDates.slice():[];stock.distributionHistory=Array.isArray(info.history)?info.history.map(function(x){return Object.assign({},x);}):[];stock.payoutDateSource=info.source||stock.payoutDateSource||'';stock.dividendSourceUrl=info.sourceUrl||stock.dividendSourceUrl||'';stock.etfManager=info.manager||stock.etfManager||getEtfBrandManager(stock.name).manager||'';stock.etfBrand=info.brand||stock.etfBrand||getEtfBrandManager(stock.name).brand||'';stock.lastDividendUpdatedAt=info.updatedAt||new Date().toISOString();ok++;}catch(e){fail++;console.warn('ETF 진단 갱신 실패',stock.ticker,e);}}}
+            async function worker(){while(true){var pos=cursor++;if(pos>=targets.length)return;var stock=targets[pos];try{var info=await fetchEtfDistributionInfo(stock.ticker,stock.name,true);if(!info){fail++;continue;}if(Number(info.annualDistribution)>0)stock.dps=Number(info.annualDistribution);stock.divCycle=info.cycle||stock.divCycle||'quarterly';if(Array.isArray(info.months)&&info.months.length)stock.payoutMonths=info.months.slice();stock.dividendSource=info.source||stock.dividendSource||'';stock.dividendAsOf=info.asOf||stock.dividendAsOf||'';stock.dividendMethod=Number(info.annualDistribution)>0?(info.annualEstimated?'최근 분배금 연환산(추정)':'최근 한 주기 ETF 실제 분배금 합계'):(stock.dividendMethod||'ETF 분배 일정');stock.payoutDates=Array.isArray(info.payoutDates)?info.payoutDates.slice():[];stock.recordDates=Array.isArray(info.recordDates)?info.recordDates.slice():[];stock.distributionHistory=Array.isArray(info.history)?info.history.map(function(x){return Object.assign({},x);}):[];stock.payoutDateSource=info.source||stock.payoutDateSource||'';stock.dividendSourceUrl=info.sourceUrl||stock.dividendSourceUrl||'';stock.etfManager=info.manager||stock.etfManager||getEtfBrandManager(stock.name).manager||'';stock.etfBrand=info.brand||stock.etfBrand||getEtfBrandManager(stock.name).brand||'';stock.lastDividendUpdatedAt=info.updatedAt||new Date().toISOString();ok++;}catch(e){fail++;console.warn('ETF 진단 갱신 실패',stock.ticker,e);}}}
             try{var workers=[];for(var i=0;i<Math.min(3,targets.length);i++)workers.push(worker());await Promise.all(workers);localStorage.setItem('my_last_etf_distribution_refresh_stats',JSON.stringify({at:new Date().toISOString(),total:targets.length,ok:ok,fail:fail}));if(ok)saveToStorage(false);renderAllSafely('ETF distribution refresh');runDataDiagnostics();alert('ETF 정보 갱신 완료\n정상: '+ok+'개'+(fail?'\n실패: '+fail+'개':''));}finally{if(btn){btn.disabled=false;btn.innerHTML=old;}}
         }
 
